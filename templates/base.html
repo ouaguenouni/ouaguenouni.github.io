@@ -5,16 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ title }} - {{ config.site_name }}</title>
     <meta name="description" content="{{ metadata.description|default(config.site_description) }}">
-    <link rel="stylesheet" href="/assets/css/style.css">
+    <link rel="stylesheet" href="{{ config.base_url }}/assets/css/style.css">
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 </head>
 <body>
     <header>
         <div class="container">
-            <h1 class="site-title"><a href="/">{{ config.site_name }}</a></h1>
+            <h1 class="site-title"><a href="{{ config.base_url }}/">{{ config.site_name }}</a></h1>
             <nav>
                 <ul>
-                    <li><a href="/">Home</a></li>
+                    <li><a href="{{ config.base_url }}/">Home</a></li>
                     <!-- Add more navigation items as needed -->
                 </ul>
             </nav>

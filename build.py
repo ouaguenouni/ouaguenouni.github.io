@@ -42,7 +42,7 @@ def process_plot_tags(content, plots_metadata):
         plot_id = match.group(1)
         if plot_id in plots_metadata:
             plot_data = plots_metadata[plot_id]
-            return f'<div class="plotly-chart">\n<iframe src="/assets/plots/{plot_data["filename"]}" width="100%" height="500" frameborder="0"></iframe>\n<p class="caption">{plot_data["description"]}</p>\n</div>'
+            return f'<div class="plotly-chart">\n<iframe src="{{{{ config.base_url }}}}/assets/plots/{plot_data["filename"]}" width="100%" height="500" frameborder="0"></iframe>\n<p class="caption">{plot_data["description"]}</p>\n</div>'
         else:
             return f'<div class="error">Plot {plot_id} not found</div>'
     
@@ -106,16 +106,22 @@ def build_site():
     
     # Create index.html if it doesn't exist
     if not os.path.exists("_site/index.html"):
-        # Get all HTML files in _site
-        html_files = list(Path("_site").glob("*.html"))
+        # Get all HTML files in _site except index.html
+        html_files = [f for f in Path("_site").glob("*.html") if f.name != "index.html"]
         
         if html_files:
             # Create a simple index
-            index_content = "<h1>Posts</h1>\n<ul>\n"
+            index_content = "<h1>Index</h1>\n<h2>Posts</h2>\n<ul>\n"
             for html_file in html_files:
-                filename = html_file.name
+                # Get the full path relative to _site
+                rel_path = html_file.relative_to("_site")
                 name = html_file.stem
-                index_content += f'<li><a href="{filename}">{name}</a></li>\n'
+                
+                # Replace underscores with spaces and capitalize for display
+                display_name = name.replace('_', ' ').title()
+                
+                # Add link to the index
+                index_content += f'<li><a href="/{rel_path}">{display_name}</a></li>\n'
             index_content += "</ul>"
             
             # Render with template
