@@ -5,17 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Analysis Post - My Plotly Blog</title>
     <meta name="description" content="Analyzing important data">
-    <link rel="stylesheet" href="/assets/css/style.css">
+    <link rel="stylesheet" href="/repo-name/assets/css/style.css">
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 </head>
 <body>
     <header>
         <div class="container">
-            <h1 class="site-title"><a href="/">My Plotly Blog</a></h1>
+            <h1 class="site-title"><a href="/repo-name/">My Plotly Blog</a></h1>
             <nav>
                 <ul>
-                    <li><a href="/">Home</a></li>
-                    <!-- Add more navigation items as needed -->
+                    
+                    <li><a href="/repo-name/">Home</a></li>
+                    
+                    <li><a href="/repo-name/about.html">About</a></li>
+                    
                 </ul>
             </nav>
         </div>
@@ -41,8 +44,28 @@
 
     <footer>
         <div class="container">
-            <p>&copy; Ouaguenouni Mohamed - Built with Plotly and Markdown</p>
+            <p>&copy; Your Name - Built with Plotly and Markdown</p>
         </div>
     </footer>
+
+
+
+<script>
+    // Resize iframes to fit content
+    document.addEventListener('DOMContentLoaded', function() {
+        const plotFrames = document.querySelectorAll('.plotly-chart iframe');
+        plotFrames.forEach(frame => {
+            // Adjust iframe height based on content
+            frame.onload = function() {
+                try {
+                    const height = Math.max(500, frame.contentWindow.document.body.scrollHeight + 30);
+                    frame.style.height = height + 'px';
+                } catch (e) {
+                    console.log('Could not resize iframe automatically: ', e);
+                }
+            };
+        });
+    });
+</script>
 </body>
 </html>

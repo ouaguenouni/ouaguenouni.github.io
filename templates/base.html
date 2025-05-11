@@ -14,8 +14,9 @@
             <h1 class="site-title"><a href="{{ config.base_url }}/">{{ config.site_name }}</a></h1>
             <nav>
                 <ul>
-                    <li><a href="{{ config.base_url }}/">Home</a></li>
-                    <!-- Add more navigation items as needed -->
+                    {% for item in config.nav %}
+                    <li><a href="{{ config.base_url }}{{ item.url }}">{{ item.title }}</a></li>
+                    {% endfor %}
                 </ul>
             </nav>
         </div>
@@ -40,5 +41,25 @@
             <p>&copy; {{ config.author }} - Built with Plotly and Markdown</p>
         </div>
     </footer>
+
+
+
+<script>
+    // Resize iframes to fit content
+    document.addEventListener('DOMContentLoaded', function() {
+        const plotFrames = document.querySelectorAll('.plotly-chart iframe');
+        plotFrames.forEach(frame => {
+            // Adjust iframe height based on content
+            frame.onload = function() {
+                try {
+                    const height = Math.max(500, frame.contentWindow.document.body.scrollHeight + 30);
+                    frame.style.height = height + 'px';
+                } catch (e) {
+                    console.log('Could not resize iframe automatically: ', e);
+                }
+            };
+        });
+    });
+</script>
 </body>
 </html>

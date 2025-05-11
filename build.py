@@ -7,6 +7,25 @@ import shutil
 from pathlib import Path
 from jinja2 import Environment, FileSystemLoader
 
+
+def fix_relative_links(html_content, base_url):
+    """Fix relative links to work with GitHub Pages base URL."""
+    # Fix links to assets
+    html_content = re.sub(
+        r'(href|src)="/(assets/[^"]+)"', 
+        f'\\1="{base_url}/\\2"', 
+        html_content
+    )
+    
+    # Fix links to other pages
+    html_content = re.sub(
+        r'href="/([^/"][^"]+\.html)"', 
+        f'href="{base_url}/\\1"', 
+        html_content
+    )
+    
+    return html_content
+
 def load_config():
     """Load configuration from config.yml."""
     with open("config.yml", "r") as f:
@@ -123,18 +142,25 @@ def build_site():
                 # Add link to the index
                 index_content += f'<li><a href="/{rel_path}">{display_name}</a></li>\n'
             index_content += "</ul>"
-            
-            # Render with template
+
             output = template.render(
-                title="Index",
-                content=index_content,
-                metadata={},
-                config=config
+            title=front_matter.get("title", "Untitled"),
+            content=html_content,
+            metadata=front_matter,
+            config=config
             )
+    
+            # Fix relative links for GitHub Pages
+            if config.get("base_url"):
+                output = fix_relative_links(output, config["base_url"])
             
             # Write index.html
             with open("_site/index.html", "w") as f:
                 f.write(output)
+
+            # Create .nojekyll file to disable Jekyll processing
+            with open("_site/.nojekyll", "w") as f:
+                pass
             
             print("Generated _site/index.html")
     
