@@ -124,6 +124,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const progressBar = document.querySelector('.progress-bar');
     const currentSubtitle = document.querySelector('.current-subtitle');
     const headings = document.querySelectorAll('.main-article section h2, .main-article section h3');
+    const articleTitle = document.querySelector('.main-article .article-title').textContent;
+
+    // Give headings IDs if they don’t have one
+    headings.forEach((h, i) => {
+        if (!h.id) h.id = 'heading-' + i;
+    });
 
     function updateProgress() {
         const scrollTop = window.scrollY;
@@ -131,23 +137,28 @@ document.addEventListener('DOMContentLoaded', () => {
         const scrollPercent = (scrollTop / docHeight) * 100;
         progressBar.style.height = scrollPercent + '%';
 
-        // Update current heading
+        // Find the current heading
         let current = null;
         headings.forEach(h => {
             if (h.offsetTop - 50 <= scrollTop) {
                 current = h;
             }
         });
+
         if (current) {
             currentSubtitle.textContent = current.textContent;
-            currentSubtitle.dataset.targetId = current.id || '';
+            currentSubtitle.dataset.targetId = current.id;
+        } else {
+            // Top of page: show article title
+            currentSubtitle.textContent = articleTitle;
+            currentSubtitle.dataset.targetId = document.querySelector('.main-article .article-title').id || '';
         }
     }
 
     window.addEventListener('scroll', updateProgress);
     updateProgress();
 
-    // Smooth scroll to section on click
+    // Smooth scroll to heading on click
     currentSubtitle.addEventListener('click', () => {
         const targetId = currentSubtitle.dataset.targetId;
         if (targetId) {
@@ -161,11 +172,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Ensure headings have IDs
-    headings.forEach((h, i) => {
-        if (!h.id) h.id = 'heading-' + i;
-    });
+    // Make sure article title has an ID for clicking
+    const titleEl = document.querySelector('.main-article .article-title');
+    if (!titleEl.id) titleEl.id = 'article-title';
 });
+
 </script>
 
 
