@@ -1,9 +1,54 @@
+blockquote {
+    font-family: 'ETBembo', 'Palatino Linotype', 'Book Antiqua', Palatino, 'Times New Roman', serif;
+    font-size: 1.1em;
+    line-height: 1.7;
+    color: #555;
+    font-style: italic;
+    margin: 3.5rem 4rem;
+    padding-left: 2rem;
+    border-left: 2px solid #ddd;
+    hanging-punctuation: first;
+    text-align: justify;
+    position: relative;
+}
+
+blockquote::before {
+    content: "“";
+    font-size: 4rem;
+    line-height: 0;
+    position: absolute;
+    left: 0.2rem;
+    top: -0.2rem;
+    color: #ccc;
+    font-family: 'ETBembo', serif;
+}
+
+blockquote cite {
+    display: block;
+    margin-top: 1rem;
+    font-style: normal;
+    font-size: 0.95rem;
+    color: #888;
+    text-align: right;
+}
+
+blockquote cite::before {
+    content: "— ";
+}
+
+
 .site-header {
     margin-bottom: 3rem;
     padding-bottom: 1rem;
     border-bottom: 1px solid #eee;
 }
 
+.main-article img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 1rem 0;
+}
 .site-header h1 {
     font-size: 1.4rem;
     margin: 0;
@@ -100,8 +145,9 @@ hr::before {
 }
 
 .reading-sidebar {
+    user-select: none;
     position: fixed;
-    left: 2%;
+    left: 1%;
     top: 50%;
     transform: translateY(-50%);
     display: flex;
@@ -117,16 +163,36 @@ hr::before {
     pointer-events: auto;
 }
 
-.current-subtitle {
+.previous-subtitle,
+.current-subtitle,
+.next-subtitle {
     writing-mode: vertical-rl;
     text-orientation: mixed;
     transform: rotate(180deg);
     text-align: center;
-    font-size: 0.9rem;
-    color: #666;
+    font-size: 0.8rem;
     margin-right: 8px;
+    max-width: 24px;
+    min-width: 24px;
     cursor: pointer;
-    max-width: 50px;
+}
+
+.current-subtitle {
+    font-size: 0.9rem;
+    color: #333;
+    opacity: 1;
+}
+
+.previous-subtitle,
+.next-subtitle {
+    color: #999;
+    opacity: 0.5;
+}
+
+.previous-subtitle:empty,
+.next-subtitle:empty {
+    opacity: 0;
+    visibility: hidden;
 }
 
 .progress-bar-container {
@@ -135,6 +201,7 @@ hr::before {
     height: 50vh;
     background: #d7d7d7;
     border-radius: 2px;
+    margin-left: 8px;
 }
 
 .progress-bar {
@@ -147,15 +214,9 @@ hr::before {
     border-radius: 2px;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1200px) {
     .reading-sidebar {
         display: none;
     }
 }
 
-.main-article img {
-    max-width: 100%;
-    height: auto;
-    display: block;
-    margin: 1rem 0;
-}

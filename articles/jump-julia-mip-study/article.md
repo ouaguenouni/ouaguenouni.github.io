@@ -180,3 +180,37 @@ This gives us :
 Solving a linear program is done with the Simplex algorithm, which works because of a simple but important principle :
 
 > Optimizing a linear function on a polytope (or more generally a compact convex space) always leads us to a vertex (more generally an extreme point).
+
+The simplex algorithm is a local search procedure that walks from a vertex to another to increase the objective function's value until we reach a vertex where every neighbour has an inferior value.
+
+Since the vertex where the optimization ends depends only on the objective function, we can try to find an objective function for each polytope vertex.
+
+For example, in the following polytope (Note that we added a constraint to increase the number of vertex of the polytope)
+
+![plot_6](plot_6.webp)
+
+We can obtain any of the vertices by optimizing in different directions.
+
+![plot_7](plot_7.webp)
+
+---
+
+## From Continuous to Integer variables: The Branch-and-Bound Method
+
+Even if it’s not totally how a solver works, the first thing you have to understand to assimilate how Mixed Integer Programming works is the Branch and Bound method.
+
+Let’s take the precedent example but restricting our variables to integers; the feasible region is no longer the grey area inside the polytope. Still, we can compute the feasible integer points, which give us the following figure :
+
+![plot_8](plot_8.webp)
+
+In grey, we can see the feasible solutions, and the first thing we can notice is that some vertices are in the integer solutions and some not, and this distinction is crucial, but we will get back to this point later.
+
+The branch and bound procedure create a tree called “enumeration tree”; in each node, it constructs a mixed-integer program and solves its “linear relaxation” with the simplex algorithm, which means the same program after ignoring integrality constraint, from this point on, there are two possible outcomes :
+
+- The solution is integer feasible, and therefore we stop the resolution.
+
+This can happen if the polytope of constraints has integer vertices. For instance, if we solve the LP relaxation of the precedent mixed-integer program with the objective function 2x+y, we will find (10,3), which is an integer solution.
+
+- The solution is “fractional”, and therefore we need to branch.
+
+And this will happen in the precedent polytope if we try to optimize the function x+2y,
