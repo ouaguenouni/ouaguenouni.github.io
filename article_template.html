@@ -6,6 +6,11 @@
     <title>{{TITLE}} - Ouaguenouni Mohamed</title>
     <link rel="stylesheet" type="text/css" href="../../style.css">
     <link rel="stylesheet" type="text/css" href="../../article.css">
+    <meta property="og:title" content="{{TITLE}}">
+    <meta property="og:description" content="{{DESCRIPTION}}">
+    <meta property="og:image" content="{{OG}}">
+    <meta property="og:type" content="article">
+    <meta property="twitter:card" content="summary_large_image">
 </head>
 <body>
     <header class="site-header">
@@ -69,7 +74,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const articleTitleEl = document.querySelector('.main-article .article-title');
     const articleTitle = articleTitleEl.textContent;
 
-    // Ensure all headings have an id
     headings.forEach((h, i) => {
         if (!h.id) h.id = 'heading-' + i;
     });
@@ -81,13 +85,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const scrollPercent = (scrollTop / docHeight) * 100;
         progressBar.style.height = scrollPercent + '%';
 
-        // Determine current heading
         let currentIndex = -1;
         headings.forEach((h, i) => {
             if (h.offsetTop - 50 <= scrollTop) currentIndex = i;
         });
 
-        // Current heading
         let current = currentIndex >= 0 ? headings[currentIndex] : null;
 
         if (current) {
@@ -100,7 +102,6 @@ document.addEventListener('DOMContentLoaded', () => {
             nextSubtitle.textContent = headings[currentIndex + 1]?.textContent || '';
             nextSubtitle.dataset.targetId = headings[currentIndex + 1]?.id || '';
         } else {
-            // Top of article: no current heading yet
             currentSubtitle.textContent = articleTitle;
             currentSubtitle.dataset.targetId = articleTitleEl.id;
 
@@ -118,13 +119,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const target = document.getElementById(targetId);
         if (!target) return;
 
-        // Smooth scroll
         window.scrollTo({
             top: target.offsetTop,
             behavior: 'smooth'
         });
 
-        // Continuously check scroll position until it reaches target
         const onScroll = () => {
             const scrollTop = window.scrollY;
             if (Math.abs(scrollTop - target.offsetTop) < 2) {
@@ -135,7 +134,6 @@ document.addEventListener('DOMContentLoaded', () => {
         window.addEventListener('scroll', onScroll);
     }
 
-    // Add click events
     [previousSubtitle, currentSubtitle, nextSubtitle].forEach(el => {
         el.addEventListener('click', () => scrollToSubtitle(el));
     });

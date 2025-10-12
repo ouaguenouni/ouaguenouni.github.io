@@ -4,11 +4,75 @@ from pathlib import Path
 import os
 import readtime
 
+from PIL import Image, ImageDraw, ImageFont
+
+def generate_og_thumbnail(output_path, title, background_path=None, width=1200, height=630, font_path=None):
+    """
+    Generate an Open Graph thumbnail using a background image with a dark overlay and title text.
+    """
+    if background_path and Path(background_path).exists():
+        # Open and resize background image
+        bg = Image.open(background_path).convert("RGB")
+        bg = bg.resize((width, height))
+        img = bg
+    else:
+        # Fallback to solid color background
+        img = Image.new('RGB', (width, height), color=(40, 40, 40))
+
+    # Create draw object
+    draw = ImageDraw.Draw(img)
+
+    # Add dark overlay
+    overlay = Image.new('RGBA', (width, height), (0, 0, 0, 150))  # 150 = alpha
+    img = Image.alpha_composite(img.convert('RGBA'), overlay)
+
+    # Prepare font
+    if font_path is None:
+        font_path = "et-book.ttf"  # Replace with your font
+    try:
+        font_size = 80
+        font = ImageFont.truetype(font_path, font_size)
+    except:
+        font = ImageFont.load_default()
+
+    # Wrap text
+    words = title.split()
+    lines = []
+    current_line = ""
+    for word in words:
+        test_line = current_line + (" " if current_line else "") + word
+        bbox = draw.textbbox((0, 0), test_line, font=font)
+        text_width = bbox[2] - bbox[0]
+        if text_width <= width - 100:
+            current_line = test_line
+        else:
+            lines.append(current_line)
+            current_line = word
+    lines.append(current_line)
+
+    # Center text vertically
+    total_text_height = sum(draw.textbbox((0, 0), line, font=font)[3] - draw.textbbox((0, 0), line, font=font)[1] for line in lines)
+    y_text = (height - total_text_height) // 2
+
+    # Draw text (white)
+    draw = ImageDraw.Draw(img)  # recreate draw after alpha_composite
+    for line in lines:
+        bbox = draw.textbbox((0, 0), line, font=font)
+        text_width = bbox[2] - bbox[0]
+        text_height = bbox[3] - bbox[1]
+        x_text = (width - text_width) // 2
+        draw.text((x_text, y_text), line, font=font, fill=(255, 255, 255))
+        y_text += text_height
+
+    img.convert('RGB').save(output_path)
+    return output_path
+
+
+
 def convert_md_to_html(md_file, output_file=None, template_file='article_template.html'):
     with open(md_file, 'r', encoding='utf-8') as f:
         content = f.read()
 
-    # Extract frontmatter
     frontmatter_pattern = r'^---\s*\n(.*?)\n---\s*\n'
     frontmatter_match = re.search(frontmatter_pattern, content, re.DOTALL)
 
@@ -37,7 +101,6 @@ def convert_md_to_html(md_file, output_file=None, template_file='article_templat
         if thumbnail_match:
             thumbnail = thumbnail_match.group(1).strip()
 
-    # Handle math blocks and inline math
     block_store = []
     inline_store = []
 
@@ -62,13 +125,11 @@ def convert_md_to_html(md_file, output_file=None, template_file='article_templat
     )
     article_content = md.convert(content)
 
-    # Restore math
     for i, tex in enumerate(block_store):
         article_content = article_content.replace(f"{{{{MATHBLOCK_{i}}}}}", f"$$\n{tex}\n$$")
     for i, tex in enumerate(inline_store):
         article_content = article_content.replace(f"{{{{MATHINLINE_{i}}}}}", f"${tex}$")
 
-    # Load template
     with open(template_file, 'r', encoding='utf-8') as f:
         template = f.read()
 
@@ -79,6 +140,23 @@ def convert_md_to_html(md_file, output_file=None, template_file='article_templat
     time_read = readtime.of_text(content)
     html_output = html_output.replace('{{READ_TIME}}', str(time_read))
 
+    link_path = os.path.relpath(output_file, start=Path.cwd()).replace('\\', '/')
+
+    if not thumbnail:
+        local_thumb = Path(md_file).parent / 'thumbnail.png'
+        if local_thumb.exists():
+            thumbnail = os.path.relpath(local_thumb, start=Path.cwd()).replace('\\', '/')
+
+    og_path = Path(md_file).parent / 'og.png'
+    bg_path = thumbnail if thumbnail else None
+    generate_og_thumbnail(og_path, title, background_path=bg_path)
+
+    html_output = html_output.replace('{{DESCRIPTION}}', description)
+
+    article_folder = Path(md_file).parent.name
+    og_url = f"/articles/{article_folder}/og.png"
+    html_output = html_output.replace('{{OG}}', og_url)
+
     if output_file is None:
         output_file = Path(md_file).parent / 'index.html'
 
@@ -88,16 +166,7 @@ def convert_md_to_html(md_file, output_file=None, template_file='article_templat
     print(f"✓ Converted {md_file} to {output_file}")
     print(f"  Title: {title}")
     print(f"  Date: {date}")
-
-    # Compute link relative to main index.html
-    link_path = os.path.relpath(output_file, start=Path.cwd()).replace('\\', '/')
-
-    # Handle local thumbnail.png if frontmatter not provided
-    if not thumbnail:
-        local_thumb = Path(md_file).parent / 'thumbnail.png'
-        if local_thumb.exists():
-            thumbnail = os.path.relpath(local_thumb, start=Path.cwd()).replace('\\', '/')
-
+    print()
     return {
         'title': title,
         'date': date,
@@ -116,7 +185,6 @@ def generate_all_articles(articles_dir='articles', article_template='article_tem
 
     articles_info = []
 
-    # Generate each article page
     for article_subdir in articles_path.iterdir():
         if article_subdir.is_dir():
             md_file = article_subdir / 'article.md'
@@ -126,11 +194,9 @@ def generate_all_articles(articles_dir='articles', article_template='article_tem
             else:
                 print(f"⚠️  No article.md found in {article_subdir}")
 
-    # Generate main index.html
     with open(index_template, 'r', encoding='utf-8') as f:
         template = f.read()
 
-    # Generate the articles section
     articles_html = ""
     for art in sorted(articles_info, key=lambda x: x['date'], reverse=True):
         thumbnail_html = f'<img src="{art["thumbnail"]}" alt="Article image">' if art["thumbnail"] else ""
