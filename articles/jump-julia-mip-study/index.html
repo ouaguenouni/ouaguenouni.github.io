@@ -11,11 +11,21 @@
     <header class="site-header">
         <h1><a href="../../index.html">Ouaguenouni Mohamed</a></h1>
     </header>
-    <article class="main-article">
-        <h1 class="article-title">A comprehensive study of Mixed Integer Programming with JuMP on Julia (Part 1)</h1>
-        <p class="article-meta">3 min read read · Published on Mar 29, 2021</p>
-        <section>
-<p>Some basics of Linear/Mixed Integer Programming &amp; How to use a heuristic callback inside a MIP solver.  </p>
+
+<aside class="reading-sidebar">
+    <div class="progress-wrapper">
+        <div class="current-subtitle"></div>
+        <div class="progress-bar-container">
+            <div class="progress-bar"></div>
+        </div>
+    </div>
+</aside>
+
+<article class="main-article">
+    <h1 class="article-title">A comprehensive study of Mixed Integer Programming with JuMP on Julia (Part 1)</h1>
+    <p class="article-meta">3 min read read · Published on Mar 29, 2021</p>
+    <section>
+        <p>Some basics of Linear/Mixed Integer Programming &amp; How to use a heuristic callback inside a MIP solver.  </p>
 <h2>Introduction</h2>
 <p>One of the primary purposes of the computer sciences and operation research is to solve problems efficiently; problem-solving is a field where we often find very “ad-hoc” methods of resolution, they can be efficient, but they rely on some specific properties of the problem which are not necessarily easy to notice.</p>
 <p>In this series of posts, we will introduce and discover a very versatile and generic way of thinking and of solving a wide variety of problems, and this introduction will occur on three sides:</p>
@@ -72,11 +82,19 @@ plot!([x_v], [-2x_v .+ 20], label =&quot;Y= -2x + 20&quot;)
 </ul>
 <p>These lines will produce the following plot :</p>
 <p><img alt="plot_1" src="plot_1.webp" /></p>
-        </section>
-    </article>
-    <footer class="article-footer">
-        <a href="../../index.html">← Back to home</a>
-    </footer>
+    </section>
+</article>
+
+
+
+
+<footer class="article-footer">
+    <div class="footer-line">
+        <span>O</span>
+    </div>
+    <p><a href="../../index.html">← Back to home</a></p>
+</footer>
+
 
 
 
@@ -100,6 +118,56 @@ document.addEventListener("DOMContentLoaded", (event) => {
     hljs.highlightAll();
 });
 </script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const progressBar = document.querySelector('.progress-bar');
+    const currentSubtitle = document.querySelector('.current-subtitle');
+    const headings = document.querySelectorAll('.main-article section h2, .main-article section h3');
+
+    function updateProgress() {
+        const scrollTop = window.scrollY;
+        const docHeight = document.body.scrollHeight - window.innerHeight;
+        const scrollPercent = (scrollTop / docHeight) * 100;
+        progressBar.style.height = scrollPercent + '%';
+
+        // Update current heading
+        let current = null;
+        headings.forEach(h => {
+            if (h.offsetTop - 50 <= scrollTop) {
+                current = h;
+            }
+        });
+        if (current) {
+            currentSubtitle.textContent = current.textContent;
+            currentSubtitle.dataset.targetId = current.id || '';
+        }
+    }
+
+    window.addEventListener('scroll', updateProgress);
+    updateProgress();
+
+    // Smooth scroll to section on click
+    currentSubtitle.addEventListener('click', () => {
+        const targetId = currentSubtitle.dataset.targetId;
+        if (targetId) {
+            const el = document.getElementById(targetId);
+            if (el) {
+                window.scrollTo({
+                    top: el.offsetTop,
+                    behavior: 'smooth'
+                });
+            }
+        }
+    });
+
+    // Ensure headings have IDs
+    headings.forEach((h, i) => {
+        if (!h.id) h.id = 'heading-' + i;
+    });
+});
+</script>
+
 
 </body>
 </html>
