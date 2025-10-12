@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Towards building a unified framework for feature selection with ranking functions - Ouaguenouni Mohamed</title>
+    <link rel="stylesheet" type="text/css" href="../../style.css">
+    <link rel="stylesheet" type="text/css" href="../../article.css">
+</head>
+<body>
+    <header class="site-header">
+        <h1><a href="../../index.html">Ouaguenouni Mohamed</a></h1>
+    </header>
+    <article class="main-article">
+        <h1 class="article-title">Towards building a unified framework for feature selection with ranking functions</h1>
+        <p class="article-meta">2 min read read · Published on Apr 7, 2021</p>
+        <section>
+<p>In the feature engineering of any data related project, we often have to filter the columns we will use to train our model manually; this filtering often relies on the insights we have on data and also on many criteria that can help us distinguish between the valuable attributes and the redundant or the meaningless ones, this process is known as the <strong>feature selection</strong>.</p>
+<p>They are many different ways of selecting attributes; the one we see today is known as the ranking feature selection. It’s the most basic way. It evaluates each attribute with a function, ranks them and keeps the best attributes.</p>
+<p>Although this ranking can be done with various methods, we will explore these method’s classification, see how this classification can help us organize them into a reliable and extensible framework, and use this framework to test and compare their behaviours.</p>
+<h2>Feature selection ranking methods</h2>
+<p>In feature selection, we can classify the quality measure of an attribute into five categories according to the classification made by Dash and Liu.</p>
+<ul>
+<li>Distance measures: These quantify the correlation between the attributes and the label.</li>
+<li>Information measures: These information theory measures are interested in the label’s entropy after splitting them according to a feature's value.</li>
+<li>Consistency measures: A feature is consistent if the same values are not associated with different values of the class.</li>
+<li>Dependency measures: Two variables are said to be independent if the probability of taking a specific value is not influenced by information on the other's value, so these measures work by quantifying the class's dependency on an attribute.</li>
+<li>Classification measures: These measures are time expensive; they evaluate the classification quality when taking a specific attribute.</li>
+</ul>
+<p>I will, of course, come back to each of these classes when presenting the measures I will consider.</p>
+        </section>
+    </article>
+    <footer class="article-footer">
+        <a href="../../index.html">← Back to home</a>
+    </footer>
+
+
+
+    <!-- KaTeX -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.24/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.24/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.24/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {
+        delimiters: [
+            {left:'$$', right:'$$', display:true},
+            {left:'$', right:'$', display:false}
+        ]
+    });"></script>
+
+<!-- Highlight.js -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/julia.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", (event) => {
+    hljs.highlightAll();
+});
+</script>
+
+</body>
+</html>
