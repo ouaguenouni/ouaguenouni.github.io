@@ -87,14 +87,14 @@ hr::before {
 .footer-line::after {
     content: '';
     flex: 1;
-    border-bottom: 1px solid #ccc; /* Faded gray line */
+    border-bottom: 1px solid #ccc;
     margin: 0 1rem;
 }
 
 .footer-line span {
     font-size: 1.5rem;
     font-weight: bold;
-    color: #ccc; /* Faded gray letter */
+    color: #ccc;
     font-family: 'ETBembo', serif;
     letter-spacing: 0.1em;
 }
@@ -114,7 +114,7 @@ hr::before {
 .progress-wrapper {
     display: flex;
     align-items: center;
-    pointer-events: auto; /* enable clicking */
+    pointer-events: auto;
 }
 
 .current-subtitle {

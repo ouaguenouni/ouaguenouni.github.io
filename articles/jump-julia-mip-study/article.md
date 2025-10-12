@@ -87,3 +87,96 @@ The first line will sample 100 points from the interval [-2, 15]; a part of this
 These lines will produce the following plot :
 
 ![plot_1](plot_1.webp)
+
+and now let’s print the polytope of constraints :
+
+```julia
+x_v = LinRange(-2,15,100)
+y_v = LinRange(-2,15,100)
+plot([0*x_v], [y_v],label ="Y Axis")
+plot!([x_v], [0*x_v],label ="X Axis")
+plot!([x_v], [0*x_v .+ 7.5], label ="Y=7.5")
+plot!([0*x_v .+ 10], [y_v],label ="X=10")
+plot!(title = "Polytop of Constraints")
+```
+
+![plot_2](plot_2.webp)
+
+The grey area I added to the plot represents the space's portion, which satisfies the problem's constraints.
+
+Now let’s focus on the objective function by looking at the vector (1,2), representing the gradient of the linear function x+2y.
+
+![plot_3](plot_3.webp)
+
+Each line I added represents a line of points with the same value. The further you go in the gradient direction, the bigger the objective value becomes.
+
+We can visually conclude that the best solution is at the intersection of the green and the pink line, so let’s see if we find this result using JuMP.
+
+The traditional add/import lines (we will use GLPK as a solver, but nothing is dependant on it).
+
+```julia
+Pkg.add("JuMP")
+Pkg.add("GLPK")
+using JuMP
+using GLPK
+```
+
+Now we declare our model and set the optimizer from GLPK:
+
+```julia
+prgrm = Model()
+set_optimizer(prgrm, GLPK.Optimizer)
+```
+
+We add the variables and precise their scope; by default, the variables are continuous :
+
+```julia
+@variable(prgrm, 0<=x)
+@variable(prgrm, 0<=y)
+```
+
+Now we create and add the two remaining constraints; the first two are in the scope of the variables;
+
+```julia
+@constraint(prgrm, x <= 10)
+@constraint(prgrm, y <= 7.5)
+```
+
+Finally, we add the objective function and precise sense of optimization, which will be, in this case, a maximization :
+
+```julia
+@objective(prgrm, Max, x+2y)
+```
+
+One interesting feature of JuMP and especially when using it with Jupyter-notebook is that we can print the program as easily as the content of any variable, which gives us the following output :
+
+![plot_4](plot_4.webp)
+
+And now solving it is as easy to say as it is to do :
+
+```julia
+optimize!(prgrm)
+```
+
+After that, we can access the values of the variables after optimization like this:
+
+```julia
+value.(x)
+value.(y)
+```
+
+And so one we can update our precedent plot to confirm our graphical resolution with the line :
+
+```julia
+plot!([value.(x)], [value.(y)], seriestype = :scatter, label="Optimum")
+```
+
+This gives us :
+
+![plot_5](plot_5.webp)
+
+## The Simplex principle
+
+Solving a linear program is done with the Simplex algorithm, which works because of a simple but important principle :
+
+> Optimizing a linear function on a polytope (or more generally a compact convex space) always leads us to a vertex (more generally an extreme point).

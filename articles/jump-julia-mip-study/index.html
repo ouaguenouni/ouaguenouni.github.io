@@ -23,7 +23,7 @@
 
 <article class="main-article">
     <h1 class="article-title">A comprehensive study of Mixed Integer Programming with JuMP on Julia (Part 1)</h1>
-    <p class="article-meta">3 min read read · Published on Mar 29, 2021</p>
+    <p class="article-meta">5 min read · Published on Mar 29, 2021</p>
     <section>
         <p>Some basics of Linear/Mixed Integer Programming &amp; How to use a heuristic callback inside a MIP solver.  </p>
 <h2>Introduction</h2>
@@ -82,10 +82,63 @@ plot!([x_v], [-2x_v .+ 20], label =&quot;Y= -2x + 20&quot;)
 </ul>
 <p>These lines will produce the following plot :</p>
 <p><img alt="plot_1" src="plot_1.webp" /></p>
+<p>and now let’s print the polytope of constraints :</p>
+<pre><code class="language-julia">x_v = LinRange(-2,15,100)
+y_v = LinRange(-2,15,100)
+plot([0*x_v], [y_v],label =&quot;Y Axis&quot;)
+plot!([x_v], [0*x_v],label =&quot;X Axis&quot;)
+plot!([x_v], [0*x_v .+ 7.5], label =&quot;Y=7.5&quot;)
+plot!([0*x_v .+ 10], [y_v],label =&quot;X=10&quot;)
+plot!(title = &quot;Polytop of Constraints&quot;)
+</code></pre>
+<p><img alt="plot_2" src="plot_2.webp" /></p>
+<p>The grey area I added to the plot represents the space's portion, which satisfies the problem's constraints.</p>
+<p>Now let’s focus on the objective function by looking at the vector (1,2), representing the gradient of the linear function x+2y.</p>
+<p><img alt="plot_3" src="plot_3.webp" /></p>
+<p>Each line I added represents a line of points with the same value. The further you go in the gradient direction, the bigger the objective value becomes.</p>
+<p>We can visually conclude that the best solution is at the intersection of the green and the pink line, so let’s see if we find this result using JuMP.</p>
+<p>The traditional add/import lines (we will use GLPK as a solver, but nothing is dependant on it).</p>
+<pre><code class="language-julia">Pkg.add(&quot;JuMP&quot;)
+Pkg.add(&quot;GLPK&quot;)
+using JuMP
+using GLPK
+</code></pre>
+<p>Now we declare our model and set the optimizer from GLPK:</p>
+<pre><code class="language-julia">prgrm = Model()
+set_optimizer(prgrm, GLPK.Optimizer)
+</code></pre>
+<p>We add the variables and precise their scope; by default, the variables are continuous :</p>
+<pre><code class="language-julia">@variable(prgrm, 0&lt;=x)
+@variable(prgrm, 0&lt;=y)
+</code></pre>
+<p>Now we create and add the two remaining constraints; the first two are in the scope of the variables;</p>
+<pre><code class="language-julia">@constraint(prgrm, x &lt;= 10)
+@constraint(prgrm, y &lt;= 7.5)
+</code></pre>
+<p>Finally, we add the objective function and precise sense of optimization, which will be, in this case, a maximization :</p>
+<pre><code class="language-julia">@objective(prgrm, Max, x+2y)
+</code></pre>
+<p>One interesting feature of JuMP and especially when using it with Jupyter-notebook is that we can print the program as easily as the content of any variable, which gives us the following output :</p>
+<p><img alt="plot_4" src="plot_4.webp" /></p>
+<p>And now solving it is as easy to say as it is to do :</p>
+<pre><code class="language-julia">optimize!(prgrm)
+</code></pre>
+<p>After that, we can access the values of the variables after optimization like this:</p>
+<pre><code class="language-julia">value.(x)
+value.(y)
+</code></pre>
+<p>And so one we can update our precedent plot to confirm our graphical resolution with the line :</p>
+<pre><code class="language-julia">plot!([value.(x)], [value.(y)], seriestype = :scatter, label=&quot;Optimum&quot;)
+</code></pre>
+<p>This gives us :</p>
+<p><img alt="plot_5" src="plot_5.webp" /></p>
+<h2>The Simplex principle</h2>
+<p>Solving a linear program is done with the Simplex algorithm, which works because of a simple but important principle :</p>
+<blockquote>
+<p>Optimizing a linear function on a polytope (or more generally a compact convex space) always leads us to a vertex (more generally an extreme point).</p>
+</blockquote>
     </section>
 </article>
-
-
 
 
 <footer class="article-footer">
@@ -95,10 +148,6 @@ plot!([x_v], [-2x_v .+ 20], label =&quot;Y= -2x + 20&quot;)
     <p><a href="../../index.html">← Back to home</a></p>
 </footer>
 
-
-
-
-    <!-- KaTeX -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.24/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.24/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.24/dist/contrib/auto-render.min.js"
@@ -109,7 +158,6 @@ plot!([x_v], [-2x_v .+ 20], label =&quot;Y= -2x + 20&quot;)
         ]
     });"></script>
 
-<!-- Highlight.js -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/julia.min.js"></script>
@@ -126,7 +174,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const headings = document.querySelectorAll('.main-article section h2, .main-article section h3');
     const articleTitle = document.querySelector('.main-article .article-title').textContent;
 
-    // Give headings IDs if they don’t have one
     headings.forEach((h, i) => {
         if (!h.id) h.id = 'heading-' + i;
     });
@@ -137,7 +184,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const scrollPercent = (scrollTop / docHeight) * 100;
         progressBar.style.height = scrollPercent + '%';
 
-        // Find the current heading
         let current = null;
         headings.forEach(h => {
             if (h.offsetTop - 50 <= scrollTop) {
@@ -149,7 +195,6 @@ document.addEventListener('DOMContentLoaded', () => {
             currentSubtitle.textContent = current.textContent;
             currentSubtitle.dataset.targetId = current.id;
         } else {
-            // Top of page: show article title
             currentSubtitle.textContent = articleTitle;
             currentSubtitle.dataset.targetId = document.querySelector('.main-article .article-title').id || '';
         }
@@ -158,7 +203,6 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('scroll', updateProgress);
     updateProgress();
 
-    // Smooth scroll to heading on click
     currentSubtitle.addEventListener('click', () => {
         const targetId = currentSubtitle.dataset.targetId;
         if (targetId) {
@@ -172,7 +216,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Make sure article title has an ID for clicking
     const titleEl = document.querySelector('.main-article .article-title');
     if (!titleEl.id) titleEl.id = 'article-title';
 });

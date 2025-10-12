@@ -23,7 +23,7 @@
 
 <article class="main-article">
     <h1 class="article-title">Towards building a unified framework for feature selection with ranking functions</h1>
-    <p class="article-meta">2 min read read · Published on Apr 7, 2021</p>
+    <p class="article-meta">2 min read · Published on Apr 7, 2021</p>
     <section>
         <p>In the feature engineering of any data related project, we often have to filter the columns we will use to train our model manually; this filtering often relies on the insights we have on data and also on many criteria that can help us distinguish between the valuable attributes and the redundant or the meaningless ones, this process is known as the <strong>feature selection</strong>.</p>
 <p>They are many different ways of selecting attributes; the one we see today is known as the ranking feature selection. It’s the most basic way. It evaluates each attribute with a function, ranks them and keeps the best attributes.</p>
@@ -42,8 +42,6 @@
 </article>
 
 
-
-
 <footer class="article-footer">
     <div class="footer-line">
         <span>O</span>
@@ -51,10 +49,6 @@
     <p><a href="../../index.html">← Back to home</a></p>
 </footer>
 
-
-
-
-    <!-- KaTeX -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.24/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.24/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.24/dist/contrib/auto-render.min.js"
@@ -65,7 +59,6 @@
         ]
     });"></script>
 
-<!-- Highlight.js -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/julia.min.js"></script>
@@ -82,7 +75,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const headings = document.querySelectorAll('.main-article section h2, .main-article section h3');
     const articleTitle = document.querySelector('.main-article .article-title').textContent;
 
-    // Give headings IDs if they don’t have one
     headings.forEach((h, i) => {
         if (!h.id) h.id = 'heading-' + i;
     });
@@ -93,7 +85,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const scrollPercent = (scrollTop / docHeight) * 100;
         progressBar.style.height = scrollPercent + '%';
 
-        // Find the current heading
         let current = null;
         headings.forEach(h => {
             if (h.offsetTop - 50 <= scrollTop) {
@@ -105,7 +96,6 @@ document.addEventListener('DOMContentLoaded', () => {
             currentSubtitle.textContent = current.textContent;
             currentSubtitle.dataset.targetId = current.id;
         } else {
-            // Top of page: show article title
             currentSubtitle.textContent = articleTitle;
             currentSubtitle.dataset.targetId = document.querySelector('.main-article .article-title').id || '';
         }
@@ -114,7 +104,6 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('scroll', updateProgress);
     updateProgress();
 
-    // Smooth scroll to heading on click
     currentSubtitle.addEventListener('click', () => {
         const targetId = currentSubtitle.dataset.targetId;
         if (targetId) {
@@ -128,7 +117,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Make sure article title has an ID for clicking
     const titleEl = document.querySelector('.main-article .article-title');
     if (!titleEl.id) titleEl.id = 'article-title';
 });

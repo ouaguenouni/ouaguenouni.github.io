@@ -170,7 +170,7 @@ p {
 @media (max-width: 768px) {
     body {
         padding: 5%;
-        font-size: 16px;
+        font-size: 20px;
     }
 
     .header-section {
@@ -204,5 +204,22 @@ p {
     .article-image {
         order: -1;
         height: 150px;
+    }
+
+    .article-item .article-image img {
+        mask-image: linear-gradient(to top, transparent 0%, black 40%);
+        -webkit-mask-image: linear-gradient(to top, transparent 0%, black 40%);
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+    }
+
+    .article-item {
+        gap: 0rem;
+    }
+
+    .article-title {
+        margin-top: 0.5em;
     }
 }
