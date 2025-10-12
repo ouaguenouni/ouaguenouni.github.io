@@ -14,16 +14,19 @@
 
 <aside class="reading-sidebar">
     <div class="progress-wrapper">
+        <div class="previous-subtitle"></div>
         <div class="current-subtitle"></div>
+        <div class="next-subtitle"></div>
         <div class="progress-bar-container">
             <div class="progress-bar"></div>
         </div>
     </div>
 </aside>
 
+
 <article class="main-article">
     <h1 class="article-title">A comprehensive study of Mixed Integer Programming with JuMP on Julia (Part 1)</h1>
-    <p class="article-meta">5 min read · Published on Mar 29, 2021</p>
+    <p class="article-meta">6 min read · Published on Mar 29, 2021</p>
     <section>
         <p>Some basics of Linear/Mixed Integer Programming &amp; How to use a heuristic callback inside a MIP solver.  </p>
 <h2>Introduction</h2>
@@ -137,6 +140,27 @@ value.(y)
 <blockquote>
 <p>Optimizing a linear function on a polytope (or more generally a compact convex space) always leads us to a vertex (more generally an extreme point).</p>
 </blockquote>
+<p>The simplex algorithm is a local search procedure that walks from a vertex to another to increase the objective function's value until we reach a vertex where every neighbour has an inferior value.</p>
+<p>Since the vertex where the optimization ends depends only on the objective function, we can try to find an objective function for each polytope vertex.</p>
+<p>For example, in the following polytope (Note that we added a constraint to increase the number of vertex of the polytope)</p>
+<p><img alt="plot_6" src="plot_6.webp" /></p>
+<p>We can obtain any of the vertices by optimizing in different directions.</p>
+<p><img alt="plot_7" src="plot_7.webp" /></p>
+<hr />
+<h2>From Continuous to Integer variables: The Branch-and-Bound Method</h2>
+<p>Even if it’s not totally how a solver works, the first thing you have to understand to assimilate how Mixed Integer Programming works is the Branch and Bound method.</p>
+<p>Let’s take the precedent example but restricting our variables to integers; the feasible region is no longer the grey area inside the polytope. Still, we can compute the feasible integer points, which give us the following figure :</p>
+<p><img alt="plot_8" src="plot_8.webp" /></p>
+<p>In grey, we can see the feasible solutions, and the first thing we can notice is that some vertices are in the integer solutions and some not, and this distinction is crucial, but we will get back to this point later.</p>
+<p>The branch and bound procedure create a tree called “enumeration tree”; in each node, it constructs a mixed-integer program and solves its “linear relaxation” with the simplex algorithm, which means the same program after ignoring integrality constraint, from this point on, there are two possible outcomes :</p>
+<ul>
+<li>The solution is integer feasible, and therefore we stop the resolution.</li>
+</ul>
+<p>This can happen if the polytope of constraints has integer vertices. For instance, if we solve the LP relaxation of the precedent mixed-integer program with the objective function 2x+y, we will find (10,3), which is an integer solution.</p>
+<ul>
+<li>The solution is “fractional”, and therefore we need to branch.</li>
+</ul>
+<p>And this will happen in the precedent polytope if we try to optimize the function x+2y,</p>
     </section>
 </article>
 
@@ -170,13 +194,18 @@ document.addEventListener("DOMContentLoaded", (event) => {
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const progressBar = document.querySelector('.progress-bar');
+    const previousSubtitle = document.querySelector('.previous-subtitle');
     const currentSubtitle = document.querySelector('.current-subtitle');
+    const nextSubtitle = document.querySelector('.next-subtitle');
     const headings = document.querySelectorAll('.main-article section h2, .main-article section h3');
-    const articleTitle = document.querySelector('.main-article .article-title').textContent;
+    const articleTitleEl = document.querySelector('.main-article .article-title');
+    const articleTitle = articleTitleEl.textContent;
 
+    // Ensure all headings have an id
     headings.forEach((h, i) => {
         if (!h.id) h.id = 'heading-' + i;
     });
+    if (!articleTitleEl.id) articleTitleEl.id = 'article-title';
 
     function updateProgress() {
         const scrollTop = window.scrollY;
@@ -184,42 +213,68 @@ document.addEventListener('DOMContentLoaded', () => {
         const scrollPercent = (scrollTop / docHeight) * 100;
         progressBar.style.height = scrollPercent + '%';
 
-        let current = null;
-        headings.forEach(h => {
-            if (h.offsetTop - 50 <= scrollTop) {
-                current = h;
-            }
+        // Determine current heading
+        let currentIndex = -1;
+        headings.forEach((h, i) => {
+            if (h.offsetTop - 50 <= scrollTop) currentIndex = i;
         });
+
+        // Current heading
+        let current = currentIndex >= 0 ? headings[currentIndex] : null;
 
         if (current) {
             currentSubtitle.textContent = current.textContent;
             currentSubtitle.dataset.targetId = current.id;
+
+            previousSubtitle.textContent = headings[currentIndex - 1]?.textContent || '';
+            previousSubtitle.dataset.targetId = headings[currentIndex - 1]?.id || '';
+
+            nextSubtitle.textContent = headings[currentIndex + 1]?.textContent || '';
+            nextSubtitle.dataset.targetId = headings[currentIndex + 1]?.id || '';
         } else {
+            // Top of article: no current heading yet
             currentSubtitle.textContent = articleTitle;
-            currentSubtitle.dataset.targetId = document.querySelector('.main-article .article-title').id || '';
+            currentSubtitle.dataset.targetId = articleTitleEl.id;
+
+            previousSubtitle.textContent = '';
+            previousSubtitle.dataset.targetId = '';
+
+            nextSubtitle.textContent = headings[0]?.textContent || '';
+            nextSubtitle.dataset.targetId = headings[0]?.id || '';
         }
     }
 
-    window.addEventListener('scroll', updateProgress);
-    updateProgress();
+    function scrollToSubtitle(el) {
+        const targetId = el.dataset.targetId;
+        if (!targetId) return;
+        const target = document.getElementById(targetId);
+        if (!target) return;
 
-    currentSubtitle.addEventListener('click', () => {
-        const targetId = currentSubtitle.dataset.targetId;
-        if (targetId) {
-            const el = document.getElementById(targetId);
-            if (el) {
-                window.scrollTo({
-                    top: el.offsetTop,
-                    behavior: 'smooth'
-                });
+        // Smooth scroll
+        window.scrollTo({
+            top: target.offsetTop,
+            behavior: 'smooth'
+        });
+
+        // Continuously check scroll position until it reaches target
+        const onScroll = () => {
+            const scrollTop = window.scrollY;
+            if (Math.abs(scrollTop - target.offsetTop) < 2) {
+                updateProgress();
+                window.removeEventListener('scroll', onScroll);
             }
-        }
+        };
+        window.addEventListener('scroll', onScroll);
+    }
+
+    // Add click events
+    [previousSubtitle, currentSubtitle, nextSubtitle].forEach(el => {
+        el.addEventListener('click', () => scrollToSubtitle(el));
     });
 
-    const titleEl = document.querySelector('.main-article .article-title');
-    if (!titleEl.id) titleEl.id = 'article-title';
+    window.addEventListener('scroll', updateProgress);
+    updateProgress();
 });
-
 </script>
 
 

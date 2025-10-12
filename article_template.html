@@ -14,12 +14,15 @@
 
 <aside class="reading-sidebar">
     <div class="progress-wrapper">
+        <div class="previous-subtitle"></div>
         <div class="current-subtitle"></div>
+        <div class="next-subtitle"></div>
         <div class="progress-bar-container">
             <div class="progress-bar"></div>
         </div>
     </div>
 </aside>
+
 
 <article class="main-article">
     <h1 class="article-title">{{TITLE}}</h1>
@@ -59,13 +62,18 @@ document.addEventListener("DOMContentLoaded", (event) => {
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const progressBar = document.querySelector('.progress-bar');
+    const previousSubtitle = document.querySelector('.previous-subtitle');
     const currentSubtitle = document.querySelector('.current-subtitle');
+    const nextSubtitle = document.querySelector('.next-subtitle');
     const headings = document.querySelectorAll('.main-article section h2, .main-article section h3');
-    const articleTitle = document.querySelector('.main-article .article-title').textContent;
+    const articleTitleEl = document.querySelector('.main-article .article-title');
+    const articleTitle = articleTitleEl.textContent;
 
+    // Ensure all headings have an id
     headings.forEach((h, i) => {
         if (!h.id) h.id = 'heading-' + i;
     });
+    if (!articleTitleEl.id) articleTitleEl.id = 'article-title';
 
     function updateProgress() {
         const scrollTop = window.scrollY;
@@ -73,42 +81,68 @@ document.addEventListener('DOMContentLoaded', () => {
         const scrollPercent = (scrollTop / docHeight) * 100;
         progressBar.style.height = scrollPercent + '%';
 
-        let current = null;
-        headings.forEach(h => {
-            if (h.offsetTop - 50 <= scrollTop) {
-                current = h;
-            }
+        // Determine current heading
+        let currentIndex = -1;
+        headings.forEach((h, i) => {
+            if (h.offsetTop - 50 <= scrollTop) currentIndex = i;
         });
+
+        // Current heading
+        let current = currentIndex >= 0 ? headings[currentIndex] : null;
 
         if (current) {
             currentSubtitle.textContent = current.textContent;
             currentSubtitle.dataset.targetId = current.id;
+
+            previousSubtitle.textContent = headings[currentIndex - 1]?.textContent || '';
+            previousSubtitle.dataset.targetId = headings[currentIndex - 1]?.id || '';
+
+            nextSubtitle.textContent = headings[currentIndex + 1]?.textContent || '';
+            nextSubtitle.dataset.targetId = headings[currentIndex + 1]?.id || '';
         } else {
+            // Top of article: no current heading yet
             currentSubtitle.textContent = articleTitle;
-            currentSubtitle.dataset.targetId = document.querySelector('.main-article .article-title').id || '';
+            currentSubtitle.dataset.targetId = articleTitleEl.id;
+
+            previousSubtitle.textContent = '';
+            previousSubtitle.dataset.targetId = '';
+
+            nextSubtitle.textContent = headings[0]?.textContent || '';
+            nextSubtitle.dataset.targetId = headings[0]?.id || '';
         }
     }
 
-    window.addEventListener('scroll', updateProgress);
-    updateProgress();
+    function scrollToSubtitle(el) {
+        const targetId = el.dataset.targetId;
+        if (!targetId) return;
+        const target = document.getElementById(targetId);
+        if (!target) return;
 
-    currentSubtitle.addEventListener('click', () => {
-        const targetId = currentSubtitle.dataset.targetId;
-        if (targetId) {
-            const el = document.getElementById(targetId);
-            if (el) {
-                window.scrollTo({
-                    top: el.offsetTop,
-                    behavior: 'smooth'
-                });
+        // Smooth scroll
+        window.scrollTo({
+            top: target.offsetTop,
+            behavior: 'smooth'
+        });
+
+        // Continuously check scroll position until it reaches target
+        const onScroll = () => {
+            const scrollTop = window.scrollY;
+            if (Math.abs(scrollTop - target.offsetTop) < 2) {
+                updateProgress();
+                window.removeEventListener('scroll', onScroll);
             }
-        }
+        };
+        window.addEventListener('scroll', onScroll);
+    }
+
+    // Add click events
+    [previousSubtitle, currentSubtitle, nextSubtitle].forEach(el => {
+        el.addEventListener('click', () => scrollToSubtitle(el));
     });
 
-    const titleEl = document.querySelector('.main-article .article-title');
-    if (!titleEl.id) titleEl.id = 'article-title';
+    window.addEventListener('scroll', updateProgress);
+    updateProgress();
 });
-
 </script>
 
 
