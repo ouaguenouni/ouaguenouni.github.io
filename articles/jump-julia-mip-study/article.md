@@ -88,6 +88,8 @@ These lines will produce the following plot :
 
 ![plot_1](plot_1.webp)
 
+:::html test_plot.html :::
+
 and now let’s print the polytope of constraints :
 
 ```julia
