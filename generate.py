@@ -7,35 +7,26 @@ import readtime
 from PIL import Image, ImageDraw, ImageFont
 
 def generate_og_thumbnail(output_path, title, background_path=None, width=1200, height=630, font_path=None):
-    """
-    Generate an Open Graph thumbnail using a background image with a dark overlay and title text.
-    """
     if background_path and Path(background_path).exists():
-        # Open and resize background image
         bg = Image.open(background_path).convert("RGB")
         bg = bg.resize((width, height))
         img = bg
     else:
-        # Fallback to solid color background
         img = Image.new('RGB', (width, height), color=(40, 40, 40))
 
-    # Create draw object
     draw = ImageDraw.Draw(img)
 
-    # Add dark overlay
-    overlay = Image.new('RGBA', (width, height), (0, 0, 0, 150))  # 150 = alpha
+    overlay = Image.new('RGBA', (width, height), (0, 0, 0, 150))
     img = Image.alpha_composite(img.convert('RGBA'), overlay)
 
-    # Prepare font
     if font_path is None:
-        font_path = "et-book.ttf"  # Replace with your font
+        font_path = "et-book.ttf"
     try:
         font_size = 80
         font = ImageFont.truetype(font_path, font_size)
     except:
         font = ImageFont.load_default()
 
-    # Wrap text
     words = title.split()
     lines = []
     current_line = ""
@@ -50,12 +41,10 @@ def generate_og_thumbnail(output_path, title, background_path=None, width=1200, 
             current_line = word
     lines.append(current_line)
 
-    # Center text vertically
     total_text_height = sum(draw.textbbox((0, 0), line, font=font)[3] - draw.textbbox((0, 0), line, font=font)[1] for line in lines)
     y_text = (height - total_text_height) // 2
 
-    # Draw text (white)
-    draw = ImageDraw.Draw(img)  # recreate draw after alpha_composite
+    draw = ImageDraw.Draw(img)
     for line in lines:
         bbox = draw.textbbox((0, 0), line, font=font)
         text_width = bbox[2] - bbox[0]
@@ -66,8 +55,6 @@ def generate_og_thumbnail(output_path, title, background_path=None, width=1200, 
 
     img.convert('RGB').save(output_path)
     return output_path
-
-
 
 def convert_md_to_html(md_file, output_file=None, template_file='article_template.html'):
     with open(md_file, 'r', encoding='utf-8') as f:
@@ -101,6 +88,31 @@ def convert_md_to_html(md_file, output_file=None, template_file='article_templat
         if thumbnail_match:
             thumbnail = thumbnail_match.group(1).strip()
 
+    # Store for embedded HTML files
+    html_embed_store = []
+
+    def _stash_html_embed(m):
+        file_path = m.group(1).strip()
+        idx = len(html_embed_store)
+
+        # Resolve path relative to markdown file
+        md_dir = Path(md_file).parent
+        full_path = md_dir / file_path
+
+        if full_path.exists():
+            with open(full_path, 'r', encoding='utf-8') as f:
+                html_content = f.read()
+            html_embed_store.append(html_content)
+        else:
+            print(f"⚠️  Warning: HTML file not found: {full_path}")
+            html_embed_store.append(f'<p style="color: red;">Error: HTML file not found: {file_path}</p>')
+
+        return f"\n\n{{{{HTMLEMBED_{idx}}}}}\n\n"
+
+    # Extract HTML embeds before processing math
+    # Syntax: :::html path/to/file.html :::
+    content = re.sub(r':::html\s+(.+?)\s+:::', _stash_html_embed, content, flags=re.DOTALL)
+
     block_store = []
     inline_store = []
 
@@ -124,6 +136,10 @@ def convert_md_to_html(md_file, output_file=None, template_file='article_templat
         }
     )
     article_content = md.convert(content)
+
+    # Restore HTML embeds first (they should not be processed by markdown)
+    for i, html_content in enumerate(html_embed_store):
+        article_content = article_content.replace(f"{{{{HTMLEMBED_{i}}}}}", html_content)
 
     for i, tex in enumerate(block_store):
         article_content = article_content.replace(f"{{{{MATHBLOCK_{i}}}}}", f"$$\n{tex}\n$$")
