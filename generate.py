@@ -56,6 +56,27 @@ def generate_og_thumbnail(output_path, title, background_path=None, width=1200, 
     img.convert('RGB').save(output_path)
     return output_path
 
+def isolate_html_scripts(html_content):
+    def wrap_script(match):
+        opening_tag = match.group(1)
+        script_content = match.group(2)
+        closing_tag = match.group(3)
+
+        if 'src=' in opening_tag:
+            return match.group(0)
+
+        if 'type="module"' in opening_tag or "type='module'" in opening_tag:
+            return match.group(0)
+
+        wrapped_content = f"\n(function() {{\n{script_content}\n}})();\n"
+
+        return f"{opening_tag}{wrapped_content}{closing_tag}"
+
+    pattern = r'(<script[^>]*>)(.*?)(</script>)'
+    isolated_html = re.sub(pattern, wrap_script, html_content, flags=re.DOTALL | re.IGNORECASE)
+
+    return isolated_html
+
 def convert_md_to_html(md_file, output_file=None, template_file='article_template.html'):
     with open(md_file, 'r', encoding='utf-8') as f:
         content = f.read()
@@ -88,29 +109,29 @@ def convert_md_to_html(md_file, output_file=None, template_file='article_templat
         if thumbnail_match:
             thumbnail = thumbnail_match.group(1).strip()
 
-    # Store for embedded HTML files
     html_embed_store = []
 
     def _stash_html_embed(m):
         file_path = m.group(1).strip()
         idx = len(html_embed_store)
 
-        # Resolve path relative to markdown file
         md_dir = Path(md_file).parent
         full_path = md_dir / file_path
 
         if full_path.exists():
             with open(full_path, 'r', encoding='utf-8') as f:
                 html_content = f.read()
-            html_embed_store.append(html_content)
+
+            html_content = isolate_html_scripts(html_content)
+
+            wrapped_html = f'<div class="embedded-html" id="embed-{idx}">\n{html_content}\n</div>'
+            html_embed_store.append(wrapped_html)
         else:
             print(f"⚠️  Warning: HTML file not found: {full_path}")
             html_embed_store.append(f'<p style="color: red;">Error: HTML file not found: {file_path}</p>')
 
         return f"\n\n{{{{HTMLEMBED_{idx}}}}}\n\n"
 
-    # Extract HTML embeds before processing math
-    # Syntax: :::html path/to/file.html :::
     content = re.sub(r':::html\s+(.+?)\s+:::', _stash_html_embed, content, flags=re.DOTALL)
 
     block_store = []
@@ -137,7 +158,6 @@ def convert_md_to_html(md_file, output_file=None, template_file='article_templat
     )
     article_content = md.convert(content)
 
-    # Restore HTML embeds first (they should not be processed by markdown)
     for i, html_content in enumerate(html_embed_store):
         article_content = article_content.replace(f"{{{{HTMLEMBED_{i}}}}}", html_content)
 
