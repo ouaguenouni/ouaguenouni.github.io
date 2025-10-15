@@ -224,3 +224,43 @@ p {
         margin-top: 0.5em;
     }
 }
+
+.article-footer {
+    margin-top: 4rem;
+    padding-top: 2rem;
+}
+
+.article-footer a {
+    color: #111;
+    text-decoration: none;
+    border-bottom: 1px solid #ccc;
+    transition: border-color 0.2s;
+}
+
+.article-footer a:hover {
+    border-bottom-color: #111;
+}
+
+.footer-line {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 3rem 0 2rem 0;
+    user-select: none;
+}
+
+.footer-line::before,
+.footer-line::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid #ccc;
+    margin: 0 1rem;
+}
+
+.footer-line span {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #ccc;
+    font-family: 'ETBembo', serif;
+    letter-spacing: 0.1em;
+}
