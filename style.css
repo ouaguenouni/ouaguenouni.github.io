@@ -264,3 +264,9 @@ p {
     font-family: 'ETBembo', serif;
     letter-spacing: 0.1em;
 }
+
+.article-meta {
+    font-style: italic;
+    color: #666;
+    font-size: 1.1rem;
+}
