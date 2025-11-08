@@ -1,0 +1,242 @@
+<style>
+.point {
+    cursor: grab;
+}
+.point:active {
+    cursor: grabbing;
+}
+</style>
+<div>
+    <span>Type de distance:</span>
+    <input type="radio" id="euclidian_distance" name="distance" checked/>
+    <label for="euclidian_distance">Euclidienne</label>
+    <input type="radio" id="manhattan_distance" name="distance"/>
+    <label for="manhattan_distance">Manhattan</label>
+</div>
+
+<div id="chart"></div>
+
+<script>
+const gridUnit = 1;
+const gridExtent = 5;
+
+const margin = {top: 20, right: 30, bottom: 40, left: 50};
+const width = 720 - margin.left - margin.right;
+const height = 500 - margin.top - margin.bottom;
+const aspectRatio = width / height;
+
+const yRange = gridExtent;
+const xRange = yRange * aspectRatio;
+
+const xScale = d3.scaleLinear().domain([-xRange, xRange]).range([0, width]);
+const yScale = d3.scaleLinear().domain([-yRange, yRange]).range([height, 0]);
+
+const svg = d3.select("#chart")
+    .append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+    .attr("transform", `translate(${margin.left},${margin.top})`);
+
+let points = [
+    {x: 3, y: 5},
+    {x: -2, y: -1}
+];
+
+let distanceType = 'euclidean';
+
+const lineGroup = svg.append("g");
+const linePath = lineGroup.append("line")
+    .attr("stroke", "#4a90e2")
+    .attr("stroke-width", 5);
+const manhattanPathGroup = svg.append("g").attr("class", "manhattan-path");
+
+const strokeCircles = svg.append("g").attr("class", "stroke-circles");
+
+function integerTicksForX() {
+    const start = Math.ceil(-xRange);
+    const end = Math.floor(xRange);
+    return d3.range(start, end + 1, gridUnit);
+}
+function integerTicksForY() {
+    const start = Math.ceil(-yRange);
+    const end = Math.floor(yRange);
+    return d3.range(start, end + 1, gridUnit);
+}
+
+const xTicks = integerTicksForX();
+const yTicks = integerTicksForY();
+
+svg.append("g")
+    .attr("transform", `translate(0,${yScale(0)})`)
+    .call(
+        d3.axisBottom(xScale)
+            .tickValues(xTicks)
+            .tickFormat(d3.format("d"))
+    );
+
+svg.append("g")
+    .attr("transform", `translate(${xScale(0)},0)`)
+    .call(
+        d3.axisLeft(yScale)
+            .tickValues(yTicks)
+            .tickFormat(d3.format("d"))
+    );
+
+svg.append("g")
+    .attr("class", "grid")
+    .attr("opacity", 0.12)
+    .call(
+        d3.axisLeft(yScale)
+            .tickSize(-width)
+            .tickValues(yTicks)
+            .tickFormat("")
+    );
+
+svg.append("g")
+    .attr("class", "grid")
+    .attr("transform", `translate(0,${height})`)
+    .attr("opacity", 0.12)
+    .call(
+        d3.axisBottom(xScale)
+            .tickSize(-height)
+            .tickValues(xTicks)
+            .tickFormat("")
+    );
+
+const distanceLabel = svg.append("text")
+    .attr("class", "distance-label")
+    .attr("fill", "#333")
+    .attr("text-anchor", "middle");
+
+lineGroup.node().appendChild(distanceLabel.node());
+
+function updateLine() {
+    const dx = points[1].x - points[0].x;
+    const dy = points[1].y - points[0].y;
+    let distance;
+
+    if (distanceType === 'euclidean') {
+        distance = Math.sqrt(dx * dx + dy * dy);
+        linePath.style("display", "block");
+        manhattanPathGroup.selectAll("*").remove();
+        linePath
+            .attr("x1", xScale(points[0].x))
+            .attr("y1", yScale(points[0].y))
+            .attr("x2", xScale(points[1].x))
+            .attr("y2", yScale(points[1].y));
+    } else {
+        distance = Math.abs(dx) + Math.abs(dy);
+        linePath.style("display", "none");
+        manhattanPathGroup.selectAll("*").remove();
+
+        const xDir = dx > 0 ? gridUnit : (dx < 0 ? -gridUnit : 0);
+        const yDir = dy > 0 ? gridUnit : (dy < 0 ? -gridUnit : 0);
+
+        let currentX = points[0].x;
+        let currentY = points[0].y;
+
+        const xSteps = Math.round(Math.abs(dx / gridUnit));
+        const ySteps = Math.round(Math.abs(dy / gridUnit));
+        const steps = Math.max(xSteps, ySteps);
+
+        const stairPoints = [{x: currentX, y: currentY}];
+
+        for (let i = 0; i < steps; i++) {
+            if (i < xSteps) {
+                currentX += xDir;
+                stairPoints.push({x: currentX, y: currentY});
+            }
+            if (i < ySteps) {
+                currentY += yDir;
+                stairPoints.push({x: currentX, y: currentY});
+            }
+        }
+
+        const lineGenerator = d3.line()
+            .x(d => xScale(d.x))
+            .y(d => yScale(d.y));
+
+        manhattanPathGroup.append("path")
+            .datum(stairPoints)
+            .attr("d", lineGenerator)
+            .attr("fill", "none")
+            .attr("stroke", "#4a90e2")
+            .attr("stroke-width", 5);
+    }
+
+    const midX = (xScale(points[0].x) + xScale(points[1].x)) / 2;
+    const midY = (yScale(points[0].y) + yScale(points[1].y)) / 2;
+
+    distanceLabel
+        .attr("x", midX)
+        .attr("y", midY - 20)
+        .text(`d = ${distance.toFixed(2)}`);
+
+    svg.node().appendChild(distanceLabel.node());
+}
+
+const drag = d3.drag()
+    .on("drag", function(event, d) {
+        const svgElement = this.ownerSVGElement;
+        const rect = svgElement.getBoundingClientRect();
+        const x = xScale.invert(event.sourceEvent.clientX - rect.left - margin.left);
+        const y = yScale.invert(event.sourceEvent.clientY - rect.top - margin.top);
+
+        d.x = Math.round(x / gridUnit) * gridUnit;
+        d.y = Math.round(y / gridUnit) * gridUnit;
+
+        d3.select(this)
+            .attr("cx", xScale(d.x))
+            .attr("cy", yScale(d.y));
+
+        const index = points.indexOf(d);
+        strokeCircles.selectAll("circle")
+            .filter((_, i) => i === index)
+            .attr("cx", xScale(d.x))
+            .attr("cy", yScale(d.y));
+
+        updateLine();
+    });
+
+strokeCircles.selectAll("circle")
+    .data(points)
+    .enter()
+    .append("circle")
+    .attr("cx", d => xScale(d.x))
+    .attr("cy", d => yScale(d.y))
+    .attr("r", 11)
+    .attr("fill", "white")
+    .attr("stroke", "white")
+    .attr("stroke-width", 5)
+    .style("pointer-events", "none");
+
+svg.selectAll(".point")
+    .data(points)
+    .enter()
+    .append("circle")
+    .attr("class", "point")
+    .attr("cx", d => xScale(d.x))
+    .attr("cy", d => yScale(d.y))
+    .attr("r", 10)
+    .attr("fill", "#e74c3c")
+    .call(drag);
+
+document.getElementById('euclidian_distance').addEventListener('change', function() {
+    if (this.checked) {
+        distanceType = 'euclidean';
+        updateLine();
+    }
+});
+
+document.getElementById('manhattan_distance').addEventListener('change', function() {
+    if (this.checked) {
+        distanceType = 'manhattan';
+        updateLine();
+    }
+});
+
+document.getElementById('manhattan_distance').checked = true;
+distanceType = 'manhattan';
+updateLine();
+</script>

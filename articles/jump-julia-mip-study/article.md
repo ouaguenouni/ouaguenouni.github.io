@@ -1,6 +1,6 @@
 ---
 title: A comprehensive study of Mixed Integer Programming with JuMP on Julia (Part 1)
-date: Mar 29, 2021
+date: 29/03/2021
 description: Some basics of Linear/Mixed Integer Programming & How to use a heuristic callback inside a MIP solver.
 ---
 

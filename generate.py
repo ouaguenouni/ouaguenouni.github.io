@@ -3,8 +3,29 @@ import re
 from pathlib import Path
 import os
 import readtime
+from datetime import datetime
+import time
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
 
 from PIL import Image, ImageDraw, ImageFont
+
+def parse_date(date_str):
+    try:
+        return datetime.strptime(date_str.strip(), '%d/%m/%Y')
+    except ValueError:
+        print(f"⚠️  Warning: Could not parse date '{date_str}', expected DD/MM/YYYY format")
+        return datetime(1900, 1, 1)
+
+def format_date_display(date_str):
+    try:
+        dt = datetime.strptime(date_str.strip(), '%d/%m/%Y')
+        day = dt.day
+        month = dt.strftime('%B')
+        year = dt.year
+        return f'{day} {month} {year}'
+    except:
+        return date_str
 
 def generate_og_thumbnail(output_path, title, background_path=None, width=1200, height=630, font_path=None):
     if background_path and Path(background_path).exists():
@@ -170,7 +191,7 @@ def convert_md_to_html(md_file, output_file=None, template_file='article_templat
         template = f.read()
 
     html_output = template.replace('{{TITLE}}', title)
-    html_output = html_output.replace('{{DATE}}', date)
+    html_output = html_output.replace('{{DATE}}', format_date_display(date))
     html_output = html_output.replace('{{CONTENT}}', article_content)
 
     time_read = readtime.of_text(content)
@@ -201,7 +222,7 @@ def convert_md_to_html(md_file, output_file=None, template_file='article_templat
 
     print(f"✓ Converted {md_file} to {output_file}")
     print(f"  Title: {title}")
-    print(f"  Date: {date}")
+    print(f"  Date: {format_date_display(date)}")
     print()
     return {
         'title': title,
@@ -234,7 +255,7 @@ def generate_all_articles(articles_dir='articles', article_template='article_tem
         template = f.read()
 
     articles_html = ""
-    for art in sorted(articles_info, key=lambda x: x['date'], reverse=True):
+    for art in sorted(articles_info, key=lambda x: parse_date(x['date']), reverse=True):
         thumbnail_html = f'<img src="{art["thumbnail"]}" alt="Article image">' if art["thumbnail"] else ""
         articles_html += f"""
         <article class="article-item">
@@ -256,5 +277,74 @@ def generate_all_articles(articles_dir='articles', article_template='article_tem
     print(f"✓ Generated main index: {main_index}")
 
 
+class ArticleEventHandler(FileSystemEventHandler):
+    def __init__(self, articles_dir='articles', article_template='article_template.html',
+                 index_template='index_template.html', main_index='index.html'):
+        self.articles_dir = articles_dir
+        self.article_template = article_template
+        self.index_template = index_template
+        self.main_index = main_index
+        self.last_regenerate = 0
+        self.debounce_seconds = 1
+
+    def on_modified(self, event):
+        if event.is_directory:
+            return
+
+        file_path = Path(event.src_path)
+
+        if (file_path.name == 'article.md' or
+            file_path.name in [self.article_template, self.index_template] or
+            file_path.suffix in ['.html', '.png'] and self.articles_dir in str(file_path)):
+
+            current_time = time.time()
+            if current_time - self.last_regenerate < self.debounce_seconds:
+                return
+
+            self.last_regenerate = current_time
+            print(f"\n🔄 Change detected in {file_path.name}, regenerating...")
+            try:
+                generate_all_articles(
+                    articles_dir=self.articles_dir,
+                    article_template=self.article_template,
+                    index_template=self.index_template,
+                    main_index=self.main_index
+                )
+            except Exception as e:
+                print(f"❌ Error during regeneration: {e}")
+
+
+def watch_and_generate(articles_dir='articles', article_template='article_template.html',
+                      index_template='index_template.html', main_index='index.html'):
+
+    print("🚀 Starting article generator with file watching...")
+    print(f"📁 Watching directory: {articles_dir}")
+    print("📝 Press Ctrl+C to stop\n")
+
+    generate_all_articles(articles_dir, article_template, index_template, main_index)
+
+    event_handler = ArticleEventHandler(articles_dir, article_template, index_template, main_index)
+    observer = Observer()
+
+    observer.schedule(event_handler, articles_dir, recursive=True)
+    observer.schedule(event_handler, '.', recursive=False)
+
+    observer.start()
+
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        print("\n👋 Stopping file watcher...")
+        observer.stop()
+
+    observer.join()
+
+
 if __name__ == "__main__":
-    generate_all_articles()
+    import sys
+
+    if len(sys.argv) > 1 and sys.argv[1] == '--watch':
+        watch_and_generate()
+    else:
+        generate_all_articles()
