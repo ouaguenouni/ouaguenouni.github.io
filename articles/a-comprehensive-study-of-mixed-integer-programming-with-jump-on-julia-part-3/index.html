@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A comprehensive study of Mixed Integer Programming with JuMP on Julia (Part 3) - Ouaguenouni Mohamed</title>
+    <link rel="stylesheet" type="text/css" href="../../style.css">
+    <link rel="stylesheet" type="text/css" href="../../article.css">
+    <meta property="og:title" content="A comprehensive study of Mixed Integer Programming with JuMP on Julia (Part 3)">
+    <meta property="og:description" content="I am solving a problem with an exponential number of constraints with the Branch-and-Cut framework">
+    <meta property="og:image" content="/articles/a-comprehensive-study-of-mixed-integer-programming-with-jump-on-julia-part-3/og.png">
+    <meta property="og:type" content="article">
+    <meta property="twitter:card" content="summary_large_image">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+</head>
+<body>
+    <header class="site-header">
+        <h1><a href="../../index.html">Ouaguenouni Mohamed</a></h1>
+    </header>
+
+<aside class="reading-sidebar">
+    <div class="progress-wrapper">
+        <div class="previous-subtitle"></div>
+        <div class="current-subtitle"></div>
+        <div class="next-subtitle"></div>
+        <div class="progress-bar-container">
+            <div class="progress-bar"></div>
+        </div>
+    </div>
+</aside>
+
+<article class="main-article">
+    <h1 class="article-title">A comprehensive study of Mixed Integer Programming with JuMP on Julia (Part 3)</h1>
+    <p class="article-meta">11 min read · Published on 17 September 2021</p>
+    <section>
+        <p>I am solving a problem with an exponential number of constraints with the Branch-and-Cut framework</p>
+<hr />
+<p>Yes, it’s possible.</p>
+<p>Even though it’s very counter-intuitive, we can handle a linear program with an exponential number of constraints provided that we have a practical (even approached) way of <strong>separating</strong> these constraints.</p>
+<p>This story is a continuation of <a href="https://towardsdatascience.com/a-comprehensive-study-of-mixed-integer-programming-with-jump-on-julia-part-1-8d47418324d4">this</a> one and <a href="https://towardsdatascience.com/a-comprehensive-study-of-mixed-integer-programming-with-jump-on-julia-part-2-27e1cc1ed581">this</a> one, where I explained how we could use linear programming in order to solve large combinatorial problems, and now we will go to the level above and see how we could use stronger formulations that may contain an exponential number of constraints.</p>
+<p>To do so we will see the meaning of a “separation procedure” and how we could use it to solve the first sort of non-compact linear formulation by using “Lazy Constraints Callbacks” of the framework JuMP in a Branch-and-cut framework.</p>
+<p>We will also see how we could use the Branch-and-cut Framework to strengthen a compact formulation with “Lazy Constraints Callbacks.”</p>
+<h2>Yet another variant of the TSP (Traveling Salesman Problem)</h2>
+<p>The problem I chose to present to illustrate how to use a branch-and-cut formulation is the Traveling Salesman Problem; I made this choice for two reasons: the first one is that it’s a widely known problem among people who are interested in combinatorics problem solving, and the second is that it’s, in my opinion, the problem that the branch-and-cut formulations have most helped to solve on a large scale.</p>
+<p>More precisely, I chose the Capacitated Vehicle Routing Problem (CVRP) problem because it’s an interesting variant of the TSP for which we can visualise better the concrete cases of application.</p>
+<h3>Description of the problem</h3>
+<p>Imagine that you have many clients, each with its demand positioned on a map, a depot and a fleet of K trucks; how would you organise the delivery to minimise the overall cost of the delivery?</p>
+<p>First, we’ll define a type representing a client in Julia; the client must have its position and demand; this could be done using the <strong>struct</strong> keyword.</p>
+<pre><code>struct Clientpositiondemandend;client1 = Client([0,10], 25)
+</code></pre>
+<p>To generate a random instance, we’ll say that the coordinates are in a square 100x100, and the demand is an integer between 15 and 30; the following function gives us a random client :</p>
+<pre><code>function random\_client(pos\_range, demande\_range)position = rand(pos\_range, (1, 2))demand = rand(demande\_range, 1)client = Client(position, demand[1])return clientend;client1 = random\_client(1:100, 15:30);
+</code></pre>
+<p>Now that we have a representation of the clients, we can define a representation of the problem, which contains in addition to the clients the coordinates of the depot, the number of trucks <em>m</em> and their capacity <em>Q</em>.</p>
+<pre><code>struct CVRP\_ProblemclientsdepotmQend;
+</code></pre>
+<p>And thus, a function that generates a random instance.</p>
+<pre><code>function random\_instance(n\_clients, depot, m, Q)clients = Dict([(i,random\_client(0:100, 10:30)) for i in 1:n\_clients])problem = CVRP\_Problem(clients, depot, m , Q)return problemend;
+</code></pre>
+<p>And now, to visualise the problem, let’s set up a function to display the problem.</p>
+<pre><code>function display\_problem(problem)x\_pos = [c.position[1] for c in values(problem.clients)]y\_pos = [c.position[2] for c in values(problem.clients)]scatter(x\_pos, y\_pos, shape = :circle, markersize = 6, label= &quot;Client&quot;)scatter!([problem.depot[1]], [problem.depot[2]], shape = :square, markersize = 8, label= &quot;Depot&quot;)end;
+</code></pre>
+<p>This function gives us for a random problem the following figure :</p>
+<p><img alt="1_aF9ZIo7F7nA6E3eIgmRi3g.png" src="1_aF9ZIo7F7nA6E3eIgmRi3g.png" /></p>
+<h3>Formalisation of the problem</h3>
+<p>Since the objective is to minimise the overall distance travelled by all trucks and not the number of trucks, a solution could be represented by the arcs taken in the tour.</p>
+<p>Remember that each client must be visited by precisely one truck, so we suppose that the most considerable demand is less than the capacity of the trucks.</p>
+<p>So the solution is the indication for each arc <em>e=(x,y)</em> of whether it is taken or not, so the decision variables will be binary variables xₑ for each <em>e.</em></p>
+<p>Now we’ll define some proper notations :</p>
+<p>First, we define a notation for the sum of decision variables, given a set of edges E, we define :</p>
+<p><img alt="0_0-AxC_Yi-40oTdZK.png" src="0_0-AxC_Yi-40oTdZK.png" /></p>
+<p>After that, we define the “neighbour” operator δ</p>
+<p><img alt="0_eSwX3pXORMdncu_T.png" src="0_eSwX3pXORMdncu_T.png" /></p>
+<p>So, δ⁺ is the arcs that go from a vertex and δ⁻ the arcs that go to a vertex; here is an illustration to clarify the concept.</p>
+<p><img alt="1_NcDRvwykurGYQ5UE4IL5iQ.png" src="1_NcDRvwykurGYQ5UE4IL5iQ.png" /></p>
+<p>So to build vehicle routes, we should constraint the solution with the following constraint that ensures that each client is visited one time (one entry and one exit) :</p>
+<p><img alt="0_2tFEiYjG699Ot93F.png" src="0_2tFEiYjG699Ot93F.png" /></p>
+<p>Since each client’s demand is below the capacity of a truck, if a client is visited by one truck, it’s sufficient to deliver the quantity he demands.</p>
+<p>And to constraint the number of trucks, we should also constraint the depot (vertex 0) with the following constraint so that there are not more exits than the number of trucks <em>m</em>.</p>
+<p><img alt="0_vMvs6EUgRkvc0EbW.png" src="0_vMvs6EUgRkvc0EbW.png" /></p>
+<p>The objective is to reduce the route’s total cost, representing the overall distance covered by the tour.</p>
+<p>The complete program so far is given by the following code.</p>
+<pre><code>cvrp = Model(GLPK.Optimizer)x=@variable(cvrp,x[0:length(problem.clients),0:length(problem.clients)],Bin)@constraint(cvrp, sum(get\_out(x, 0)) &lt;= problem.m)@constraint(cvrp, sum(get\_in(x, 0)) &lt;= problem.m)for i in 1:length(problem.clients)@constraint(cvrp, sum(get\_in(x, i)) == 1)@constraint(cvrp, sum(get\_out(x, i)) == 1)end;obj\_coef = []for i in 0:length(problem.clients)for j in 0:length(problem.clients)append!(obj\_coef, [get\_cost(problem, i, j) \* x[i,j] ] )end;end;@objective(cvrp,Min,sum(obj\_coef))optimize!(cvrp)termination\_status(cvrp)objective\_value(cvrp)
+</code></pre>
+<p>But is this formulation sufficient to solve the vehicle routing problem? — of course, no otherwise, this article would be too short.</p>
+<h2>Subtour Elimination</h2>
+<h3>Subtour problem</h3>
+<p>If we run the precedent program, we should obtain the following result :</p>
+<p><img alt="1_vvlwCE6GwDEE6MnAVdgexQ.png" src="1_vvlwCE6GwDEE6MnAVdgexQ.png" /></p>
+<p>Is this a bug? — no, it’s not; the following solution is a solution that fits the program perfectly. The problem is in the program itself since he allows the presence of the sub tours.</p>
+<p>This illustration shows another example of subtour, and we can see that each vertex of the subtour satisfies its constraints.</p>
+<p><img alt="1_UTb5m6hrQ6WHv-k_99PGpA.png" src="1_UTb5m6hrQ6WHv-k_99PGpA.png" /></p>
+<p>Another problem that could be found in the solutions that satisfy the constraints of the program is that the following solution is accepted :</p>
+<p><img alt="1_g_KaRY6AjLazdzEh9CioPQ.png" src="1_g_KaRY6AjLazdzEh9CioPQ.png" /></p>
+<p>And it should not because the tour is not realisable since the sum of the demands in the vertexes through which the tour passes is more than the capacity of a truck.</p>
+<h3>Miller-Tucker-Zemlin inequalities</h3>
+<p>The Miller-Tucker-Zemlin are inequalities that permit to write a compact program for any TSP variant.</p>
+<p>The idea is that we create new variables <em>w</em> for each vertex that represents the quantity in the truck when arriving in the vertex.</p>
+<p>We then should add a constraint that expresses the following :</p>
+<blockquote>
+<p>If the arc (a,b) is taken in a tour, then the difference between the quantity before a and the quantity before b should be greater than the demand in a.</p>
+</blockquote>
+<p>We have w ≤ Q naturally<em>.</em></p>
+<p>And this could be represented by the following inequalities :</p>
+<p><img alt="0_c7nWZLVXMuBcySL8.png" src="0_c7nWZLVXMuBcySL8.png" /></p>
+<p>Because if xᵢⱼ = 1 the constraint becomes:</p>
+<p><img alt="0_Bzfcq7eNn3DNVxFb.png" src="0_Bzfcq7eNn3DNVxFb.png" /></p>
+<p>which is what we needed, and if xᵢⱼ = 0 the constraint gives us:</p>
+<p><img alt="0_PlEVn-adlMT1WQ_X.png" src="0_PlEVn-adlMT1WQ_X.png" /></p>
+<p>which is trivial and thus don’t constraint the solution.</p>
+<p>After adding the MTZ constraints, the code becomes:</p>
+<pre><code>cvrp = Model(GLPK.Optimizer)x=@variable(cvrp,x[0:length(problem.clients),0:length(problem.clients)],Bin)@constraint(cvrp, sum(get\_out(x, 0)) &lt;= problem.m)@constraint(cvrp, sum(get\_in(x, 0)) &lt;= problem.m)for i in 1:length(problem.clients)@constraint(cvrp, sum(get\_in(x, i)) == 1)@constraint(cvrp, sum(get\_out(x, i)) == 1)end;w = @variable(cvrp,w[0:length(problem.clients)])for (i,vi) in problem.clientsfor j in 0:length(problem.clients)if(i == j)continueend;c = @constraint(cvrp, w[i] - w[j] &gt;= vi.demand - (problem.Q +vi.demand)\*(1-x[i,j]))end;end;obj\_coef = []for i in 0:length(problem.clients)for j in 0:length(problem.clients)append!(obj\_coef, [get\_cost(problem, i, j) \* x[i,j] ] )end;end;@objective(cvrp,Min,sum(obj\_coef))
+</code></pre>
+<p>And for the precedent instance, it gives us:</p>
+<p><img alt="1_qH2R1WIVPvCnIfUroNT-UQ.png" src="1_qH2R1WIVPvCnIfUroNT-UQ.png" /></p>
+<h3>Resource Capacity Constraints</h3>
+<p>The resource capacity constraints are a family of constraints to replace and/or strengthen the MTZ formulation.</p>
+<p>These constraints say that if we have a set of clients S with a sum of demands D = ∑dᵢ (i ∈ S), then we need at least W(S) trucks to serve them :</p>
+<p><img alt="0_2UiWeSgu662pMCvM.png" src="0_2UiWeSgu662pMCvM.png" /></p>
+<p>These constraints could replace the MTZ constraints because they make the solution involving sub tours not valid.</p>
+<p>The problem with these inequalities is that they should stand for every subset of clients, and thus enumerating them would result in an exponential enumeration which is irrelevant.</p>
+<p>The solution is to use them in a cutting plane approach.</p>
+<h2>Branch-and-Cut Framework</h2>
+<p>We will successively see how to replace the MTZ inequalities using “user cuts” and then reinforce the obtained formulation with “lazy cuts”. But, first, we need to define a separation algorithm.</p>
+<h3>Separation theorem</h3>
+<p>A separation algorithm is an algorithm that returns for a given solution a violated constraint, if any, or that proves that there is not any violated constraint.</p>
+<p>Suppose the separation algorithm runs in a polynomial time. In that case, even if the constraints are in an exponential number, we still could optimise in a polynomial number of calls to the solver.</p>
+<h3>Separation problem</h3>
+<p>Here the separation problem is to find given a solution a set of clients such that</p>
+<p><img alt="0_mAlM8-jflS_CuKAp.png" src="0_mAlM8-jflS_CuKAp.png" /></p>
+<p>if any, and by noting</p>
+<p><img alt="0_SGeIlvOOWdqTMY7z.png" src="0_SGeIlvOOWdqTMY7z.png" /></p>
+<p>this is equivalent to solving the following optimisation problem :</p>
+<p><img alt="0_wGwyIB3xWe9lCnrj.png" src="0_wGwyIB3xWe9lCnrj.png" /></p>
+<p>And if the min is 0, then it means that there is not any violated inequality.</p>
+<h3>Breaking sub tours with a separation algorithm</h3>
+<p>One attractive property that we could exploit to get rid of MTZ inequalities while eliminating the sub tours is that if a solution is integral (see the precedent chapter to remember the difference between an integral and a fractional solution), then verifying the resource capacity constraints on the connected components is sufficient to check the validity of a solution.</p>
+<p>So we should update the workflow of the branch-and-bound by adding violated inequalities to get rid of the integrated solutions that contain sub tours :</p>
+<p><img alt="1_zHO9pQP4c_ttmTTrMTirNg.png" src="1_zHO9pQP4c_ttmTTrMTirNg.png" /></p>
+<p>Adding inequalities is also called “cutting” solutions, and this approach is an example of a branch-and-bound-and-cut approach or, more concisely, a branch-and-cut approach.</p>
+<p>The implemented separating function should be put in a “user cut” callback to be run on each solution until it doesn't return any violated constraint.</p>
+<p>Now let’s see how to implement this in Julia,</p>
+<p>First of all, let’s see the needed operators we need to compute the function that the separation problem is minimising.</p>
+<p>The delta operator should be extended to a set of vertices like that.</p>
+<p><img alt="1_0tRUDQBH2WRDcDCSNeK5kg.png" src="1_0tRUDQBH2WRDcDCSNeK5kg.png" /></p>
+<p>δ for a group of vertices S is the set of edges with exactly one endpoint in S, and this could be implemented as follows :</p>
+<pre><code>function delta(problem, S, x)L = []for i in Sfor j in 0:length(problem.clients)if !(j in S)i\_min = min(i,j)i\_max = max(i,j)if !(x[i\_min,i\_max] in L)append!(L, [x[i\_min,i\_max]]);end;end;end;end;return Lend;
+</code></pre>
+<p>Then, we need a function that computes the total demand of a set of clients.</p>
+<pre><code>function demand\_s(problem, S)d = 0;for c in Sd = d + problem.clients[c].demand;end;return d;end;
+</code></pre>
+<p>And this allows us to define the function to minimise.</p>
+<pre><code>function W(problem, x, cs, cb\_data)L = delta\_cb(problem, cs, x, cb\_data)return L - 2\*ceil(demand\_s(problem, cs)/problem.Q)end;
+</code></pre>
+<p>Finally, to verify if W is negative on the connected components that form a subtour, we first need to detect the connected components in the graph produced by a solution.</p>
+<p>To do so, we’ll use the library “LightGraph.jl”, and the first step is to write a function that creates a graph object from a set of <em>x</em> variables.</p>
+<pre><code>function build\_simple\_graph(problem, x)g = SimpleGraph(length(problem.clients));for i in 0:nv(g)for j in i+1:nv(g)if(value(x[i,j]) == 1)add\_edge!(g, i, j)end;end;end;return g;end;
+</code></pre>
+<p>Then, we run without the MTZ constraints and visualise the solution.</p>
+<p><img alt="1_jV6iall5BAUwAVueJ18-PQ.png" src="1_jV6iall5BAUwAVueJ18-PQ.png" /></p>
+<p>And now we compute the connected components and see if the function W is negative on them, which will traduce a violated resource constraint.</p>
+<p><img alt="1_6_FnDYH-65KsUEr4zVLk2w.png" src="1_6_FnDYH-65KsUEr4zVLk2w.png" /></p>
+<p>And we see that for the integral solution returned by the formulation without the MTZ constraints, the sub tours give us a negative value of the function <em>W</em>.</p>
+<p>Another interesting remark is that this formulation has a better convergence speed so that now we could solve more significant instances as in the following :</p>
+<p><img alt="1_7y6d_eqnuJTpkO-pHjgo5A.png" src="1_7y6d_eqnuJTpkO-pHjgo5A.png" /></p>
+<p>Please ignore the direction of arrows, as in <a href="https://www.sciencedirect.com/science/article/abs/pii/S0377221797002907">this</a> article; I switched to a modelisation that uses undirected graphs to have fewer variables.</p>
+<p>This is, by the way, the code that created the linear program :</p>
+<pre><code>cvrp = Model(GLPK.Optimizer)n = length(problem.clients)x = @variable(cvrp,x[i= 0:n, j = i+1:n ],Int)for i in 0:nfor j in i+1:nif( i == 0)c = @constraint(cvrp, 0 &lt;= x[i,j] &lt;= 2)elsec= @constraint(cvrp, 0 &lt;= x[i,j] &lt;= 1)end;end;end;c= @constraint(cvrp, sum(delta(problem, [0], x)) == 2\*problem.m )for i in 1:nδ = delta(problem, [i], x)if(length(δ) == 0)continueend;c = @constraint(cvrp, sum(δ) == 2 )end;obj\_coef = []for i in 0:nfor j in i+1:nappend!(obj\_coef, [get\_cost(problem, i, j) \* x[i,j] ] )end;end;@objective(cvrp,Min,sum(obj\_coef))
+</code></pre>
+<p>And this is the callback I used to check for each integral solution if its connected components satisfy the resource constraints :</p>
+<pre><code>function ressource\_constraints(cb\_data)status = callback\_node\_status(cb\_data, cvrp)if(status == MOI.CALLBACK\_NODE\_STATUS\_INTEGER)g = build\_simple\_graph\_cb(problem, x, cb\_data)comp = connected\_components(g)for c in compf = W(problem, x,c, cb\_data);if(f &lt;0 )con = @build\_constraint(sum(delta(problem, c, x)) &gt;=2\*ceil(demand\_s(problem, c)/problem.Q))MOI.submit(cvrp, MOI.LazyConstraint(cb\_data), con)end;end;end;end;MOI.set(cvrp, MOI.LazyConstraintCallback(), ressource\_constraints);
+</code></pre>
+<p>And it gives us the following outputs:</p>
+<p><img alt="1_R7hOfLpPmdKrccAXv45kFA.png" src="1_R7hOfLpPmdKrccAXv45kFA.png" /></p>
+<p>So we could see the incremental enrichment of the program with cuts that avoid the sub tours in the solution.</p>
+<h3>Bonus: Branch-and-cut for reinforcement</h3>
+<p>Finally, we’ll explain another way to use the branch-and-cut framework.</p>
+<p>The separation algorithm will now be used to reinforce the formulation. By that, we mean that the separation algorithm is no longer a part of the constraint’s definition.</p>
+<p>Still, now, it’s called during the optimisation process to generate new cuts that will tighten the formulation.</p>
+<p>To do that, we have to define the separation process as a “Lazy Cut”, and the advantage of using branch-and-cut as a lazy constraint is that we could use meta-heuristics to search for the potential cuts to make because even if we don’t find them all, it won't result in an infeasible solution.</p>
+<p>For example, in the precedent code, we could add that we seek a set of clients that violate the resource constraints even for a fractional solution. By doing so, we create additional cuts that will reinforce the convergence.</p>
+<p>For more information, you can read <a href="https://www.sciencedirect.com/science/article/abs/pii/S0377221797002907">this</a> article where a tabu search is used to separate the resource inequalities for the CVRP problem.</p>
+<h2>Conclusion</h2>
+<p>Branch-and-cut approaches are an exciting way to consider combinatorial problems because they require considering valid tight inequalities and how to separate them efficiently.</p>
+    </section>
+</article>
+
+
+<footer class="article-footer">
+    <div class="footer-line">
+        <span>O</span>
+    </div>
+    <p><a href="../../index.html">← Back to home</a></p>
+</footer>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.24/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.24/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.24/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {
+        delimiters: [
+            {left:'$$', right:'$$', display:true},
+            {left:'$', right:'$', display:false}
+        ]
+    });"></script>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/julia.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", (event) => {
+    hljs.highlightAll();
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const progressBar = document.querySelector('.progress-bar');
+    const previousSubtitle = document.querySelector('.previous-subtitle');
+    const currentSubtitle = document.querySelector('.current-subtitle');
+    const nextSubtitle = document.querySelector('.next-subtitle');
+    const headings = document.querySelectorAll('.main-article section h2, .main-article section h3');
+    const articleTitleEl = document.querySelector('.main-article .article-title');
+    const articleTitle = articleTitleEl.textContent;
+
+    headings.forEach((h, i) => {
+        if (!h.id) h.id = 'heading-' + i;
+    });
+    if (!articleTitleEl.id) articleTitleEl.id = 'article-title';
+
+    function updateProgress() {
+        const scrollTop = window.scrollY;
+        const docHeight = document.body.scrollHeight - window.innerHeight;
+        const scrollPercent = (scrollTop / docHeight) * 100;
+        progressBar.style.height = scrollPercent + '%';
+
+        let currentIndex = -1;
+        headings.forEach((h, i) => {
+            if (h.offsetTop - 50 <= scrollTop) currentIndex = i;
+        });
+
+        let current = currentIndex >= 0 ? headings[currentIndex] : null;
+
+        if (current) {
+            currentSubtitle.textContent = current.textContent;
+            currentSubtitle.dataset.targetId = current.id;
+
+            previousSubtitle.textContent = headings[currentIndex - 1]?.textContent || '';
+            previousSubtitle.dataset.targetId = headings[currentIndex - 1]?.id || '';
+
+            nextSubtitle.textContent = headings[currentIndex + 1]?.textContent || '';
+            nextSubtitle.dataset.targetId = headings[currentIndex + 1]?.id || '';
+        } else {
+            currentSubtitle.textContent = articleTitle;
+            currentSubtitle.dataset.targetId = articleTitleEl.id;
+
+            previousSubtitle.textContent = '';
+            previousSubtitle.dataset.targetId = '';
+
+            nextSubtitle.textContent = headings[0]?.textContent || '';
+            nextSubtitle.dataset.targetId = headings[0]?.id || '';
+        }
+    }
+
+    function scrollToSubtitle(el) {
+        const targetId = el.dataset.targetId;
+        if (!targetId) return;
+        const target = document.getElementById(targetId);
+        if (!target) return;
+
+        window.scrollTo({
+            top: target.offsetTop,
+            behavior: 'smooth'
+        });
+
+        const onScroll = () => {
+            const scrollTop = window.scrollY;
+            if (Math.abs(scrollTop - target.offsetTop) < 2) {
+                updateProgress();
+                window.removeEventListener('scroll', onScroll);
+            }
+        };
+        window.addEventListener('scroll', onScroll);
+    }
+
+    [previousSubtitle, currentSubtitle, nextSubtitle].forEach(el => {
+        el.addEventListener('click', () => scrollToSubtitle(el));
+    });
+
+    window.addEventListener('scroll', updateProgress);
+    updateProgress();
+});
+</script>
+
+
+</body>
+</html>

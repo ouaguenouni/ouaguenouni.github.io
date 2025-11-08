@@ -2,6 +2,7 @@
 title: Comprendre les cartes sémantiques
 date: 22/10/2025
 description: De la théorie à la pratique
+draft: true
 ---
 
 *TLDR;* Une carte sémantique est un diagram qui contient les mots d’un vocabulaire et ou les mots les plus proches sur la carte sont proche sémantiquement.

@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quality-Diversity Algorithms: MAP-Polar - Ouaguenouni Mohamed</title>
+    <link rel="stylesheet" type="text/css" href="../../style.css">
+    <link rel="stylesheet" type="text/css" href="../../article.css">
+    <meta property="og:title" content="Quality-Diversity Algorithms: MAP-Polar">
+    <meta property="og:description" content="A new approach based on MAP-Elites applied to Robot Navigation">
+    <meta property="og:image" content="/articles/quality-diversity-algorithms-map-polar/og.png">
+    <meta property="og:type" content="article">
+    <meta property="twitter:card" content="summary_large_image">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+</head>
+<body>
+    <header class="site-header">
+        <h1><a href="../../index.html">Ouaguenouni Mohamed</a></h1>
+    </header>
+
+<aside class="reading-sidebar">
+    <div class="progress-wrapper">
+        <div class="previous-subtitle"></div>
+        <div class="current-subtitle"></div>
+        <div class="next-subtitle"></div>
+        <div class="progress-bar-container">
+            <div class="progress-bar"></div>
+        </div>
+    </div>
+</aside>
+
+<article class="main-article">
+    <h1 class="article-title">Quality-Diversity Algorithms: MAP-Polar</h1>
+    <p class="article-meta">9 min read · Published on 24 March 2021</p>
+    <section>
+        <p>A new approach based on MAP-Elites applied to Robot Navigation</p>
+<hr />
+<p>Evolutionary Algorithms have taken an important place in many application fields, including robotics. In this article, we will, first, present the navigation problem in robotics. After that, we will show why it’s better to look for diversity than for quality and experiment with some well-known methods to do this kind of thing. Finally, we will present a new intuition for associating quality with diversity to outperform both quality and diversity-oriented algorithms.</p>
+<h2>Navigation Task</h2>
+<p>In robotics, it is common that agents are roughly represented as several sensors that collect sensory information about the environment and several actors that can take values in a discrete or continuous range.</p>
+<p>In this blog post, we are interested in the task of navigation. This task consists of an agent with proximity sensors to move in an environment to reach a goal.<br />
+Our experiment sensors are range finders and radars arranged around the agent, as presented in this illustration taken from [3].</p>
+<p>The actor is the motor that can give an impulse in the forward or reverse direction and an impulse to the left or the right, both represented by velocities taking their values in the real interval [-2,2].</p>
+<p><img alt="1_agHJlixuGeke9YFiQPtwXg.png" src="1_agHJlixuGeke9YFiQPtwXg.png" /></p>
+<p>The environment is a maze with a single goal that the agent has to reach by minimising distance travelled and collisions.</p>
+<p>In their article, Lehman and Staley[3] used two mazes, one they referred to as “medium,” but it was more a “standard” maze. The second they considered as “hard” because of the deceptive behaviour that results from following the distance to the goal.</p>
+<p><img alt="1_Qh0NIOZmOtiEfrYDAJmHzw.png" src="1_Qh0NIOZmOtiEfrYDAJmHzw.png" /></p>
+<p>The main statement that Lehman and Staley[3] claim in their article is that in the second configuration, the exploration is more efficient if it doesn't rely only on each solution's quality, which is the distance to the goal in this case but also on the diversity in the population.</p>
+<p>Since in the following, we will explore the different state-of-the-art methods to combine quality and diversity in an evolutionary approach, it’s more convenient to assess their performance on the hard map.</p>
+<h2>Technical Point</h2>
+<p>In the following, we will explain the framework we will use to build the neural network controllers, and, after that, we will explain the evolutionary algorithm's simulation process to evaluate each neural network's behaviour.</p>
+<h2><strong>Neural Network Design</strong></h2>
+<p>Each neural network we could think of to deal with this navigation task has in common the number of inputs and the number of fixed outputs according to the number of sensors and the number of robot actors.</p>
+<p><img alt="1_XKwWXtJyldcrxeoTRx7DWg.png" src="1_XKwWXtJyldcrxeoTRx7DWg.png" /></p>
+<p>In the context of an evolutionary algorithm, we have to distinguish between two notions: the genotype and the phenotype of an individual (in this case of a neural network)</p>
+<ul>
+<li><strong>Genotype:</strong> In this case, the genotype is the vector of weights that defines the way the neural network will generate outputs from the inputs it gets from the sensors; more generally, the genotype refers to the hidden configuration of the agent.</li>
+<li><strong>Phenotype</strong>: This term refers to the agent's actual observable behaviour by opposition to the genotype, which encodes hidden characteristics. In our case, the phenotype is the trajectory the agent takes in the maze when using the neural network parametrised with the genotype's weights.</li>
+</ul>
+<p>Our design framework has to consider and allow access to a compact representation of the neural network's genotype. To do this, we will use the PyTorch framework and create a base class for all our neural networks; each neural network we will design after that will extend this class to inherits genotype manipulation methods.</p>
+<p><img alt="1_wWdircPtiwTxERkA50IEnw.png" src="1_wWdircPtiwTxERkA50IEnw.png" /></p>
+<p>For example, the most straightforward architecture we can think of is a multilayer neural network with a tanh activation function scaled by two to fit our action’s domain; we extend the base class to inherits all the functionalities that manipulate the genotype of the neural network.</p>
+<p><img alt="1_zI21vOS2Di1b9oNKsemmGg.png" src="1_zI21vOS2Di1b9oNKsemmGg.png" /></p>
+<h2>Simulation of the experience</h2>
+<p>Now that we have a way to build a neural network from its genotype, we have to simulate the neural network's behaviour in the maze to evaluate this behaviour (also called phenotype in this context).</p>
+<p>To manage the simulations, we will use fastsim, which can be found here: <a href="https://github.com/jbmouret/libfastsim">https://github.com/jbmouret/libfastsim</a> and a gym binding <a href="https://github.com/alexendy/fastsim_gym">https://github.com/alexendy/fastsim_gym</a>.</p>
+<p><img alt="1_7iP6fMG3-V80VPkMJszIVg.png" src="1_7iP6fMG3-V80VPkMJszIVg.png" /></p>
+<p>In the observation returned, we can get the number of collisions and the position. Both can be valid descriptors for the phenotype of each individual.</p>
+<h2>Overview of the state of art algorithms</h2>
+<p>Now we will review and experiment with some stat of the art algorithms for this task,</p>
+<p><strong>Novelty Search:</strong></p>
+<p>The novelty search is one of the most known diversity-based algorithms. Lehman and Stahley introduced it in [3], and it uses an estimation of each individual's novelty as a fitness function.</p>
+<p>The novelty is defined independently from the context of the task as follows:</p>
+<p><img alt="1_6Z5C1p4vM68CVqURTdh4bw.png" src="1_6Z5C1p4vM68CVqURTdh4bw.png" /></p>
+<p>Roughly it’s the mean of the distance of an individual's phenotype to the k nearest phenotypes. It will promote the genotypes that result in behaviour conduct in new positions.</p>
+<p>As explained by Lehman and Stahly, using this objective function in the hard maze results in divergent research.</p>
+<p>This plot represents the last positions of the generated individuals of 200 generations.</p>
+<p><img alt="1_Hn--MZDkS8qsKBys3bn3Fg.png" src="1_Hn--MZDkS8qsKBys3bn3Fg.png" /></p>
+<p><strong>MAP-Elites Search:</strong></p>
+<p>In this algorithm introduced by JB Mouret and Jeff Clune[2], in our adaptation of it, we will divide the maze into grid cells and map each individual to the cell corresponding to its final position in the maze.</p>
+<p>After that, we will keep for each cell the “best” individual, which means in our case the individual that can reach this cell with the minimum number of collisions, and in the selection phase, we will select individuals from the grid archive to ensure that we have selected individuals that can reach different cells of the grid.</p>
+<p>We can now compare the individuals in the fit-oriented and the MAP-Elites approach as in the precedent part.</p>
+<p><img alt="1_3ZF12WjNahZ_VFxiDtXfeA.png" src="1_3ZF12WjNahZ_VFxiDtXfeA.png" /></p>
+<p>And as we can see, the MAP-Elite selection is somehow objective-oriented. Still, the selection process, which relies on selecting one individual per grid cell, allows the algorithm to get out of the impasse and add selection pressure on diversity.</p>
+<p><strong>Spatial, Hierarchical, Illuminated Neuro-Evolution (SHINE) :</strong></p>
+<p>This approach was introduced by Davy Smith, Laurissa Tokarchuk and Geraint Wiggins [1] and combine elements from Novelty Search and MAP-Elites,</p>
+<p>It maintains an archive of the individuals by mapping their final positions in the maze. Instead of using a grid, it uses a hierarchical mapping based on a tree construction; a hyper-parameter “alpha” limits the tree height.</p>
+<p>Each tree leaf is filtered using a novelty-based criterion to keep the best “beta” individuals.</p>
+<p>This approach outperforms both Novelty Search and MAP-Elites by far, as we can see in this visualisation.</p>
+<p><img alt="1_aue6LXSuENSCt92fPIj0qg.png" src="1_aue6LXSuENSCt92fPIj0qg.png" /></p>
+<p>This visualisation lacks points because the algorithm reaches the exit in a minimal number of generations than the others, but we will get back to this point later.</p>
+<h2><strong>Hyper-parameters influence</strong></h2>
+<p>As you may have noticed, all the precedent algorithms rely on hyper-parameters to regulate their way of saving and/or selecting individuals from a generation to another.</p>
+<p><strong>Novelty Search</strong></p>
+<p>The novelty search is the more “hyper-parameter free” approach; it only depends on k, the number of neighbours to consider when computing the novelty score, and this hyper-parameter, except for the extreme values, don't really affect the performances.</p>
+<p><strong>MAP-Elites</strong></p>
+<p>The MAP-Elites algorithm, since using a fitness-based approach to filter the best individuals in each grid cell, is affected by the number of cells or equivalently by each cell's size.</p>
+<p>The influence of the number of cells can be observed when taking extreme values. For instance, suppose we want to select ten individuals, if we have 1000 cells, the algorithm will choose the ten best cells that can be very near to each other because of the tiny size cell, and in contrast, if we take only 20 cells on the whole map, the selection will have to cover at least 50% of the total area of the maze so it will be more scattered.</p>
+<p>As a result, the algorithm may not get out of the impasse when taking a small grid size.</p>
+<p><strong>SHINE</strong></p>
+<p>Finally, SHINE algorithms rely on two hyper-parameters: the max number of individuals in each leaf and the tree's max height. Even though it complexifies the tunning process because that raises combination issues, these two parameters affect the algorithm more vaguely, so it’s more difficult to tune them.</p>
+<p>The archive building starts as in the MAP-Elits algorithms but with only four cells. Each time a new individual is generated, it’s mapped to a cell, if a cell has more than alpha element, it’s split to 4 cells, and a new level in the tree is created, if the algorithm cannot create a new level because the tree reached its maximum height, we remove from the leaf the worst individual according to a novelty search criterion.</p>
+<p>As we can see, the depth of a leaf indicates how small the individual's grid is; this aim to grant that a very frequented area is cut more finely.</p>
+<h2>Quality-Diversity tradeoff</h2>
+<p>In our study, we will use two metrics to track the progression of an evolutionary algorithm.</p>
+<ul>
+<li>We can measure the mean fitness of the population since the algorithm aims to optimise the fitness. It’s generally a good metric to track.</li>
+<li>Since the algorithms aim to create one controller, we can be interested in the best fitness found so far to see how quick it takes to find a controller that reaches the maze's exit.</li>
+</ul>
+<p>Regarding these two metrics, let’s analyse the precedent algorithm’s performances.</p>
+<p><img alt="1_Pkuav2vXv1SJCKjcdVNexA.png" src="1_Pkuav2vXv1SJCKjcdVNexA.png" /></p>
+<p>As we can see, the SHINE algorithm and Novelty search both outperform MAP-Elites because of the deceptive nature of the fitness objective used in the cells of MAP-Elites. We also note that SHINE converges more quickly because it cut more precisely the maze's most visited areas.</p>
+<p>However, as a side effect of the fitness objective used in MAP-Elites, we notice that the individual’s mean quality keeps increasing. In contrast, the other algorithm’s quality stagnates because of the novelty objective.</p>
+<h2>My Approach: MAP-Polar</h2>
+<p>This last part will explain the intuition I considered when designing my approach and the result I obtained.</p>
+<p><strong>A synthesis of what can be kept from what has been presented above</strong></p>
+<p>As I said before, all the precedents approach's principal drawbacks are their dependence on hyper-parameters. Yet, these parameters allow them to calibrate their quality-diversity tradeoff.</p>
+<p>Moreover, we saw that the SHINE algorithm outperforms the others for many reasons; one of the main reasons is that it constructs <strong>custom-sized grid cells.</strong></p>
+<p><strong>The general principle of my approach</strong></p>
+<p>In my approach, I try to emancipate my archive from any hyper-parameter while maintaining the custom-sized grid cells archive.</p>
+<p>To do this, I first noticed that seeking novelty is useful when we are far from the goal. It becomes less and less useful when we start getting closer, so the first modification I made compared to MAP-Elites is that I used polar coordinate to describe the final positions instead of cartesian positions. I took the goal as the origin.</p>
+<p>After that, to adapt SHINE’s idea, I scaled the grid size to an exponential scale to have big cells when far from the goal and small cells when we get closer to it.</p>
+<p><strong>Experimental results</strong></p>
+<p>Let’s so how this new version of MAP-Elits behave compared to Novelty Search and to SHINE.</p>
+<p><img alt="1_FCzEsjhsdyI5UTqaz1vRkA.png" src="1_FCzEsjhsdyI5UTqaz1vRkA.png" /></p>
+<p>As we can see, we reach the target at a comparable speed. Still, we kept the side effect of the MAP-Elites algorithm that causes the global amelioration of the population's quality.</p>
+<p>And, one more thing, we did it without any hyper-parameter tunning.</p>
+<h2>Bibliographic References</h2>
+<p>[1] Smith, D., Tokarchuk, L., and Wiggins, G. 2016. Rapid Phenotypic Landscape Exploration Through Hierarchical Spatial Partitioning.</p>
+<p>[2] Jean-Baptiste Mouret, and Jeff Clune. (2015). Illuminating search spaces by mapping elites.</p>
+<p>[3] Lehman, J., and Stanley, K. 2011. Abandoning Objectives: Evolution Through the Search for Novelty Alone. <em>Evolutionary Computation, 19</em>, p.189–223.</p>
+<p>A special thanks to Cassy Deplace which helped me in this project.</p>
+<p>Project supervised by : Pr. Stéphane Doncieux</p>
+    </section>
+</article>
+
+
+<footer class="article-footer">
+    <div class="footer-line">
+        <span>O</span>
+    </div>
+    <p><a href="../../index.html">← Back to home</a></p>
+</footer>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.24/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.24/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.24/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {
+        delimiters: [
+            {left:'$$', right:'$$', display:true},
+            {left:'$', right:'$', display:false}
+        ]
+    });"></script>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/julia.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", (event) => {
+    hljs.highlightAll();
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const progressBar = document.querySelector('.progress-bar');
+    const previousSubtitle = document.querySelector('.previous-subtitle');
+    const currentSubtitle = document.querySelector('.current-subtitle');
+    const nextSubtitle = document.querySelector('.next-subtitle');
+    const headings = document.querySelectorAll('.main-article section h2, .main-article section h3');
+    const articleTitleEl = document.querySelector('.main-article .article-title');
+    const articleTitle = articleTitleEl.textContent;
+
+    headings.forEach((h, i) => {
+        if (!h.id) h.id = 'heading-' + i;
+    });
+    if (!articleTitleEl.id) articleTitleEl.id = 'article-title';
+
+    function updateProgress() {
+        const scrollTop = window.scrollY;
+        const docHeight = document.body.scrollHeight - window.innerHeight;
+        const scrollPercent = (scrollTop / docHeight) * 100;
+        progressBar.style.height = scrollPercent + '%';
+
+        let currentIndex = -1;
+        headings.forEach((h, i) => {
+            if (h.offsetTop - 50 <= scrollTop) currentIndex = i;
+        });
+
+        let current = currentIndex >= 0 ? headings[currentIndex] : null;
+
+        if (current) {
+            currentSubtitle.textContent = current.textContent;
+            currentSubtitle.dataset.targetId = current.id;
+
+            previousSubtitle.textContent = headings[currentIndex - 1]?.textContent || '';
+            previousSubtitle.dataset.targetId = headings[currentIndex - 1]?.id || '';
+
+            nextSubtitle.textContent = headings[currentIndex + 1]?.textContent || '';
+            nextSubtitle.dataset.targetId = headings[currentIndex + 1]?.id || '';
+        } else {
+            currentSubtitle.textContent = articleTitle;
+            currentSubtitle.dataset.targetId = articleTitleEl.id;
+
+            previousSubtitle.textContent = '';
+            previousSubtitle.dataset.targetId = '';
+
+            nextSubtitle.textContent = headings[0]?.textContent || '';
+            nextSubtitle.dataset.targetId = headings[0]?.id || '';
+        }
+    }
+
+    function scrollToSubtitle(el) {
+        const targetId = el.dataset.targetId;
+        if (!targetId) return;
+        const target = document.getElementById(targetId);
+        if (!target) return;
+
+        window.scrollTo({
+            top: target.offsetTop,
+            behavior: 'smooth'
+        });
+
+        const onScroll = () => {
+            const scrollTop = window.scrollY;
+            if (Math.abs(scrollTop - target.offsetTop) < 2) {
+                updateProgress();
+                window.removeEventListener('scroll', onScroll);
+            }
+        };
+        window.addEventListener('scroll', onScroll);
+    }
+
+    [previousSubtitle, currentSubtitle, nextSubtitle].forEach(el => {
+        el.addEventListener('click', () => scrollToSubtitle(el));
+    });
+
+    window.addEventListener('scroll', updateProgress);
+    updateProgress();
+});
+</script>
+
+
+</body>
+</html>

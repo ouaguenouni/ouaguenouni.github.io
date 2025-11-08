@@ -130,6 +130,11 @@ def convert_md_to_html(md_file, output_file=None, template_file='article_templat
         if thumbnail_match:
             thumbnail = thumbnail_match.group(1).strip()
 
+        is_draft = False
+        draft_match = re.search(r'draft:\s*(true|false)', frontmatter, re.IGNORECASE)
+        if draft_match:
+            is_draft = draft_match.group(1).lower() == 'true'
+
     html_embed_store = []
 
     def _stash_html_embed(m):
@@ -220,6 +225,7 @@ def convert_md_to_html(md_file, output_file=None, template_file='article_templat
     with open(output_file, 'w', encoding='utf-8') as f:
         f.write(html_output)
 
+    print()
     print(f"✓ Converted {md_file} to {output_file}")
     print(f"  Title: {title}")
     print(f"  Date: {format_date_display(date)}")
@@ -229,7 +235,8 @@ def convert_md_to_html(md_file, output_file=None, template_file='article_templat
         'date': date,
         'description': description,
         'link': link_path,
-        'thumbnail': thumbnail
+        'thumbnail': thumbnail,
+        'draft': is_draft
     }
 
 
@@ -247,7 +254,10 @@ def generate_all_articles(articles_dir='articles', article_template='article_tem
             md_file = article_subdir / 'article.md'
             if md_file.exists():
                 info = convert_md_to_html(md_file, output_file=article_subdir / 'index.html', template_file=article_template)
-                articles_info.append(info)
+                if not info.get('draft', False):
+                    articles_info.append(info)
+                else:
+                    print(f"📝 Skipping draft article: {info['title']}")
             else:
                 print(f"⚠️  No article.md found in {article_subdir}")
 

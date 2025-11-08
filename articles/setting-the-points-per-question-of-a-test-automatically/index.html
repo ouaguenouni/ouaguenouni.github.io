@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Setting the points per question of a test automatically - Ouaguenouni Mohamed</title>
+    <link rel="stylesheet" type="text/css" href="../../style.css">
+    <link rel="stylesheet" type="text/css" href="../../article.css">
+    <meta property="og:title" content="Setting the points per question of a test automatically">
+    <meta property="og:description" content="How to use a linear program to select the grading scale of an exam that is both meritocratic and encouraging">
+    <meta property="og:image" content="/articles/setting-the-points-per-question-of-a-test-automatically/og.png">
+    <meta property="og:type" content="article">
+    <meta property="twitter:card" content="summary_large_image">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+</head>
+<body>
+    <header class="site-header">
+        <h1><a href="../../index.html">Ouaguenouni Mohamed</a></h1>
+    </header>
+
+<aside class="reading-sidebar">
+    <div class="progress-wrapper">
+        <div class="previous-subtitle"></div>
+        <div class="current-subtitle"></div>
+        <div class="next-subtitle"></div>
+        <div class="progress-bar-container">
+            <div class="progress-bar"></div>
+        </div>
+    </div>
+</aside>
+
+<article class="main-article">
+    <h1 class="article-title">Setting the points per question of a test automatically</h1>
+    <p class="article-meta">6 min read · Published on 12 December 2021</p>
+    <section>
+        <p>How to use a linear program to select the grading scale of an exam that is both meritocratic and encouraging</p>
+<hr />
+<p>As a young teacher, I recently had to give my first exam, and so I had to score my first papers, but before scoring them, I had to define for each question how many points it would be worth.</p>
+<p>I found myself trying multiple rating scales repeatedly to find one that stimulates meritocracy while allowing for overall good grades.</p>
+<p>But then I noticed that a rating scale is a weighted sum, so finding a rating scale could be seen as an optimization problem; I then decided to design a way to automate this scaling by using Linear Programming and the solver CPLEX from ILOG.</p>
+<h2>Problem statement</h2>
+<p>The first thing I had to do was to correct the papers without a grading scale. To do so, I created a CSV file that has for each student and each question a float between 0 and 1 that represents the degree to which I judge that it has answered the question.</p>
+<p>After that, I used Pandas to get the marks of each question and each student in a matrix as follows:</p>
+<pre><code>import pandas as pdimport numpy as npimport matplotlib.pyplot as pltdf = pd.read\_csv(&quot;TME\_Grades.csv&quot;)N = df.values.T #I Transpose because initially i Had a table with #the students in the rows and the exercices in the columns.
+</code></pre>
+<p>Consider that we have <em>n</em> questions and <em>m</em> students, and let <em>N</em> be the <em>(n,m)</em> matrix that gives us the "relative score" of a student in a question.</p>
+<p>The problem could be finding a set of weights <em>W</em> of size <em>n</em> such that W.N gives the students' marks<em>.</em></p>
+<p>Let's start by seeing how we create our model and our variables.</p>
+<pre><code>from docplex.mp.model import Modelmodel = Model(&quot;Exam\_Scoring&quot;)exercices\_vars = model.continuous\_var\_list(keys = np.arange(N.shape[0]), name= lambda k:&quot;E\_&quot;+str(k))
+</code></pre>
+<p>The function "continuous_var_list" is given a list of keys; in our case, it's the number between 0 and the number of questions minus 1.</p>
+<p>After we created the variables needed, let's think about the constraints we want to implement, some of the constraints we want to have are intuitive; the set of weights is a set of real numbers that sum to a fixed number (let's say 20), and each weight must be strictly positive.</p>
+<p>Before defining the other constraints and the objective, we need to define the notion of meritocracy in our problem and see how we could implement it.</p>
+<h2>Meritocracy and Easiness</h2>
+<p>If I wanted to be utterly meritocratic in my grading scale, I would give each question a weight proportional to its difficulty.</p>
+<p>Since the difference between any two questions is the number of students who answered each question, I could consider that one question is more complicated than another if fewer students answered it correctly.</p>
+<p>So, a meritocratic grading scale would give each question a weight that is proportional to :</p>
+<p><img alt="0_egL8BMSbEz8MNlDU.png" src="0_egL8BMSbEz8MNlDU.png" /></p>
+<p>Where <em>nᵢ</em> is the number of students that did not answer the question <em>i.</em></p>
+<p>Let's try this grading scale to see my students' grades if I was utterly meritocratic.</p>
+<pre><code>not\_ans = N.shape[1] - N.sum(axis=1)m = 20\*(not\_ans /not\_ans.sum())
+</code></pre>
+<p>This will give us the following grades.</p>
+<p><img alt="1_NUabQpFk6L5FIK5TtD_HQA.png" src="1_NUabQpFk6L5FIK5TtD_HQA.png" /></p>
+<p>We can see that they are very rough, no one gets 20, and the mean is around 4.50, and this was to be expected since the scale was calculated to reward questions that no one answered.</p>
+<p>How could we change the grading scale to increase the mean of the grades while keeping a meritocracy?</p>
+<p>To do so, we have to ensure two conditions are satisfied by our new set of weights:</p>
+<p>1- The ranking of the students must not change.<br />
+2- The new grades must be greater or equal than the meritocratic grades.</p>
+<p>The grade of a student given a set of weights could easily be computed as follows:</p>
+<p><img alt="1_4K-GDpGap2dSfQLr-aI_qw.png" src="1_4K-GDpGap2dSfQLr-aI_qw.png" /></p>
+<p>To ensure that condition one is respected, we will use the function argsort to sort the students by their marks in the meritocratic system and impose that the ranking doesn't change by saying that for each student, its mark must remain greater than the mark of the students that were below him in the previous order.</p>
+<pre><code>for i in range(len(sorted\_students)-1):gap = min(grades[i]-grades[i+1], 0.001)cst = sum(N[:, sorted\_students[i]]\*exercices\_vars) &gt;= sum(N[:,sorted\_students[i+1]]\*exercices\_vars) + gapmodel.add\_constraint(cst)
+</code></pre>
+<p>Since we cannot use the strict comparison in linear programming, we use the large one with a variable that represents the gap we want to have between two students, if their meritocratic grades were the same gap will be equal to 0, in the other case, it will be a tiny float (here 0.001).</p>
+<p>The gap variable plays another important role; it regulates the "degree of meritocracy" we require; having a gap equal to 0 means that a student that was before another in the meritocratic grading scale could now have the same mark as him.</p>
+<p>Having a gap of -1 means that we partially release the meritocratic constraint, and we authorize a student with a better mark than another to be below him but not by more than 1 point.</p>
+<p>And in the other sense, setting a gap that is at least as great as the initial gap will give us the same ranking.</p>
+<p>The following constraints ensure the other condition:</p>
+<pre><code>for i,grade in enumerate(grades):if(grade==0):continuecst = (sum(N[:,i]\*exercices\_vars)) &gt;= grademodel.add\_constraint(cst)model.add\_constraint(sum(exercices\_vars) == 20)for var in exercices\_vars:model.add\_constraint(var &gt;= 0)
+</code></pre>
+<p>Now that we know how to restrain the grading scale to make him fair for everyone, let's see what objectives we could use to enforce a specific grading scale.</p>
+<h2>Utilitarian and Egalitarian</h2>
+<p>As a teacher, the first objective that comes intuitively is to maximize the overall class average; this could be done by setting the sum of new grades as a maximization objective.</p>
+<pre><code>model.maximize(sum(exercices\_vars@N)/ N.shape[1])
+</code></pre>
+<p>In our example, the marks will change as follow:</p>
+<p><img alt="1_amDJ3U44F-0rC3X0KFwKMQ.png" src="1_amDJ3U44F-0rC3X0KFwKMQ.png" /></p>
+<p>We can see that the ranking doesn't change; the overall marks increase, and the mean becomes 6.10.</p>
+<p>This objective is called the utilitarian objective, but as we can see, the marks do not increase with the same proportion.</p>
+<p>We can instead think about maximizing the minimum non-null score to promote an egalitarian increase of the scores; this is achieved by doing:</p>
+<pre><code>model.maximize(model.min([i for i in (exercices\_vars@N) if str(i) != &quot;0&quot;]))
+</code></pre>
+<p>And gives us:</p>
+<p><img alt="1_tp5H-gDkjNzd--QnYUX8aQ.png" src="1_tp5H-gDkjNzd--QnYUX8aQ.png" /></p>
+<p>The rise in grades is more evenly distributed among the students, and the mean is around 5.10.</p>
+<p>Other objectives can be imagined, one can maximize the number of admits, or assume that we want a certain average and therefore minimize the absolute value of the distance between the class average and this desired average.</p>
+<h2>Conclusion</h2>
+<p>If I used a handmade grading scale instead of using this protocol, that would have required that I estimate approximately and a priori the difficulty of the questions that I gave.</p>
+<p>And since I cannot precisely know how the difficulty of each question for each student, someone could exploit my estimation to answer the questions that have the best points/difficulty ratio and thus be ranked better than someone else that did not answer strategically.</p>
+<p>When I was a student, I thought that this strategy dimension was a part of the exam because, in most cases, estimating if a question will require more time than another is possible only by doing a lot of exercises before the exam.</p>
+<p>Although the grading scale was often given but was changed afterwards, usually to avoid too many people getting terrible grades; in such cases, there is no fairness to students who are good enough to answer complex questions nor those who have enough experience to avoid them.</p>
+<p>With this framework, we could ensure that we keep the initial ranking even when changing the grading scale, thus avoiding terrible grades while promoting student performances.</p>
+    </section>
+</article>
+
+
+<footer class="article-footer">
+    <div class="footer-line">
+        <span>O</span>
+    </div>
+    <p><a href="../../index.html">← Back to home</a></p>
+</footer>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.24/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.24/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.24/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {
+        delimiters: [
+            {left:'$$', right:'$$', display:true},
+            {left:'$', right:'$', display:false}
+        ]
+    });"></script>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/julia.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", (event) => {
+    hljs.highlightAll();
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const progressBar = document.querySelector('.progress-bar');
+    const previousSubtitle = document.querySelector('.previous-subtitle');
+    const currentSubtitle = document.querySelector('.current-subtitle');
+    const nextSubtitle = document.querySelector('.next-subtitle');
+    const headings = document.querySelectorAll('.main-article section h2, .main-article section h3');
+    const articleTitleEl = document.querySelector('.main-article .article-title');
+    const articleTitle = articleTitleEl.textContent;
+
+    headings.forEach((h, i) => {
+        if (!h.id) h.id = 'heading-' + i;
+    });
+    if (!articleTitleEl.id) articleTitleEl.id = 'article-title';
+
+    function updateProgress() {
+        const scrollTop = window.scrollY;
+        const docHeight = document.body.scrollHeight - window.innerHeight;
+        const scrollPercent = (scrollTop / docHeight) * 100;
+        progressBar.style.height = scrollPercent + '%';
+
+        let currentIndex = -1;
+        headings.forEach((h, i) => {
+            if (h.offsetTop - 50 <= scrollTop) currentIndex = i;
+        });
+
+        let current = currentIndex >= 0 ? headings[currentIndex] : null;
+
+        if (current) {
+            currentSubtitle.textContent = current.textContent;
+            currentSubtitle.dataset.targetId = current.id;
+
+            previousSubtitle.textContent = headings[currentIndex - 1]?.textContent || '';
+            previousSubtitle.dataset.targetId = headings[currentIndex - 1]?.id || '';
+
+            nextSubtitle.textContent = headings[currentIndex + 1]?.textContent || '';
+            nextSubtitle.dataset.targetId = headings[currentIndex + 1]?.id || '';
+        } else {
+            currentSubtitle.textContent = articleTitle;
+            currentSubtitle.dataset.targetId = articleTitleEl.id;
+
+            previousSubtitle.textContent = '';
+            previousSubtitle.dataset.targetId = '';
+
+            nextSubtitle.textContent = headings[0]?.textContent || '';
+            nextSubtitle.dataset.targetId = headings[0]?.id || '';
+        }
+    }
+
+    function scrollToSubtitle(el) {
+        const targetId = el.dataset.targetId;
+        if (!targetId) return;
+        const target = document.getElementById(targetId);
+        if (!target) return;
+
+        window.scrollTo({
+            top: target.offsetTop,
+            behavior: 'smooth'
+        });
+
+        const onScroll = () => {
+            const scrollTop = window.scrollY;
+            if (Math.abs(scrollTop - target.offsetTop) < 2) {
+                updateProgress();
+                window.removeEventListener('scroll', onScroll);
+            }
+        };
+        window.addEventListener('scroll', onScroll);
+    }
+
+    [previousSubtitle, currentSubtitle, nextSubtitle].forEach(el => {
+        el.addEventListener('click', () => scrollToSubtitle(el));
+    });
+
+    window.addEventListener('scroll', updateProgress);
+    updateProgress();
+});
+</script>
+
+
+</body>
+</html>
