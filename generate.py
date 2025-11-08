@@ -236,7 +236,8 @@ def convert_md_to_html(md_file, output_file=None, template_file='article_templat
         'description': description,
         'link': link_path,
         'thumbnail': thumbnail,
-        'draft': is_draft
+        'draft': is_draft,
+        'read_time': str(time_read)
     }
 
 
@@ -267,11 +268,14 @@ def generate_all_articles(articles_dir='articles', article_template='article_tem
     articles_html = ""
     for art in sorted(articles_info, key=lambda x: parse_date(x['date']), reverse=True):
         thumbnail_html = f'<img src="{art["thumbnail"]}" alt="Article image">' if art["thumbnail"] else ""
+        date_formatted = format_date_display(art['date'])
+        
         articles_html += f"""
         <article class="article-item">
             <div class="article-content">
                 <h3 class="article-title"><a href="{art['link']}">{art['title']}</a></h3>
                 <p class="article-description">{art['description']}</p>
+                <p class="article-meta">{date_formatted} · {art['read_time']}</p>
             </div>
             <div class="article-image">
                 {thumbnail_html}
