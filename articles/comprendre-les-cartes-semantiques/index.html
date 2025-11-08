@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comprendre les cartes sémantiques - Ouaguenouni Mohamed</title>
+    <link rel="stylesheet" type="text/css" href="../../style.css">
+    <link rel="stylesheet" type="text/css" href="../../article.css">
+    <meta property="og:title" content="Comprendre les cartes sémantiques">
+    <meta property="og:description" content="De la théorie à la pratique">
+    <meta property="og:image" content="/articles/comprendre-les-cartes-semantiques/og.png">
+    <meta property="og:type" content="article">
+    <meta property="twitter:card" content="summary_large_image">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+</head>
+<body>
+    <header class="site-header">
+        <h1><a href="../../index.html">Ouaguenouni Mohamed</a></h1>
+    </header>
+
+<aside class="reading-sidebar">
+    <div class="progress-wrapper">
+        <div class="previous-subtitle"></div>
+        <div class="current-subtitle"></div>
+        <div class="next-subtitle"></div>
+        <div class="progress-bar-container">
+            <div class="progress-bar"></div>
+        </div>
+    </div>
+</aside>
+
+<article class="main-article">
+    <h1 class="article-title">Comprendre les cartes sémantiques</h1>
+    <p class="article-meta">1 min read · Published on 22 October 2025</p>
+    <section>
+        <p><em>TLDR;</em> Une carte sémantique est un diagram qui contient les mots d’un vocabulaire et ou les mots les plus proches sur la carte sont proche sémantiquement.
+On l’entraine en utilisant une base de données qu’on appelle “Corpus” qui contient des phrases.
+Il y’a plusieurs techniques qui peuvent être employées pour construire une représentation sémantique, celle que j’explique s’appelle Word2vec et elle fonctionne en utilisant le postulat de “Plus deux mots apparaissent dans des contextes similaires plus ils sont proches sémantiquement”</p>
+<h2>Introduction et intuition</h2>
+<p>Montre moi votre carte, je vous dirais ce que vous cherchez.</p>
+<p>Les <em>word embeddings</em> — traduisons pudiquement par “cartes sémantiques” — occupent une place paradoxale dans le paysage de l’intelligence artificielle. Apparues sous les feux des projecteurs vers 2013 avec le fameux Word2Vec, elles fascinent les initiés, impressionnent les néophytes, et demeurent probablement l’un des outils les plus systématiquement mal compris de tout le domaine. Ce qui n’est pas rien, dans un secteur où la confusion fait presque office de sport national.</p>
+<p><div class="embedded-html" id="embed-0">
+<style>
+.point {
+    cursor: grab;
+}
+.point:active {
+    cursor: grabbing;
+}
+</style>
+<div>
+    <span>Type de distance:</span>
+    <input type="radio" id="euclidian_distance" name="distance" checked/>
+    <label for="euclidian_distance">Euclidienne</label>
+    <input type="radio" id="manhattan_distance" name="distance"/>
+    <label for="manhattan_distance">Manhattan</label>
+</div>
+
+<div id="chart"></div>
+
+<script>
+(function() {
+
+const gridUnit = 1;
+const gridExtent = 5;
+
+const margin = {top: 20, right: 30, bottom: 40, left: 50};
+const width = 720 - margin.left - margin.right;
+const height = 500 - margin.top - margin.bottom;
+const aspectRatio = width / height;
+
+const yRange = gridExtent;
+const xRange = yRange * aspectRatio;
+
+const xScale = d3.scaleLinear().domain([-xRange, xRange]).range([0, width]);
+const yScale = d3.scaleLinear().domain([-yRange, yRange]).range([height, 0]);
+
+const svg = d3.select("#chart")
+    .append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+    .attr("transform", `translate(${margin.left},${margin.top})`);
+
+let points = [
+    {x: 3, y: 5},
+    {x: -2, y: -1}
+];
+
+let distanceType = 'euclidean';
+
+const lineGroup = svg.append("g");
+const linePath = lineGroup.append("line")
+    .attr("stroke", "#4a90e2")
+    .attr("stroke-width", 5);
+const manhattanPathGroup = svg.append("g").attr("class", "manhattan-path");
+
+const strokeCircles = svg.append("g").attr("class", "stroke-circles");
+
+function integerTicksForX() {
+    const start = Math.ceil(-xRange);
+    const end = Math.floor(xRange);
+    return d3.range(start, end + 1, gridUnit);
+}
+function integerTicksForY() {
+    const start = Math.ceil(-yRange);
+    const end = Math.floor(yRange);
+    return d3.range(start, end + 1, gridUnit);
+}
+
+const xTicks = integerTicksForX();
+const yTicks = integerTicksForY();
+
+svg.append("g")
+    .attr("transform", `translate(0,${yScale(0)})`)
+    .call(
+        d3.axisBottom(xScale)
+            .tickValues(xTicks)
+            .tickFormat(d3.format("d"))
+    );
+
+svg.append("g")
+    .attr("transform", `translate(${xScale(0)},0)`)
+    .call(
+        d3.axisLeft(yScale)
+            .tickValues(yTicks)
+            .tickFormat(d3.format("d"))
+    );
+
+svg.append("g")
+    .attr("class", "grid")
+    .attr("opacity", 0.12)
+    .call(
+        d3.axisLeft(yScale)
+            .tickSize(-width)
+            .tickValues(yTicks)
+            .tickFormat("")
+    );
+
+svg.append("g")
+    .attr("class", "grid")
+    .attr("transform", `translate(0,${height})`)
+    .attr("opacity", 0.12)
+    .call(
+        d3.axisBottom(xScale)
+            .tickSize(-height)
+            .tickValues(xTicks)
+            .tickFormat("")
+    );
+
+const distanceLabel = svg.append("text")
+    .attr("class", "distance-label")
+    .attr("fill", "#333")
+    .attr("text-anchor", "middle");
+
+lineGroup.node().appendChild(distanceLabel.node());
+
+function updateLine() {
+    const dx = points[1].x - points[0].x;
+    const dy = points[1].y - points[0].y;
+    let distance;
+
+    if (distanceType === 'euclidean') {
+        distance = Math.sqrt(dx * dx + dy * dy);
+        linePath.style("display", "block");
+        manhattanPathGroup.selectAll("*").remove();
+        linePath
+            .attr("x1", xScale(points[0].x))
+            .attr("y1", yScale(points[0].y))
+            .attr("x2", xScale(points[1].x))
+            .attr("y2", yScale(points[1].y));
+    } else {
+        distance = Math.abs(dx) + Math.abs(dy);
+        linePath.style("display", "none");
+        manhattanPathGroup.selectAll("*").remove();
+
+        const xDir = dx > 0 ? gridUnit : (dx < 0 ? -gridUnit : 0);
+        const yDir = dy > 0 ? gridUnit : (dy < 0 ? -gridUnit : 0);
+
+        let currentX = points[0].x;
+        let currentY = points[0].y;
+
+        const xSteps = Math.round(Math.abs(dx / gridUnit));
+        const ySteps = Math.round(Math.abs(dy / gridUnit));
+        const steps = Math.max(xSteps, ySteps);
+
+        const stairPoints = [{x: currentX, y: currentY}];
+
+        for (let i = 0; i < steps; i++) {
+            if (i < xSteps) {
+                currentX += xDir;
+                stairPoints.push({x: currentX, y: currentY});
+            }
+            if (i < ySteps) {
+                currentY += yDir;
+                stairPoints.push({x: currentX, y: currentY});
+            }
+        }
+
+        const lineGenerator = d3.line()
+            .x(d => xScale(d.x))
+            .y(d => yScale(d.y));
+
+        manhattanPathGroup.append("path")
+            .datum(stairPoints)
+            .attr("d", lineGenerator)
+            .attr("fill", "none")
+            .attr("stroke", "#4a90e2")
+            .attr("stroke-width", 5);
+    }
+
+    const midX = (xScale(points[0].x) + xScale(points[1].x)) / 2;
+    const midY = (yScale(points[0].y) + yScale(points[1].y)) / 2;
+
+    distanceLabel
+        .attr("x", midX)
+        .attr("y", midY - 20)
+        .text(`d = ${distance.toFixed(2)}`);
+
+    svg.node().appendChild(distanceLabel.node());
+}
+
+const drag = d3.drag()
+    .on("drag", function(event, d) {
+        const svgElement = this.ownerSVGElement;
+        const rect = svgElement.getBoundingClientRect();
+        const x = xScale.invert(event.sourceEvent.clientX - rect.left - margin.left);
+        const y = yScale.invert(event.sourceEvent.clientY - rect.top - margin.top);
+
+        d.x = Math.round(x / gridUnit) * gridUnit;
+        d.y = Math.round(y / gridUnit) * gridUnit;
+
+        d3.select(this)
+            .attr("cx", xScale(d.x))
+            .attr("cy", yScale(d.y));
+
+        const index = points.indexOf(d);
+        strokeCircles.selectAll("circle")
+            .filter((_, i) => i === index)
+            .attr("cx", xScale(d.x))
+            .attr("cy", yScale(d.y));
+
+        updateLine();
+    });
+
+strokeCircles.selectAll("circle")
+    .data(points)
+    .enter()
+    .append("circle")
+    .attr("cx", d => xScale(d.x))
+    .attr("cy", d => yScale(d.y))
+    .attr("r", 11)
+    .attr("fill", "white")
+    .attr("stroke", "white")
+    .attr("stroke-width", 5)
+    .style("pointer-events", "none");
+
+svg.selectAll(".point")
+    .data(points)
+    .enter()
+    .append("circle")
+    .attr("class", "point")
+    .attr("cx", d => xScale(d.x))
+    .attr("cy", d => yScale(d.y))
+    .attr("r", 10)
+    .attr("fill", "#e74c3c")
+    .call(drag);
+
+document.getElementById('euclidian_distance').addEventListener('change', function() {
+    if (this.checked) {
+        distanceType = 'euclidean';
+        updateLine();
+    }
+});
+
+document.getElementById('manhattan_distance').addEventListener('change', function() {
+    if (this.checked) {
+        distanceType = 'manhattan';
+        updateLine();
+    }
+});
+
+document.getElementById('manhattan_distance').checked = true;
+distanceType = 'manhattan';
+updateLine();
+
+})();
+</script>
+
+</div></p>
+    </section>
+</article>
+
+
+<footer class="article-footer">
+    <div class="footer-line">
+        <span>O</span>
+    </div>
+    <p><a href="../../index.html">← Back to home</a></p>
+</footer>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.24/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.24/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.24/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {
+        delimiters: [
+            {left:'$$', right:'$$', display:true},
+            {left:'$', right:'$', display:false}
+        ]
+    });"></script>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/julia.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", (event) => {
+    hljs.highlightAll();
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const progressBar = document.querySelector('.progress-bar');
+    const previousSubtitle = document.querySelector('.previous-subtitle');
+    const currentSubtitle = document.querySelector('.current-subtitle');
+    const nextSubtitle = document.querySelector('.next-subtitle');
+    const headings = document.querySelectorAll('.main-article section h2, .main-article section h3');
+    const articleTitleEl = document.querySelector('.main-article .article-title');
+    const articleTitle = articleTitleEl.textContent;
+
+    headings.forEach((h, i) => {
+        if (!h.id) h.id = 'heading-' + i;
+    });
+    if (!articleTitleEl.id) articleTitleEl.id = 'article-title';
+
+    function updateProgress() {
+        const scrollTop = window.scrollY;
+        const docHeight = document.body.scrollHeight - window.innerHeight;
+        const scrollPercent = (scrollTop / docHeight) * 100;
+        progressBar.style.height = scrollPercent + '%';
+
+        let currentIndex = -1;
+        headings.forEach((h, i) => {
+            if (h.offsetTop - 50 <= scrollTop) currentIndex = i;
+        });
+
+        let current = currentIndex >= 0 ? headings[currentIndex] : null;
+
+        if (current) {
+            currentSubtitle.textContent = current.textContent;
+            currentSubtitle.dataset.targetId = current.id;
+
+            previousSubtitle.textContent = headings[currentIndex - 1]?.textContent || '';
+            previousSubtitle.dataset.targetId = headings[currentIndex - 1]?.id || '';
+
+            nextSubtitle.textContent = headings[currentIndex + 1]?.textContent || '';
+            nextSubtitle.dataset.targetId = headings[currentIndex + 1]?.id || '';
+        } else {
+            currentSubtitle.textContent = articleTitle;
+            currentSubtitle.dataset.targetId = articleTitleEl.id;
+
+            previousSubtitle.textContent = '';
+            previousSubtitle.dataset.targetId = '';
+
+            nextSubtitle.textContent = headings[0]?.textContent || '';
+            nextSubtitle.dataset.targetId = headings[0]?.id || '';
+        }
+    }
+
+    function scrollToSubtitle(el) {
+        const targetId = el.dataset.targetId;
+        if (!targetId) return;
+        const target = document.getElementById(targetId);
+        if (!target) return;
+
+        window.scrollTo({
+            top: target.offsetTop,
+            behavior: 'smooth'
+        });
+
+        const onScroll = () => {
+            const scrollTop = window.scrollY;
+            if (Math.abs(scrollTop - target.offsetTop) < 2) {
+                updateProgress();
+                window.removeEventListener('scroll', onScroll);
+            }
+        };
+        window.addEventListener('scroll', onScroll);
+    }
+
+    [previousSubtitle, currentSubtitle, nextSubtitle].forEach(el => {
+        el.addEventListener('click', () => scrollToSubtitle(el));
+    });
+
+    window.addEventListener('scroll', updateProgress);
+    updateProgress();
+});
+</script>
+
+
+</body>
+</html>
