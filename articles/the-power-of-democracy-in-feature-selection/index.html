@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The power of democracy in Feature Selection - Ouaguenouni Mohamed</title>
+    <link rel="stylesheet" type="text/css" href="../../style.css">
+    <link rel="stylesheet" type="text/css" href="../../article.css">
+    <meta property="og:title" content="The power of democracy in Feature Selection">
+    <meta property="og:description" content="Using Condorcet Methods to aggregate Feature Selection rankings">
+    <meta property="og:image" content="/articles/the-power-of-democracy-in-feature-selection/og.png">
+    <meta property="og:type" content="article">
+    <meta property="twitter:card" content="summary_large_image">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+</head>
+<body>
+    <header class="site-header">
+        <h1><a href="../../index.html">Ouaguenouni Mohamed</a></h1>
+    </header>
+
+<aside class="reading-sidebar">
+    <div class="progress-wrapper">
+        <div class="previous-subtitle"></div>
+        <div class="current-subtitle"></div>
+        <div class="next-subtitle"></div>
+        <div class="progress-bar-container">
+            <div class="progress-bar"></div>
+        </div>
+    </div>
+</aside>
+
+<article class="main-article">
+    <h1 class="article-title">The power of democracy in Feature Selection</h1>
+    <p class="article-meta">11 min read · Published on 26 April 2021</p>
+    <section>
+        <p>Using Condorcet Methods to aggregate Feature Selection rankings</p>
+<hr />
+<p>According to Wikipedia, <strong>feature selection</strong>, also known as <strong>variable selection</strong>, <strong>attribute selection,</strong> or <strong>variable subset selection</strong>, is the process of selecting a subset of relevant <a href="https://en.wikipedia.org/wiki/Feature_(machine_learning)">features</a> (variables, predictors) for use in model construction.</p>
+<p>Feature selection techniques are used for several reasons:</p>
+<ul>
+<li>simplification of models to make them easier to interpret by researchers/users.</li>
+<li>shorter training times,</li>
+<li>to avoid the <a href="https://en.wikipedia.org/wiki/Curse_of_dimensionality">curse of dimensionality</a>,</li>
+<li>enhanced generalization by reducing <a href="https://en.wikipedia.org/wiki/Overfitting">overfittin</a>g.</li>
+</ul>
+<p>We studied a class of feature selection methods in a precedent <a href="https://towardsdatascience.com/towards-building-a-unified-framework-for-feature-selection-with-ranking-functions-5605ef665f26">story</a>: the ranking methods.</p>
+<p>A ranking method is a method that ranks the features of a dataset according to a quality measure and selects the first ones.</p>
+<p>They are five kinds of measure: Distance, Information, Consistency, Dependency, and Classification Accuracy, and we saw that according to the type of measure we take, we could obtain very different rankings, and this conduces the various rankings to be efficient for some datasets and entirely inefficient for others, hence the need of using many measures.</p>
+<p>Suppose we see each measure as an elector and each attribute as a candidate. In that case, the rankings can be viewed as orders of preferences, and thus, we could apply an election method to compute an aggregated ranking.</p>
+<p>This post will first give a background on computational social choice; after that, we’ll see how we could aggregate rankings from multiple feature selection methods with the Kemeny method. Finally, we’ll evaluate the performances of the aggregation of the rankings compared to each ranking.</p>
+<h2>Computational Social Choice Background</h2>
+<h3>Profile of preferences</h3>
+<p>Say that you have n candidates, m electors. Each elector gives us an order of preferences on the candidates in this form a ≥ b ≥ … ≥ z that we’ll call “profile of preferences.”</p>
+<p>If you want to elect a candidate, which protocol should you use? What property do you want to have? And for what price in terms of complexity?</p>
+<h3>Majority graph</h3>
+<p>The majority graph is a graph where each candidate is a vertex;</p>
+<p>We draw a directed edge from a candidate x to a candidate y if x is strictly preferred to y by the majority, i.e., if the number of electors who prefer x to y: k(x) is strictly greater than the number of electors who prefers y to x: k(y).</p>
+<p>We weight each directed edge between a candidate x a candidate y by the difference k<em>(x)-k(y) in a weighted majority graph.</em></p>
+<h3>Condorcet winner</h3>
+<p>A Condorcet method is an election method that always elects a Condorcet winner; a candidate is a Condorcet winner if he beats all the others in a head-to-head vote; for example, the two-rounds election is not a Condorcet method, let’s take an example to illustrate that :</p>
+<p>Suppose you have 8 electors with this profiles of preferences</p>
+<ul>
+<li>3 electors: a ≥ c ≥ b</li>
+<li>3 electors: b ≥ c ≥ a</li>
+<li>2 electors: c ≥ b ≥ a</li>
+</ul>
+<p>The two-rounds election is an election where voters cast a single vote for their preferred candidate. The election proceeds to a second round only if no candidate has received a <a href="https://en.wikipedia.org/wiki/Majority">simple majority</a> (more than 50%) votes cast in the first round.</p>
+<p>In this example, a and b go to the second round, and b wins; let’s look at the majority graph.</p>
+<p><img alt="1_qWZml9PkVuefgFFZQSczzw.png" src="1_qWZml9PkVuefgFFZQSczzw.png" /></p>
+<p>We can see that c wins in any head-to-head election, but still, he is eliminated in the first round; this is known as the paradox of Condorcet.</p>
+<h2>Condorcet Methods</h2>
+<p>A Condorcet method is a method that always elects the Condorcet winner (if there is any).</p>
+<p>Many Condorcet methods may require different levels of knowledge on the majority graph.</p>
+<h3>Borda Method</h3>
+<p>Some methods don't require any knowledge on the majority graph, like the Borda count, which is computable in a linear time (O(n*m))</p>
+<blockquote>
+<p>Assume we have n electors, To compute the aggregated ranking with the <strong>Borda</strong> count, we give each candidate n points each time he’s in the first position of an elector’s preferences, n-1 for each time he’s in the second position, and so on.</p>
+</blockquote>
+<p>In the above example, “a” will have 14 points, “b” will have 16 points, and “c,” the Condorcet winner, wins with 18 points.</p>
+<h3>Copeland Method</h3>
+<p>Some other methods are also based on a count but require the unweighted majority graph, which we can compute in a quadratic time O(m*n²) because we have to compare each pair of candidates. Each comparison involves all the electors.</p>
+<p>Provided we have the unweighted majority graph, commuting the Copeland ranking is straightforward.</p>
+<blockquote>
+<p>To compute the aggregated ranking with the <strong>Copeland</strong> count, we give each candidate 2 points if he beats another candidate in the majority and 1 if he’s even with him.</p>
+</blockquote>
+<p>In the précedent example, “a” will have 0 points, “b” will have 2 points, and “c” will, of course, win with 4 points.</p>
+<h3>Slater Method</h3>
+<p>The Slater method also requires the unweighted majority graph but computing an aggregated ranking with the Slater method is an <strong>NP-Hard</strong> problem, more precisely an <a href="https://en.wikipedia.org/wiki/NP-completeness"><strong>NP-Complete</strong></a> problem.</p>
+<p>That means that we could not find an algorithm running in a polynomial time to compute an aggregated ranking with the Slater method unless <a href="https://en.wikipedia.org/wiki/P_versus_NP_problem">P=NP</a>, which is highly unlikely.</p>
+<blockquote>
+<p>The aggregated ranking with the Slater method is the ranking that minimizes the number of <strong>disagreements;</strong> we count 1 disagreement in a ranking R each time a candidate beats another in the majority but is ranked after him in R.</p>
+</blockquote>
+<p>For the above example, c ≥ b≥ a have the minimum number of disagreements; we found it easily because the majority graph is acyclic, so any Topological Ordering is a ranking that minimizes the number of disagreements.</p>
+<blockquote>
+<p>According to Wikipedia definition, a <strong>topological sort</strong> or <strong>topological ordering</strong> of a <a href="https://en.wikipedia.org/wiki/Directed_graph">directed graph</a> is a <a href="https://en.wikipedia.org/wiki/Total_order">linear ordering</a> of its <a href="https://en.wikipedia.org/wiki/Vertex_(graph_theory)">vertices</a> such that for every directed edge <em>uv</em> from vertex <em>u</em> to vertex <em>v</em>, <em>u</em> comes before <em>v</em> in the ordering.</p>
+</blockquote>
+<p>Let’s imagine it’s not the case, imagine we have a profile of preferences that gives us the following graph:</p>
+<p><img alt="1_RAWl3IpD5NOUdf_AmW7nTQ.png" src="1_RAWl3IpD5NOUdf_AmW7nTQ.png" /></p>
+<p>First, since we have a cycle (A, B, C), we will have to reverse at least one arc, which means that the best ranking we could find will have at least one disagreement depending on which will be the last in the trio A, B, C.</p>
+<p>We could, for example, reverse (B, C) and (C, A) and thus have this graph.</p>
+<p><img alt="1_D7l-77o5Fotk1N3i2T-DqQ.png" src="1_D7l-77o5Fotk1N3i2T-DqQ.png" /></p>
+<p>And have this ranking A ≥ D ≥ C ≥ B that have 2 disagreements because B beats C in the majority and A beats C in the majority.</p>
+<p>It’s not the Slater ranking since we can do better by not reversing (B, C) we’ll have :</p>
+<p><img alt="1_f7iQWF99R6lB3WfrM3quDw.png" src="1_f7iQWF99R6lB3WfrM3quDw.png" /></p>
+<p>And thus, deduce this ranking: A ≥ D ≥ B ≥ C that has 1 disagreement and is a Slater’s ranking (because we can’t do less).</p>
+<h3>Kemeny Method</h3>
+<p>This method is very similar to the Slater ranking:</p>
+<blockquote>
+<p>The aggregated ranking with the Kemeny method is the ranking that minimizes the number of <strong>disagreements;</strong> we count 1 disagreement in a ranking R each time a candidate is prefered to another by an elector but is ranked after him in R.</p>
+</blockquote>
+<p>So the Kemeny’s ranking is a ranking that minimizes a distance called the Kendall Tau distance, and thus, intuitively, if the initial rankings of the electors are close to each other, getting the aggregated ranking is easy.</p>
+<p>Talking about complexity, computing Kemeny’s ranking is also an NP-Complete problem, which means that we cannot found an algorithm that runs in a time that is a polynomial function of the size of the instance (n*m).</p>
+<p>In fact, a dynamic programming approach would take O(m²n2ᵐ) operations (check <a href="https://fpt.akt.tu-berlin.de/publications/kemeny-jaamas.pdf">this</a> article for more details).</p>
+<p>However, we still have an interesting property that provides us an efficient preprocessing that significantly reduces the computation time.</p>
+<p>To introduce this property, we have to introduce the notion of a proper candidate.</p>
+<blockquote>
+<p>A candidate is said to be proper if for each other candidate b, b is better than him for at least 3/4 of the electors or b is worst than him for at least 3/4 of the electors.</p>
+</blockquote>
+<p>Let’s take an example of this with an application case.</p>
+<p>Let’s say that four teachers are in a scientific team and they are seeking interns, but they don't know in advance how many interns they will be allowed to take; each teacher could provide a preference order on the students that applied to the internship based on the marks the student get in his course, and thus we’ll have a preference order for each teacher.</p>
+<p>Let’s consider four candidates and the following profile:</p>
+<ul>
+<li>a ≥ c ≥ b ≥ d</li>
+<li>a ≥ c ≥ b≥ d</li>
+<li>d ≥ b ≥ a ≥ c</li>
+<li>c ≥ a ≥ b≥ d</li>
+</ul>
+<p>An example of a proper candidate is a, and since he beat every other candidate in 3 of the four courses, he will be the first in the aggregated ranking. Thus he will be taken whatever the number of interns selected.</p>
+<p>Based on this intuition, <a href="https://link.springer.com/chapter/10.1007/978-3-642-17493-3_5">this</a> article states that we can reduce the number of candidates to 11Δ, where Δ is the mean distance between rankings.</p>
+<p>This process is known as kernelization.</p>
+<p>The kernelization is a preprocessing analysis that allows us to reduce the problem to a smaller problem called the kernel; here, the size of the kernel is a polynomial function of the mean distance between rankings.</p>
+<h2>Implementation of the methods</h2>
+<h3>Global Framework</h3>
+<p>In a <a href="https://towardsdatascience.com/towards-building-a-unified-framework-for-feature-selection-with-ranking-functions-5605ef665f26">precedent post</a>, I explained how we could design an extensible framework to group many feature selection ranking methods; now, it’s an excellent occasion to see how we can extend it.</p>
+<p>The idea is that each feature selection method selects the features to keep after ranking them with an evaluation function; now, we must add to the framework a class of feature selection methods that sets features based on an <strong>aggregation</strong> of many rankings coming from multiple evaluation functions.</p>
+<p>We must also keep in mind that we could have any subset of evaluation functions to aggregate and aggregate them with any preceding methods.</p>
+<p>A quick modelization gives us this diagram that we’ll use as a map for what follows.</p>
+<p><img alt="1_aQAO7-74mxQV6uuKuGlRwA.png" src="1_aQAO7-74mxQV6uuKuGlRwA.png" /></p>
+<p>In this tutorial, I will explain the implementation of the Kemeny aggregator, but we can quickly implement the others the same way.</p>
+<h3>Weighted Majority Graph</h3>
+<p>First, we have to implement a weighted majority graph builder; to do so, we’ll consider the adjacency matrix representation and use NumPy.</p>
+<pre><code>def build\_weighted\_majority\_graph(self, rankings, n\_candidates):graph = np.zeros((n\_candidates, n\_candidates))rankings = np.array(rankings)candidates = list(np.unique(rankings))for i in range(len(candidates)):for k in range(i+1,len(candidates)):r = 0for ranking in rankings:p1 = np.where(ranking == candidates[i])[0][0]p2 = np.where(ranking == candidates[k])[0][0]if (p1 &lt; p2):r += 1else:r -= 1if(r &gt; 0):graph[i,k] = relif(r &lt; 0):graph[k,i] = -rreturn graph
+</code></pre>
+<p>After that, we have to think about how we could obtain the Kemeny ranking from the majority graph. To do so, we’ll use the linear programming paradigm.</p>
+<p>If you are not familiar with this paradigm, I suggest to you my article about it in Julia, but, as you will notice, it’s pretty similar.</p>
+<h3>Kemeny Ranking with Linear Programming</h3>
+<p>To build a linear program for the Kemeny ranking problem, we must first describe the solution space using variables and a set of related constraints.</p>
+<p>A ranking is an order of preferences on the candidates, so to represent it with a set of variables, we must use m² boolean variables, one for each pair of candidates.</p>
+<p>Each variable xᵢⱼ is set to 1 if the candidate j is preferred to the candidate i in the final ranking.</p>
+<p>If a ranking is an order of preferences, not any order of preferences is a ranking. First, a ranking is a <strong>total</strong> order, which means that we either prefer one or the other for any pair of candidates. Also, a ranking is an order where the preference is <strong>transitive</strong> because if we rank x before y and y before z, we necessarily rank x before z.</p>
+<p>This could be represented with the following constraints:</p>
+<p><img alt="1_M0SVqJqE9PbwHDRPRX4OnA.png" src="1_M0SVqJqE9PbwHDRPRX4OnA.png" /></p>
+<p>The first inequality means: “We have <strong><em>i</em></strong> after <strong><em>j</em></strong> or<strong><em>j</em></strong> after <strong><em>i</em></strong> in the ranking,” and the second one is violated if “we have <strong><em>i</em></strong> before <strong><em>j</em></strong>, <strong><em>j</em></strong>before <strong><em>k</em></strong> and not <strong><em>i</em></strong> before <strong><em>k</em></strong> in the ranking.”</p>
+<p>Now, we have to determine the objective function to optimize.</p>
+<p>As we said before, we have to minimize the number of disagreements, so, to have the number of disagreements of a ranking, we build a weighted sum of the variables where each variable xᵢⱼ is weighted by the weight of the arc (i,j).</p>
+<p>We can do this with the following code:</p>
+<pre><code>import numpy as npimport pulp as pldef aggregate\_kemeny(graph):prob = pl.LpProblem(&quot;Kemeny Ranking Problem&quot;, pl.LpMinimize)nodes = range(graph.shape[0])x = pl.LpVariable.dicts(&quot;X&quot;, (nodes, nodes), cat='Binary')e = 0for i in range(graph.shape[0]):for j in range(graph.shape[0]):if (i == j):continueprob += (x[i][j] + x[j][i] == 1)for k in range(graph.shape[0]):if(k == j):continueprob += (x[i][j] + x[j][k] + x[k][i] &gt;= 1)e += graph[i,j] \* x[i][j]prob += eprob.solve()rates = np.zeros(graph.shape[0])for i in nodes:for j in nodes:if(i == j):continueif(pl.value(x[i][j]) == 1):rates[j] += 1return rates.argsort()[::-1]
+</code></pre>
+<h2>Experimental results</h2>
+<p>In this experimentation, I first investigated the differences between the rankings of different feature selection methods.</p>
+<p>To do so, I drew a heatmap of the Kendall-Tau distance between the rankings coming from different feature selection measures and their aggregation with the Kemeny method.</p>
+<p>The Kendall Tau distance is a measure of the correspondence between two rankings. Values close to 1 indicate strong agreement, and values close to -1 indicate strong disagreement.</p>
+<p>The measures considered are the ones I implemented in this post:</p>
+<ul>
+<li>Two correlation measures (C1, C2).</li>
+<li>Two classification measures (CL1, CL2).</li>
+<li>The dependency, measured by a CHI2 test.</li>
+<li>Mutual information (MI).</li>
+</ul>
+<p>The dataset used is the IRIS dataset augmented with irrelevant features.</p>
+<p><img alt="1_gPbtCoKNOkI8Rk1T4irLqg.png" src="1_gPbtCoKNOkI8Rk1T4irLqg.png" /></p>
+<p>As we can notice, the aggregation of the measures provides us a ranking that is as close as possible to each ranking.</p>
+<p>The second thing I wanted to investigate is the performance of the aggregated ranking.</p>
+<p>To do so, I used a randomly sampled dataset, and I compared the accuracy achieved by the best subset of features for each measure and multiple aggregations of different measures.</p>
+<p><img alt="1_5OIScBzVo8LteFcb3Nh7SA.png" src="1_5OIScBzVo8LteFcb3Nh7SA.png" /></p>
+<p>We can notice many things :</p>
+<ul>
+<li>Some feature selection methods are very efficient for some datasets and very inefficient for others, but the aggregations always have good overall performances.</li>
+<li>The first aggregation shows us that sometimes combining many measures gives us an aggregated ranking that is more efficient than each measure used for the aggregation.</li>
+<li>The second aggregation shows us that adding a weak measure to the aggregation can augment the performance, but it’s not always the case, as shown in the third aggregation.</li>
+</ul>
+<h2>Conclusion</h2>
+<p>Using an aggregation of the rankings from different feature selection methods is very useful because it provides us a generic protocol to obtain more robust and often more efficient aggregators.</p>
+<p>This study shows us the combinatorial aspect of building an aggregation because some measures seem to synergize positively and others not. Besides, Some measure selects features that are useful for some classifiers and useless for other ones.</p>
+<p>So, in the end, wouldn’t it be better to think of the classifier as a decision-maker who would choose a set of measures to privilege? Measures that could interact positively or negatively.<br />
+But how could we build such a model and train it while limiting the very costly calls to the classifier?</p>
+<p>Stay tuned to find out more about this :)</p>
+    </section>
+</article>
+
+
+<footer class="article-footer">
+    <div class="footer-line">
+        <span>O</span>
+    </div>
+    <p><a href="../../index.html">← Back to home</a></p>
+</footer>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.24/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.24/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.24/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {
+        delimiters: [
+            {left:'$$', right:'$$', display:true},
+            {left:'$', right:'$', display:false}
+        ]
+    });"></script>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/julia.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", (event) => {
+    hljs.highlightAll();
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const progressBar = document.querySelector('.progress-bar');
+    const previousSubtitle = document.querySelector('.previous-subtitle');
+    const currentSubtitle = document.querySelector('.current-subtitle');
+    const nextSubtitle = document.querySelector('.next-subtitle');
+    const headings = document.querySelectorAll('.main-article section h2, .main-article section h3');
+    const articleTitleEl = document.querySelector('.main-article .article-title');
+    const articleTitle = articleTitleEl.textContent;
+
+    headings.forEach((h, i) => {
+        if (!h.id) h.id = 'heading-' + i;
+    });
+    if (!articleTitleEl.id) articleTitleEl.id = 'article-title';
+
+    function updateProgress() {
+        const scrollTop = window.scrollY;
+        const docHeight = document.body.scrollHeight - window.innerHeight;
+        const scrollPercent = (scrollTop / docHeight) * 100;
+        progressBar.style.height = scrollPercent + '%';
+
+        let currentIndex = -1;
+        headings.forEach((h, i) => {
+            if (h.offsetTop - 50 <= scrollTop) currentIndex = i;
+        });
+
+        let current = currentIndex >= 0 ? headings[currentIndex] : null;
+
+        if (current) {
+            currentSubtitle.textContent = current.textContent;
+            currentSubtitle.dataset.targetId = current.id;
+
+            previousSubtitle.textContent = headings[currentIndex - 1]?.textContent || '';
+            previousSubtitle.dataset.targetId = headings[currentIndex - 1]?.id || '';
+
+            nextSubtitle.textContent = headings[currentIndex + 1]?.textContent || '';
+            nextSubtitle.dataset.targetId = headings[currentIndex + 1]?.id || '';
+        } else {
+            currentSubtitle.textContent = articleTitle;
+            currentSubtitle.dataset.targetId = articleTitleEl.id;
+
+            previousSubtitle.textContent = '';
+            previousSubtitle.dataset.targetId = '';
+
+            nextSubtitle.textContent = headings[0]?.textContent || '';
+            nextSubtitle.dataset.targetId = headings[0]?.id || '';
+        }
+    }
+
+    function scrollToSubtitle(el) {
+        const targetId = el.dataset.targetId;
+        if (!targetId) return;
+        const target = document.getElementById(targetId);
+        if (!target) return;
+
+        window.scrollTo({
+            top: target.offsetTop,
+            behavior: 'smooth'
+        });
+
+        const onScroll = () => {
+            const scrollTop = window.scrollY;
+            if (Math.abs(scrollTop - target.offsetTop) < 2) {
+                updateProgress();
+                window.removeEventListener('scroll', onScroll);
+            }
+        };
+        window.addEventListener('scroll', onScroll);
+    }
+
+    [previousSubtitle, currentSubtitle, nextSubtitle].forEach(el => {
+        el.addEventListener('click', () => scrollToSubtitle(el));
+    });
+
+    window.addEventListener('scroll', updateProgress);
+    updateProgress();
+});
+</script>
+
+
+</body>
+</html>

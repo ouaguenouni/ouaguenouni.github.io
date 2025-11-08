@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A comprehensive study of Mixed Integer Programming with JuMP on Julia (Part 1) - Ouaguenouni Mohamed</title>
+    <link rel="stylesheet" type="text/css" href="../../style.css">
+    <link rel="stylesheet" type="text/css" href="../../article.css">
+    <meta property="og:title" content="A comprehensive study of Mixed Integer Programming with JuMP on Julia (Part 1)">
+    <meta property="og:description" content="Some basics of Linear/Mixed Integer Programming & How to use a heuristic callback inside a MIP solver.">
+    <meta property="og:image" content="/articles/a-comprehensive-study-of-mixed-integer-programming-with-jump-on-julia-part-1/og.png">
+    <meta property="og:type" content="article">
+    <meta property="twitter:card" content="summary_large_image">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+</head>
+<body>
+    <header class="site-header">
+        <h1><a href="../../index.html">Ouaguenouni Mohamed</a></h1>
+    </header>
+
+<aside class="reading-sidebar">
+    <div class="progress-wrapper">
+        <div class="previous-subtitle"></div>
+        <div class="current-subtitle"></div>
+        <div class="next-subtitle"></div>
+        <div class="progress-bar-container">
+            <div class="progress-bar"></div>
+        </div>
+    </div>
+</aside>
+
+<article class="main-article">
+    <h1 class="article-title">A comprehensive study of Mixed Integer Programming with JuMP on Julia (Part 1)</h1>
+    <p class="article-meta">13 min read · Published on 29 March 2021</p>
+    <section>
+        <p>Some basics of Linear/Mixed Integer Programming &amp; How to use a heuristic callback inside a MIP solver.</p>
+<hr />
+<h2>Introduction</h2>
+<p>One of the primary purposes of the computer sciences and operation research is to solve problems efficiently; problem-solving is a field where we often find very “ad-hoc” methods of resolution, they can be efficient, but they rely on some specific properties of the problem which are not necessarily easy to notice.</p>
+<p>In this series of posts, we will introduce and discover a very versatile and generic way of thinking and of solving a wide variety of problems, and this introduction will occur on three sides:</p>
+<ul>
+<li>On the theoretical view, we will investigate how Linear Programming and Mixed Integer Programming can help us in modelling big combinatorial problems.</li>
+<li>In the practical aspect, we will see how we can use an API to instantiate a Linear Program and exploit some of the problems we solve to improve the solving procedure's efficiency.</li>
+<li>And finally, from the operational perspective, we will discover a very recent, efficient and user-friendly language: Julia, and more precisely, we will discover a library: JuMP, a domain-specific modelling language for <a href="http://en.wikipedia.org/wiki/Mathematical_optimization">mathematical optimization</a>.</li>
+</ul>
+<p>This series of posts doesn't assume a background in Julia; I think a Python background is more than enough to understand the pieces of code I will use.</p>
+<h2>What is this post about</h2>
+<p>This post is the pilot of the series, but it will also be the starting point of it by giving you the background you will need to understand the practical techniques that can be used to solve large combinatorial problems.</p>
+<p>It will also be the only post in which we will present a pure theoretical academic problem as an application for simplicity.</p>
+<p>Still, if you are comfortable with mixed-integer programming, this post (and more generally this series) is a good occasion to see to use Julia and, more precisely, <strong>how to tune your exact solving procedure with some approached methods.</strong></p>
+<h2>Smooth introduction to Linear Programming (and to Julia)</h2>
+<p>Let’s start by presenting how a linear program is structured and how a solver will perform a resolution. To do it, we will go through a simple example.</p>
+<p>To make it visualizable, we will take an example where we will try to optimize a linear function of two variables with respect to a set of linear constraints.</p>
+<p><img alt="1_5LoEvrZpdCnY18Pc7y6Wsg.png" src="1_5LoEvrZpdCnY18Pc7y6Wsg.png" /></p>
+<p>Geometrically, if we take each constraint and replace the inequality with equality, each constraint will be a line equation. This line will separate R² into two parts and invalidate one of them according to the direction of the inequality.</p>
+<p>We will name the polyhedron delimited by the set of constraints, which is, in this case, a polytope because it’s close and bounded, the polyhedron (or the polytope) of constraints.</p>
+<p>As a warm-up to Julia, let’s see how we can draw the polytope of constraints by using plot.jl, a “matplotlib-like” framework and the Package LinearAlgebra is similar to NumPy.</p>
+<p>First, we use Pkg, which is the built-in package manager of Julia, to add the required Packages,</p>
+<pre><code>using Pkg;Pkg.add(&quot;LinearAlgebra&quot;);Pkg.add(&quot;Plots&quot;);Pkg.add(&quot;PyPlot&quot;);
+</code></pre>
+<p>After adding them, we can import them.</p>
+<pre><code>using LinearAlgebrausing Plotspyplot()
+</code></pre>
+<p>The last line aims to complete some package plot functionalities for visualization (check the doc <a href="https://docs.juliaplots.org/latest/tutorial/">here</a> for more details).</p>
+<p>An easy way to draw any function is to sample points and compute the associated images, and this can be done in Julia the following way :</p>
+<pre><code>x\_v = LinRange(-2,15,100)plot([x\_v], [x\_v .+ 7.5], label =&quot;Y=x + 7.5&quot;)plot!([x\_v], [-2x\_v .+ 20], label =&quot;Y= -2x + 20&quot;)
+</code></pre>
+<p>The first line will sample 100 points from the interval [-2, 15]; a part of this; you have several things to notice :</p>
+<ul>
+<li>“plot” is used to create a line plot and plot! update a created plot.</li>
+<li>“.+” is the element-wise equivalent of the vector addition.</li>
+<li>Julia is so handy that omitting the “*” between a coefficient and a variable is possible even with a vector.</li>
+</ul>
+<p>These lines will produce the following plot :</p>
+<p><img alt="1_raUjsCmXoA7X47b7RTdGTw.png" src="1_raUjsCmXoA7X47b7RTdGTw.png" /></p>
+<p>and now let’s print the polytope of constraints :</p>
+<pre><code>x\_v = LinRange(-2,15,100)y\_v = LinRange(-2,15,100)plot([0\*x\_v], [y\_v],label =&quot;Y Axis&quot;)plot!([x\_v], [0\*x\_v],label =&quot;X Axis&quot;)plot!([x\_v], [0\*x\_v .+ 7.5], label =&quot;Y=7.5&quot;)plot!([0\*x\_v .+ 10], [y\_v],label =&quot;X=10&quot;)plot!(title = &quot;Polytop of Constraints&quot;)
+</code></pre>
+<p><img alt="1_lRdOuACl1xAUNhY_H9e7MA.png" src="1_lRdOuACl1xAUNhY_H9e7MA.png" /></p>
+<p>The grey area I added to the plot represents the space's portion, which satisfies the problem's constraints.</p>
+<p>Now let’s focus on the objective function by looking at the vector (1,2), representing the gradient of the linear function x+2y.</p>
+<p><img alt="1_tKPwn3Y8PC_y9Ny9L_lFZw.png" src="1_tKPwn3Y8PC_y9Ny9L_lFZw.png" /></p>
+<p>Each line I added represents a line of points with the same value. The further you go in the gradient direction, the bigger the objective value becomes.</p>
+<p>We can visually conclude that the best solution is at the intersection of the green and the pink line, so let’s see if we find this result using JuMP.</p>
+<p>The traditional add/import lines (we will use GLPK as a solver, but nothing is dependant on it).</p>
+<pre><code>Pkg.add(&quot;JuMP&quot;)Pkg.add(&quot;GLPK&quot;)using JuMPusing GLPK
+</code></pre>
+<p>Now we declare our model and set the optimizer from GLPK:</p>
+<pre><code>prgrm = Model()set\_optimizer(prgrm, GLPK.Optimizer)
+</code></pre>
+<p>We add the variables and precise their scope; by default, the variables are continuous :</p>
+<pre><code>@variable(prgrm, 0&lt;=x)@variable(prgrm, 0&lt;=y)
+</code></pre>
+<p>Now we create and add the two remaining constraints; the first two are in the scope of the variables;</p>
+<pre><code>@constraint(prgrm, x &lt;= 10)@constraint(prgrm, y &lt;= 7.5)
+</code></pre>
+<p>Finally, we add the objective function and precise sense of optimization, which will be, in this case, a maximization :</p>
+<pre><code>@objective(prgrm, Max, x+2y)
+</code></pre>
+<p>One interesting feature of JuMP and especially when using it with Jupyter-notebook is that we can print the program as easily as the content of any variable, which gives us the following output :</p>
+<p><img alt="1_jHa9UDxvlra_EZLwpGF1yA.png" src="1_jHa9UDxvlra_EZLwpGF1yA.png" /></p>
+<p>And now solving it is as easy to say as it is to do :</p>
+<pre><code>optimize!(prgrm)
+</code></pre>
+<p>After that, we can access the values of the variables after optimization like this:</p>
+<pre><code>value.(x)value.(y)
+</code></pre>
+<p>And so one we can update our precedent plot to confirm our graphical resolution with the line :</p>
+<pre><code>plot!([value.(x)], [value.(y)], seriestype = :scatter, label=&quot;Optimum&quot;)
+</code></pre>
+<p>This gives us :</p>
+<p><img alt="1_bV4DMyd6ahGwJihrHUBdiQ.png" src="1_bV4DMyd6ahGwJihrHUBdiQ.png" /></p>
+<h2>The Simplex principle</h2>
+<p>Solving a linear program is done with the Simplex algorithm, which works because of a simple but important principle :</p>
+<blockquote>
+<p>Optimizing a linear function on a polytope (or more generally a compact convex space) always leads us to a vertex (more generally an extreme point).</p>
+</blockquote>
+<p>The simplex algorithm is a local search procedure that walks from a vertex to another to increase the objective function's value until we reach a vertex where every neighbour has an inferior value.</p>
+<p>Since the vertex where the optimization ends depends only on the objective function, we can try to find an objective function for each polytope vertex.</p>
+<p>For example, in the following polytope (Note that we added a constraint to increase the number of vertex of the polytope)</p>
+<p><img alt="1_WrLkeHJSSsrq2sIbPDJIEw.png" src="1_WrLkeHJSSsrq2sIbPDJIEw.png" /></p>
+<p>We can obtain any of the vertices by optimizing in different directions.</p>
+<p><img alt="1_3uEa6lt41I2H4W1L-6c_cg.png" src="1_3uEa6lt41I2H4W1L-6c_cg.png" /></p>
+<h2>From Continuous to Integer variables: The Branch-and-Bound Method</h2>
+<p>Even if it’s not totally how a solver works, the first thing you have to understand to assimilate how Mixed Integer Programming works is the Branch and Bound method.</p>
+<p>Let’s take the precedent example but restricting our variables to integers; the feasible region is no longer the grey area inside the polytope. Still, we can compute the feasible integer points, which give us the following figure :</p>
+<p><img alt="1_0C1d7XNcK-5D1mJb8a1C8Q.png" src="1_0C1d7XNcK-5D1mJb8a1C8Q.png" /></p>
+<p>In grey, we can see the feasible solutions, and the first thing we can notice is that some vertices are in the integer solutions and some not, and this distinction is crucial, but we will get back to this point later.</p>
+<p>The branch and bound procedure create a tree called “enumeration tree”; in each node, it constructs a mixed-integer program and solves its “linear relaxation” with the simplex algorithm, which means the same program after ignoring integrality constraint, from this point on, there are two possible outcomes :</p>
+<ul>
+<li>The solution is integer feasible, and therefore we stop the resolution.</li>
+</ul>
+<p>This can happen if the polytope of constraints has integer vertices. For instance, if we solve the LP relaxation of the precedent mixed-integer program with the objective function 2x+y, we will find (10,3), which is an integer solution.</p>
+<ul>
+<li>The solution is “fractional”, and therefore we need to <strong>branch.</strong></li>
+</ul>
+<p>And this will happen in the precedent polytope if we try to optimize the function x+2y,</p>
+<p><img alt="1_xz96pCIEKgWBm4zFVQ-N9g.png" src="1_xz96pCIEKgWBm4zFVQ-N9g.png" /></p>
+<p>Now, let’s see how we can handle this case.</p>
+<h3><strong>Branching :</strong></h3>
+<p>Branching refers to creating child nodes in the enumeration tree; these children are the same problem but solved on two partitions of the feasible space.</p>
+<p>These two partitions are obtained by <strong>adding a branching constraint.</strong></p>
+<p>Since an example is worth a thousand words, for the precedent fractional solution, which was (5.5, 7.5), we can choose which variable we can branch on if we had an integer and a fractional component in our solution, we should have branched on the fractional one, let’s say, we will branch on x, so we add one constraint in each child node,</p>
+<ul>
+<li>The first child node will have the constraint x ≤ 5</li>
+</ul>
+<p><img alt="1_j6RNGy3eE32nGSsIgn3_jQ.png" src="1_j6RNGy3eE32nGSsIgn3_jQ.png" /></p>
+<ul>
+<li>The second one will inherit the constraint x≥6</li>
+</ul>
+<p><img alt="1_qboRm8_5b_PZyCX3lK7FVw.png" src="1_qboRm8_5b_PZyCX3lK7FVw.png" /></p>
+<p>As you can notice, the aim of these constraints is, in each case, to exclude or to <strong>cut the fractional solution</strong> (you will discover why it’s in bold in another part of this series :) )</p>
+<p>This last child’s relaxation give’s us the following solution.</p>
+<p><img alt="1_b6zBjd4gI2Ps07LMr2PLWA.png" src="1_b6zBjd4gI2Ps07LMr2PLWA.png" /></p>
+<p>The solution in red is : (6.0, 7.0) an integer feasible solution.</p>
+<p>And so, are we done? Well.. not really.</p>
+<p>Let’s review our enumeration tree.</p>
+<p><img alt="1_KS8hmIuNVYFuBVUaH7NI6Q.png" src="1_KS8hmIuNVYFuBVUaH7NI6Q.png" /></p>
+<p>As we can see, we solved only two of the 3 nodes of the tree; then, we have to solve P.1’s Linear Relaxation.</p>
+<p><img alt="1_iw5uSqrVZg6DDL0zaPR_jQ.png" src="1_iw5uSqrVZg6DDL0zaPR_jQ.png" /></p>
+<p>The relaxation gives us a fractional solution : (5.0, 7.5) which means the enumeration tree would become like this if we branch on y.</p>
+<p><img alt="1_Hw5L461VmJ1x0OU-nKRlwQ.png" src="1_Hw5L461VmJ1x0OU-nKRlwQ.png" /></p>
+<p>Why am I saying would? Well, the algorithm’s name is Brand-and-Bound, and until now, we just branched, so now we will see how we can bound.</p>
+<h3><strong>Bounding :</strong></h3>
+<p>The bounding or “probing” procedure consists of removing a branch of the tree provided that we have a superior bound (for maximization) of the values we can find in it.</p>
+<p>To have this upper bound, we will introduce another intuitive and important principle :</p>
+<blockquote>
+<p>The value of an LP’s relaxation is an upper bound on it’s value.</p>
+</blockquote>
+<p>It’s intuitive because the feasible region of the relaxation contains the original program's feasible region.</p>
+<p>So when we solved P.1 and obtain a fractional solution whose value is 20, we are sure that in the sub-tree whose root is P.1, we won't find any solution with a value above 20 and since we already have an integer solution whose value is 20 we can <strong>probe</strong> this part of the tree, and after that, we are done.</p>
+<h3><strong>Using the solver to do all this automatically :</strong></h3>
+<p>The first question you should all have in mind is: “Am I going to do all this every time I have to solve a MIP ? ” and the answer is, of course, no, I have to precise that the variables are integers and the solver will do this job (among other things) for us.</p>
+<pre><code>@variable(prgrm, 0&lt;=x, Int)@variable(prgrm, 0&lt;=y, Int)
+</code></pre>
+<p>But the most attentive among you are certainly wondering what if the solver, when constructing the enumeration tree, had started with the other child who doesn't give us instantly an integer solution?</p>
+<p>This raises many questions about how to branch and how to explore the enumeration tree, but the principal thing you may focus on is that.</p>
+<blockquote>
+<p><strong>The sooner we obtain an integer solution, the best it is to prune subtrees</strong>.</p>
+</blockquote>
+<p>But since the solver is doing this internally, what is the purpose of understanding this point (and of all this part)? this is what we will see in the following :)</p>
+<h2>Using self-made heuristics inside a solver</h2>
+<p>In many large combinatorial problems, the solver may not find an integer solution, so its enumeration tree keeps growing exponentially.</p>
+<p>Fortunately, many combinatorial problems have simple (often greedy) heuristics that compute quickly a feasible solution which is consequently an integer solution.</p>
+<p>The solvers who are generally used gives us an interface to compute and submit <strong>heuristic solutions; this</strong> aims to give the algorithm an integer solution to enforce the probing.</p>
+<p>Let’s try to apply this to a very classical example: <a href="https://en.wikipedia.org/wiki/Vertex_cover"><strong>The Vertex Cover Problem.</strong></a></p>
+<blockquote>
+<p>A vertex cover V’ of an undirected graph G=(V,E),is a set of vertices that includes at least one endpoint of every edge of the graph, often we are interested in finding the smallest vertex cover.</p>
+</blockquote>
+<h3><strong>Formulating the Input Data</strong></h3>
+<p>The first question we have to think about is <strong>“How are we going to represent an instance of the problem ?”,</strong> to answer this question, let’s take an example.</p>
+<p><img alt="1_59U_wYpSVzqK-tIQYYzR1Q.png" src="1_59U_wYpSVzqK-tIQYYzR1Q.png" /></p>
+<p>Since the edges are not weighted, we can represent the problem with an adjacency matrix of shape (n,n) where n is the number of nodes.</p>
+<p>So, for instance, the precedent graph is encoded in the following matrix :</p>
+<pre><code>ADJ\_MAT = [[0 , 0 , 1, 0, 0, 0],[0 , 0 , 1, 0, 0, 0],[1 , 1 , 0, 1, 0, 0],[0 , 0 , 1, 0, 1, 0],[0 , 0 , 0, 1, 0, 1],[0 , 0 , 0, 0, 1, 0],]
+</code></pre>
+<p>(Now, I advise you to stop reading and to try to write the MIP formulation for the Vertex Cover Problem to check your understanding)</p>
+<p>Now let’s think about the formulation we are going to use :</p>
+<ul>
+<li><strong>What are the decision variables?</strong></li>
+</ul>
+<p>We are trying to decide for each vertex if we take it or not in the cover, so we have n binary variables, indicating whether we take the corresponding vertex.</p>
+<p>We can create the variables as follows:</p>
+<pre><code>#WARNING : Everything on Julia is indexed by default starting from #1.n = size(ADJ\_MAT)[1]#We create a vector of variables indexed by 1 prefixed by x (x1, x2, ..., xn)@variable(prgrm2, 0&lt;=x[1:n], Int)
+</code></pre>
+<ul>
+<li><strong>What are the constraints?</strong></li>
+</ul>
+<p>A feasible solution must cover each edge, so we have to take one vertex or the other (or both) for each edge.</p>
+<p><img alt="1_ix0jINL1g0xBhOpbN14cgw.png" src="1_ix0jINL1g0xBhOpbN14cgw.png" /></p>
+<p>These constraints can be created simply like this :</p>
+<pre><code>for i in 1:nfor j in 1:nif(ADJ\_MAT[i,j] == 1)c =@constraint(prgrm2, x[i] + x[j] &gt;= 1)set\_name(c,&quot;C&quot;)println(c)endendend
+</code></pre>
+<ul>
+<li><strong>What are we optimising?</strong></li>
+</ul>
+<p>The objective is to minimise the number of vertices we take in the cover:</p>
+<p><img alt="1_ul5CVzJ9Uq6a92a-f3kamQ.png" src="1_ul5CVzJ9Uq6a92a-f3kamQ.png" /></p>
+<p>which can be generated like this :</p>
+<pre><code>@objective(prgrm2, Min, sum(x))#Output : 𝑥1+𝑥2+𝑥3+𝑥4+𝑥5+𝑥6
+</code></pre>
+<p>So the MIP formulation is the following:</p>
+<p><img alt="1_L0ny4E9RUUhtKhVpgsqrag.png" src="1_L0ny4E9RUUhtKhVpgsqrag.png" /></p>
+<p>Which gives the following solution :</p>
+<p><img alt="1_ZixgDOeKcF2vmsc-lLKG-g.png" src="1_ZixgDOeKcF2vmsc-lLKG-g.png" /></p>
+<p>Which can be interpreted as follows:</p>
+<p><img alt="1_jD18-pZMmbg3nRkyPU1JOg.png" src="1_jD18-pZMmbg3nRkyPU1JOg.png" /></p>
+<h3>Approximated resolution of the vertex cover problem</h3>
+<p>In this part, I will present two ways of computing a feasible solution for the vertex cover problem; these two algorithms have a fascinating property: <strong>approximations with a performance guarantee.</strong></p>
+<p><strong>Greedy algorithm :</strong></p>
+<p>This algorithm consists of taking each edge both endpoints and removing all the covered edges at each step.</p>
+<blockquote>
+<p>The greedy algorithm is a 2-approximation which means it never return a solution that is more than two times worst than the optimal.</p>
+</blockquote>
+<p>The proof is straightforward once you notice that you take two vertexes where one would have been enough in the worst case.</p>
+<p><strong>Rounding up a fractional solution:</strong></p>
+<p>The vertex cover problem has another interesting property: it’s a “half-integral problem”, which means that even in its relaxation, the variables are 0 or 1 or 1/2.</p>
+<p>Another way of getting an approximation of the solution is to round up a fractional solution by turning the 1/2 to ones, which will give us a feasible solution because the fractional was already fulfilling the constraints, and we increased some of its variables.</p>
+<p>(for the full proofs of the validity of the two approaches, you can read <a href="https://www.win.tue.nl/~mdberg/Onderwijs/AdvAlg_Material/Course%20Notes/lecture6.pdf">this</a> course)</p>
+<h3><strong>Heuristic Callback on JuMP</strong></h3>
+<p>Now, how can we tell our solver to call a heuristic at each fractional node?</p>
+<p>To do so, you have to understand 3 things:</p>
+<ul>
+<li>How can you get the solver's current solution values in the Callback?</li>
+<li>How can you submit your heuristic solution after constructing it from the Callback?</li>
+<li>How can you register your Callback so that the solver will use it?</li>
+</ul>
+<p>And I will explain to you each of these aspects in the following example of using the round-up approximation :</p>
+<p>The first step you have to design your callback; inside your callback, you can use two methods :</p>
+<ul>
+<li>callback_value(cb_data, x) to get from the callback data the value of a variable (and only one at a time).</li>
+<li>MOI.submit( model, MOI.HeuristicSolution(cb_data), [x], [v] ) : this method submit the solution x=v and returns the status of the solution which can either be “accepted” “rejected” (by the solver) or “unknown”.</li>
+</ul>
+<p>So for our round-up approximation, here is the callback we propose :</p>
+<pre><code>function my\_callback\_function(cb\_data)println(&quot;Call to callback&quot;)new\_sol = []precedent = [callback\_value(cb\_data,x\_k ) for x\_k in x]for x\_i in xx\_val = callback\_value(cb\_data, x\_i)x\_new = ceil(Int, x\_val)append!(new\_sol, x\_new)endprintln(&quot;Precedent: &quot;, precedent)println(&quot;New: &quot;,new\_sol)status = MOI.submit(mod, MOI.HeuristicSolution(cb\_data), [x\_i for x\_i in x], [floor(Int, k) for k in new\_sol])println(&quot;status = &quot;, status)end
+</code></pre>
+<p>I added the print statements to track the calls to the heuristic.</p>
+<p>Now we register our callback :</p>
+<pre><code>MOI.set(mod, MOI.HeuristicCallback(), my\_callback\_function)
+</code></pre>
+<p>So when executing the optimization step, we can see this :</p>
+<p><img alt="1_hGPzDisuTiq_gBWI5vw1yw.png" src="1_hGPzDisuTiq_gBWI5vw1yw.png" /></p>
+<p>The rejected solutions after the first are because the rounding up procedure is quickly not sufficient in terms of efficiency to beat the integer solutions produced by the solver, so the solutions it proposes are rejected, but still, it was useful in the first iterations.</p>
+<h2>Conclusion</h2>
+<p>When you design a solution, you have to choose between an exact or an approached solution. Still, as we saw, provided a good intuition on the specific problem you want to solve and a good understanding of a solver's internal behaviour, we can get the best of both worlds.</p>
+<p>A special thanks to Pr Pierre Fouillhoux, who enlightened us and helped us better understand this field's depth and appreciate all the nuance of it. Of course, s/o my mate </p>
+<p><a href="https://medium.com/u/5ae8aae8252f?source=post_page---user_mention--8d47418324d4---------------------------------------">Louis Grassin</a></p>
+<p>who helped me write and code the content of this article.</p>
+    </section>
+</article>
+
+
+<footer class="article-footer">
+    <div class="footer-line">
+        <span>O</span>
+    </div>
+    <p><a href="../../index.html">← Back to home</a></p>
+</footer>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.24/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.24/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.24/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {
+        delimiters: [
+            {left:'$$', right:'$$', display:true},
+            {left:'$', right:'$', display:false}
+        ]
+    });"></script>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/julia.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", (event) => {
+    hljs.highlightAll();
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const progressBar = document.querySelector('.progress-bar');
+    const previousSubtitle = document.querySelector('.previous-subtitle');
+    const currentSubtitle = document.querySelector('.current-subtitle');
+    const nextSubtitle = document.querySelector('.next-subtitle');
+    const headings = document.querySelectorAll('.main-article section h2, .main-article section h3');
+    const articleTitleEl = document.querySelector('.main-article .article-title');
+    const articleTitle = articleTitleEl.textContent;
+
+    headings.forEach((h, i) => {
+        if (!h.id) h.id = 'heading-' + i;
+    });
+    if (!articleTitleEl.id) articleTitleEl.id = 'article-title';
+
+    function updateProgress() {
+        const scrollTop = window.scrollY;
+        const docHeight = document.body.scrollHeight - window.innerHeight;
+        const scrollPercent = (scrollTop / docHeight) * 100;
+        progressBar.style.height = scrollPercent + '%';
+
+        let currentIndex = -1;
+        headings.forEach((h, i) => {
+            if (h.offsetTop - 50 <= scrollTop) currentIndex = i;
+        });
+
+        let current = currentIndex >= 0 ? headings[currentIndex] : null;
+
+        if (current) {
+            currentSubtitle.textContent = current.textContent;
+            currentSubtitle.dataset.targetId = current.id;
+
+            previousSubtitle.textContent = headings[currentIndex - 1]?.textContent || '';
+            previousSubtitle.dataset.targetId = headings[currentIndex - 1]?.id || '';
+
+            nextSubtitle.textContent = headings[currentIndex + 1]?.textContent || '';
+            nextSubtitle.dataset.targetId = headings[currentIndex + 1]?.id || '';
+        } else {
+            currentSubtitle.textContent = articleTitle;
+            currentSubtitle.dataset.targetId = articleTitleEl.id;
+
+            previousSubtitle.textContent = '';
+            previousSubtitle.dataset.targetId = '';
+
+            nextSubtitle.textContent = headings[0]?.textContent || '';
+            nextSubtitle.dataset.targetId = headings[0]?.id || '';
+        }
+    }
+
+    function scrollToSubtitle(el) {
+        const targetId = el.dataset.targetId;
+        if (!targetId) return;
+        const target = document.getElementById(targetId);
+        if (!target) return;
+
+        window.scrollTo({
+            top: target.offsetTop,
+            behavior: 'smooth'
+        });
+
+        const onScroll = () => {
+            const scrollTop = window.scrollY;
+            if (Math.abs(scrollTop - target.offsetTop) < 2) {
+                updateProgress();
+                window.removeEventListener('scroll', onScroll);
+            }
+        };
+        window.addEventListener('scroll', onScroll);
+    }
+
+    [previousSubtitle, currentSubtitle, nextSubtitle].forEach(el => {
+        el.addEventListener('click', () => scrollToSubtitle(el));
+    });
+
+    window.addEventListener('scroll', updateProgress);
+    updateProgress();
+});
+</script>
+
+
+</body>
+</html>

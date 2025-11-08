@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A comprehensive study of Mixed Integer Programming with JuMP on Julia (Part 2) - Ouaguenouni Mohamed</title>
+    <link rel="stylesheet" type="text/css" href="../../style.css">
+    <link rel="stylesheet" type="text/css" href="../../article.css">
+    <meta property="og:title" content="A comprehensive study of Mixed Integer Programming with JuMP on Julia (Part 2)">
+    <meta property="og:description" content="Modelling concepts with an application to the Lot sizing problem">
+    <meta property="og:image" content="/articles/a-comprehensive-study-of-mixed-integer-programming-with-jump-on-julia-part-2/og.png">
+    <meta property="og:type" content="article">
+    <meta property="twitter:card" content="summary_large_image">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+</head>
+<body>
+    <header class="site-header">
+        <h1><a href="../../index.html">Ouaguenouni Mohamed</a></h1>
+    </header>
+
+<aside class="reading-sidebar">
+    <div class="progress-wrapper">
+        <div class="previous-subtitle"></div>
+        <div class="current-subtitle"></div>
+        <div class="next-subtitle"></div>
+        <div class="progress-bar-container">
+            <div class="progress-bar"></div>
+        </div>
+    </div>
+</aside>
+
+<article class="main-article">
+    <h1 class="article-title">A comprehensive study of Mixed Integer Programming with JuMP on Julia (Part 2)</h1>
+    <p class="article-meta">15 min read · Published on 12 April 2021</p>
+    <section>
+        <p>Modelling concepts with an application to the Lot sizing problem</p>
+<hr />
+<p>This post is the continuation of this <a href="https://towardsdatascience.com/a-comprehensive-study-of-mixed-integer-programming-with-jump-on-julia-part-1-8d47418324d4">one</a>; I encourage you to read the first post, especially if you don’t have any background in Mixed Integer Programming. If you did so: Welcome to serious business.</p>
+<p>This post's goal is to show how linear terms can model widespread constraints and optimise handy functions for real-life problems.</p>
+<p>In today's menu, we will investigate the following questions :</p>
+<ol>
+<li>How can we model logical constraints in a Linear Program?</li>
+<li>Are all the formulations of the same problem equivalent? And if not, how can we say that a formulation is better than another?</li>
+<li>Can we have an ideal formulation for a combinatorial problem?</li>
+</ol>
+<p>Of course, we will try to do it while solving a classical industrial problem: The Lot Sizing Problem.</p>
+<h2>The Lot Sizing Problem</h2>
+<p>The Lot Sizing-Problem (LSP) consists of planning the lot sizes to produce and stock over a planning horizon to minimise production, setup and inventory holding costs.</p>
+<p>In other terms, imagine you have to set the production planning of a factory to meet customer’s demands at every time step. Still, each time you launch the production, you have to pay an ongoing setup cost and a production cost that depends on the quantity you want to produce.</p>
+<p>You can think of producing all the quantity you can at the beginning of the period, but storing also involves cost.</p>
+<p>We will also consider a capacity constraint that will limit how much we can hold, so we’ll be tackling the Capacitated Lot Sizing problem.</p>
+<h3>Instance Description</h3>
+<p>Let’s start by looking at how we can model an instance of this problem. First of all, we must keep in mind that the resolution is made on a time horizon, so every “time dependant” variable will be indexed by t ≤ T.</p>
+<p>Now, what are the instance-dependant variables that are constant over time? First of all, costs. So we recognize <em>f</em> as the setup cost, <em>q</em> as the production cost per unit, and as the holding cost <em>k,</em> storage capacity is also invariant.</p>
+<p>Client demands will be described by a vector of our time horizon size; each demand will be represented by <em>dₜ</em> with t an instant of our time horizon.</p>
+<p>In the following, we will consider the following instance:</p>
+<pre><code>T=10 #Time Horizonf=1000 #Setup Costq=30 #Production Costk=10 #Holding CostD=[15,10,10,25,30,5,5,50,20,80] #Demand at each stepImax=100 #Storage Capacity
+</code></pre>
+<h3>Model variables</h3>
+<p>We have two possible actions: produce for now or produce and store for later.</p>
+<p>Then, at each time step, we have to decide whether to launch the production or not, and if we launch it, we have to determine how much we produce; our choice will affect the state of the stock, so we also have to use a variable for it.</p>
+<p>These decisions have to be made at each time step, so we’ll have <em>yₜ, pₜ</em> and <em>Iₜ</em> <em>to</em> representif we launch, how much we produce and how much we have in the storage at the end of each time step.</p>
+<p>The variables can be instantiated this way :</p>
+<pre><code>@variable(prgrm, p[1:T] &gt;= 0)@variable(prgrm,I[0:T]&gt;= 0) #We index from 0 to set an initial storage@variable(prgrm, 1 &gt;= y[1:T] &gt;= 0, Int)
+</code></pre>
+<h3><strong>Model constraints</strong></h3>
+<p>One principal constraint is to produce without exceeding the storage capacity at each step; this can be formulated like this :</p>
+<p><img alt="1_eQR7NoOthqnI_8Yy17ENtA.png" src="1_eQR7NoOthqnI_8Yy17ENtA.png" /></p>
+<p>After that, we must keep in mind that any product is either for now or later, so each time we produce, everything we produce above the client’s demand is kept in storage for the next steps; this is a “flow constraint” and can be written as follows :</p>
+<p><img alt="1_1-dkiAcLTFC2RIbGi1iyPA.png" src="1_1-dkiAcLTFC2RIbGi1iyPA.png" /></p>
+<pre><code>#We set initial storage to 0 (for example)@constraint(prgrm, I[0] == 0)for i in 1:T@constraint(prgrm,I[i-1] + p[i] == D[i] + I[i])end
+</code></pre>
+<p>There is another intrinsic constraint: if we want to produce, we must launch production; this is an implication constraint (<em>pₜ &gt; 0</em> impliesthat <em>yₜ = 1) and an</em> excellent occasion to present a Big-M and how we can use it to model an implication.</p>
+<p>A big-M of a variable is a value that the variable cannot reach, and it helps to formulate a constraint as follows:</p>
+<p><img alt="1_xQys-aLkngjsQnsqx8-62A.png" src="1_xQys-aLkngjsQnsqx8-62A.png" /></p>
+<p>If you look closely at this constraint, you will notice that pₜ cannot be nonnull unless yₜ is true, and if yₜ is true, the production is not limited by this constraint since M is a value greater than the maximum reachable value of pₜ.</p>
+<p>Of course, now the question is: <strong>how can we fix the Big-M?</strong></p>
+<p>We can arbitrarily fix it to an unreasonably high value like 10⁵, but it’s not recommended for two reasons :</p>
+<ol>
+<li>It can raise issues numerically because inside a solver, a false boolean, for example, is represented as a very close value to 0. By that, I mean smaller than 10⁻⁵, so if you take 10⁸ as a big M, it may lead you to a result where y is set to 10⁻⁶, and the solver sees it as a boolean false. Still, it’s not constraining pₜ to be null as it’s supposed to do.</li>
+<li>It affects the relaxation gap negatively; we will get back to this point later, but the intuition is that it’s restraining the area where we have to search, so between adding a constraint p≤ 2 and a constraint p ≤10⁶, the first one is more restrictive.</li>
+</ol>
+<p>In general, we seek the smallest variable to use as a Big-M; for this example, we can have many different choices :</p>
+<ul>
+<li>Since we can’t produce more than what we can store, the big-M can be fixed to Iₘₐₓ.</li>
+<li>We are never interested in producing more than the client’s total demands; we can take the sum of the demands as a Big-M for all our production variables.</li>
+<li>Nothing is obliging us to take the same big-M for all the pₜ variables; By applying the same reasoning as in the precedent point, we are never interested in producing more than the <strong>remaining</strong> demand.</li>
+</ul>
+<p>The second idea is contained in the third one, but we are not obliged to choose between the first idea and the third one we can put :</p>
+<p><img alt="1_BWfDBkXuIzePiY7yHwM0dQ.png" src="1_BWfDBkXuIzePiY7yHwM0dQ.png" /></p>
+<p>Notice that Mₜ is not a variable since we know Iₘₐₓ and all the dᵢ. Then we can compute every Mₜ while building our program; another positive side effect of this big-M is that we no more need to specify the constraints related to the fact that we can’t produce more than what we can store.</p>
+<h3>Objective function</h3>
+<p>To design the objective function, we must have a way to evaluate the quality of a solution; for this problem, it’s pretty straightforward we have to minimize the total cost, which we can calculate like this:</p>
+<p><img alt="1_zT2ixkqWX8QFcZ-JpLKaaQ.png" src="1_zT2ixkqWX8QFcZ-JpLKaaQ.png" /></p>
+<p>To obtain this cost, we will use two convenient functionalities of Julia; the first one is the element-wise operations which well help us multiply a vector with a coefficient :</p>
+<pre><code>p .\* 10#Output : an array of size {T}
+</code></pre>
+<p>And the second is the sum operator :</p>
+<pre><code>sum(p .\* 10)#Output: 10𝑝1+10𝑝2+10𝑝3+10𝑝4+10𝑝5+10𝑝6+10𝑝7+10𝑝8+10𝑝9+10𝑝10
+</code></pre>
+<p>And so we could get the objective function like this:</p>
+<pre><code>@objective(prgrm, Min, sum(p .\* q) + sum(y .\* f) + sum(I .\* k))
+</code></pre>
+<p>And the solution we obtain is the following:</p>
+<p><img alt="1_8exKIZfZA-kewGT0oxHVFQ.png" src="1_8exKIZfZA-kewGT0oxHVFQ.png" /></p>
+<h3>A more general instances</h3>
+<p>For the sake of generalization, let’s suppose this time that the production costs and the holding costs are variable among time, so let’s consider this instance :</p>
+<pre><code>T = 10f = 1000q = [5, 10, 10, 5, 8, 2, 7, 8, 9, 10]k = [0, 10, 5, 5, 10, 5, 8, 2, 2, 2, 8]D = [80,30,50,100,5,5,25,100,200,100]Imax = 200
+</code></pre>
+<p>Notice that it doesn't change anything in the program thanks to the element-wise product that is still valid in the objective function, so you should obtain the following allocation :</p>
+<p><img alt="1_iuWR9Aqz5tpIuDQdgPC4hQ.png" src="1_iuWR9Aqz5tpIuDQdgPC4hQ.png" /></p>
+<h2>Reducing the number of used variables</h2>
+<p>If we think of it, the stock depends on the production directly; actually, for an instant <em>t,</em> it’s the quantity we produced until <em>t</em> minus the sum of the demands until <em>t so that</em> we can <em>replace Iₜ</em> in the constraints.</p>
+<p><img alt="1_A3ABvOxn-AxZ7YZxRsN68Q.png" src="1_A3ABvOxn-AxZ7YZxRsN68Q.png" /></p>
+<p>And thus obtain:</p>
+<p><img alt="1_NbYTeGnbeCoMFc5Q3goh1w.png" src="1_NbYTeGnbeCoMFc5Q3goh1w.png" /></p>
+<p>This means that the production has to cover the demand at each step at least.</p>
+<p>Then the stock variables are useful in formulating the holding costs, but we can easily bypass this provided that we put cₜ a cost which involves the production cost and the holding cost.</p>
+<p><img alt="1_24qCG652q9laKmZBd7u9OA.png" src="1_24qCG652q9laKmZBd7u9OA.png" /></p>
+<p>So we obtain the following cost for each unit produced at a moment t.</p>
+<p>The program can be instantiated as follows.</p>
+<pre><code>prgrm = Model()set\_optimizer(prgrm, GLPK.Optimizer)@variable(prgrm, p[1:T] &gt;= 0)@variable(prgrm, 1 &gt;= y[1:T] &gt;= 0, Int)@variable(prgrm, I[0:T] &gt;= 0) #We index from 0 to set an initial storagefor i in 1:T@constraint(prgrm,sum(p[1:i]) - sum(D[1:i]) &gt;= 0)endfor i in 1:T@constraint(prgrm, sum(p[1:i]) - sum(D[1:i]) &lt;= Imax)endfor i in 1:TM = min(sum(D[i:end]), Imax)@constraint(prgrm, p[i] &lt;= M\*y[i])endc = []for t in 1:Te = q[t] + sum(k[t+1:end])append!(c,e)end@objective(prgrm, Min, sum(p .\* c) + sum(y .\* f))prgrm
+</code></pre>
+<p>And we obtain the following solution :</p>
+<p><img alt="1_wGo1OepnVhtHiC7sLfW7tQ.png" src="1_wGo1OepnVhtHiC7sLfW7tQ.png" /></p>
+<p>This is quite strange; we have obtained the same solution in term of decision variables but with a different objective value.</p>
+<p>In fact, I did it on purpose to explain two things,</p>
+<p>The first one is that when defining the cost of production at a time step, we forgot to subtract the holding cost of what will go to meet client demand which represents</p>
+<p><img alt="1_J47dK0vriS6tHq0u1Ta4Dg.png" src="1_J47dK0vriS6tHq0u1Ta4Dg.png" /></p>
+<p>The second one is that this has no importance on the decision variables because, in general, optimizing <em>f or</em> optimizing <em>f + a</em> is the same thing since <em>a</em> doesn't depend on our decision (nor on anything else since it’s a constant).</p>
+<p>Although if we had to subtract it to check, we could verify that</p>
+<p><img alt="1_atmpgxTjh_9vsd11LIL6eQ.png" src="1_atmpgxTjh_9vsd11LIL6eQ.png" /></p>
+<h2>Extended formulation</h2>
+<p>In the formulation here above, the production is decided whether it’s for now or later with a single <strong>aggregated</strong> variable.</p>
+<p>Let’s see another formulation where we will think differently by separating the production at each time step to many variables wᵢₜ; each represents the production on <em>I</em> intended to satisfy the client demand on <em>t</em>.</p>
+<p>Then satisfying the demand at each time step can be naturally expressed as :</p>
+<p><img alt="1_qjEHzyzjqwYc8xNAnv5QdQ.png" src="1_qjEHzyzjqwYc8xNAnv5QdQ.png" /></p>
+<p>The setup constraints become</p>
+<p><img alt="1_uCy8sMauhycsFEeU5_rhyg.png" src="1_uCy8sMauhycsFEeU5_rhyg.png" /></p>
+<p>Notice that I didn’t take the bound with Iₘₐₓ because it’s trivial that the demand at a special time step is less than Iₘₐₓ (we have to store it somewhere before delivering it even if it’s the same day).</p>
+<p>And we can write the capacity constraints as :</p>
+<p><img alt="1__3zDfVPl2CjQdq-GLEp7Nw.png" src="1__3zDfVPl2CjQdq-GLEp7Nw.png" /></p>
+<p>This piece of code can create the full program:</p>
+<pre><code>prgrm = Model()set\_optimizer(prgrm, GLPK.Optimizer)@variable(prgrm, w[1:T , 1:T] &gt;= 0)@variable(prgrm, 1 &gt;= y[1:T] &gt;= 0, Int)for t in 1:Tfor i in 1:t-1@constraint(prgrm, w[t,i] == 0)endendfor t in 1:T@constraint(prgrm,sum(w[1:t, t]) == D[t])endfor t in 1:T@constraint(prgrm, sum(w[t,:]) &lt;= Imax)endfor t in 1:Tfor i in 1:t@constraint(prgrm, w[i,t] &lt;= y[i]\*D[t])endendc = []for t in 1:Te = q[t] + sum(k[t+1:end])append!(c,e)ende = 0for i in 1:Te = e + c[i]\*sum(w[i,i:end])end@objective(prgrm, Min, e + sum(y .\* f))prgrm
+</code></pre>
+<p>This gives us the following result:</p>
+<p><img alt="1_cdyRd6_zdvuPycdTS8XF8w.png" src="1_cdyRd6_zdvuPycdTS8XF8w.png" /></p>
+<p>We, of course, obtain the same result, and we also notice that, as I explained sooner, a null value is, in fact, a tiny value as for p₆.</p>
+<h2>Formulations comparison</h2>
+<p>Now I’m going to present some insights you should have about MIP formulations for combinatorial problems and use them after to compare the different formulations I presented sooner.</p>
+<h3>The size matters</h3>
+<p>Like most algorithms, the simplex algorithm's efficiency depends on the size of its inputs.</p>
+<p>In general, we talk about <strong>columns</strong> and <strong>rows</strong> to refer to the program's final number of variables and constraints.</p>
+<p>Why don’t we directly use the terms variables and constraints? For two reasons,</p>
+<p>The first is that we can always write a Linear program in a <strong>matrix form</strong> like the following.</p>
+<p><img alt="1_yDJXKpJfy_1m71rYpEDkvw.png" src="1_yDJXKpJfy_1m71rYpEDkvw.png" /></p>
+<p>So, for example, the following matrixes.</p>
+<pre><code>A= [ 1 1 9 5;3 5 0 8;2 0 6 13]b = [7; 3; 5]c = [1; 3; 5; 2]
+</code></pre>
+<p>Would give this program</p>
+<p><img alt="1_KbMXQ_UFY5AyiPQxrerqww.png" src="1_KbMXQ_UFY5AyiPQxrerqww.png" /></p>
+<p>And thus, the number of variables (resp constraints) is the number of columns (resp rows) of matrix A.</p>
+<p>And the second is that the number of rows and columns may differ from the number of decision variables and problem constraints in the formal model, as you will see in the following.</p>
+<p>This will also give me an excellent occasion to present some <strong>Linearization</strong> techniques.</p>
+<p>Actually, you already have seen a linearization technique; previously, we linearized the logical implication, but as it’s not the only logical operator you can be interested in, here is a table that recapitulates the linear equivalents of the main logical operators supposing <em>x,y,z</em> are boolean variables.</p>
+<p><img alt="1_P6rgusZfjkjjFgCsqmQxOA.png" src="1_P6rgusZfjkjjFgCsqmQxOA.png" /></p>
+<p>Another operator I often linearize is the minimum (or maximum) operator. To use the minimum between x and y in a program, you can do like this:</p>
+<p><img alt="1_f8F9mL6GkZrANzFdHNB7Zw.png" src="1_f8F9mL6GkZrANzFdHNB7Zw.png" /></p>
+<p>(And in case you are wondering, yes, we can use Latex symbols in any Julia string)</p>
+<p>This, for example, is a program where we have 2 decision variables and 1 constraint but 3 columns and 3 rows.</p>
+<p>Another question you may have is, “What use could I have for a minimum in a program?”,</p>
+<p>The uses are varied, but the simplest I can give you is a preview of another article I’m thinking of writing on multi-objective optimization.</p>
+<p>Imagine, for example, that we have 10$ to share between two brothers.<br />
+Say that x and y are the variables that designate how much we give to each brother.</p>
+<p>You will have the same situation as above, but what objective function should you consider?</p>
+<p>Of course, we want to maximize the given money, so we want to maximize <em>x+y</em>, but we intuitively also want to be fair to each brother, and a way to do so is to maximize the minimum of what each brother gets.</p>
+<p>This gives us the following.</p>
+<p><img alt="1_GBXwXNYO4gUtXwLZ24ogPQ.png" src="1_GBXwXNYO4gUtXwLZ24ogPQ.png" /></p>
+<p>The last linearization I will present is the one of the product.</p>
+<p>You are reading well; if we have two boolean variables, we can linearize their quadratic combination as follows.</p>
+<p><img alt="1_7aQ32NlrwQtERJg3TDoUcw.png" src="1_7aQ32NlrwQtERJg3TDoUcw.png" /></p>
+<p>All this to say, you can use linearization techniques to express non-linear operators. Still, it would help if you kept in mind that doing so involves a cost on efficiency by increasing rows and/or columns.</p>
+<h3>The tighter, the better</h3>
+<p>As you may remember from the first part of this series, a constraint is a restriction to the half-space above or below a line, so when formulating our program, we are enumerating the lines That limit our search area.</p>
+<p>Consider for the sake of visualization a combinatorial problem where the feasible solutions are in green.</p>
+<p><img alt="1_Zbo_VEC3zMMpt9lj1z6qJA.png" src="1_Zbo_VEC3zMMpt9lj1z6qJA.png" /></p>
+<p>A formulation we can think of may split the space according to the dotted lines.</p>
+<p><img alt="1_-Ju5mZrtvMmc_rcpbFF7BA.png" src="1_-Ju5mZrtvMmc_rcpbFF7BA.png" /></p>
+<p>But we could also imagine many other formulations that involve other lines (constraints) and surround the green points,</p>
+<p>The best one we could find would ideally fit perfectly to the polyhedron formed by the green points like the solid line.</p>
+<p><img alt="1_rawNUDoUGQn5bL7O0_hZeg.png" src="1_rawNUDoUGQn5bL7O0_hZeg.png" /></p>
+<p>Why would it be the best? Because all its vertices are integral solutions, we say that it perfectly describes the feasible solution’s polyhedron.</p>
+<p>But a perfect formulation is, for many problems, difficult to find.</p>
+<p><strong>Can we recognize a perfect formulation?</strong></p>
+<p>As I said before, a linear program's constraints can be written as a matrix A; thus, we have this theorem of Hoffman-Kruskal.</p>
+<blockquote>
+<p>If A is a totally unimodular matrix then every vertice of the constraints polyhedron it defines is integral.</p>
+</blockquote>
+<p>But what is a totally unimodular matrix? The definition is pretty complex and requires some linear algebra background. Still, I will give here, as a matter of fact, the definition of a unimodular matrix and then the definition of a totally unimodular matrix.</p>
+<p><strong>Unimodular Matrix:</strong></p>
+<p>A matrix is unimodular if it’s a square matrix with a <a href="https://en.wikipedia.org/wiki/Determinant">determinant</a> of 1 or -1.</p>
+<p>If A is a matrix of integers, then we have this theorem of Veinett-Dantzig:</p>
+<blockquote>
+<p>x = A⁻¹b is an integer vector for every vector b of integers if and only if A is unimodular.</p>
+</blockquote>
+<p><strong>Totally Unimodular Matrix</strong></p>
+<p>A totally unimodular matrix is a matrix (not necessarily square) for which every square <a href="https://en.wikipedia.org/wiki/Invertible_matrix">non-singular</a> <a href="https://en.wikipedia.org/wiki/Submatrix">submatrix</a> is unimodular.</p>
+<p>Formulated like this, it doesn't seem very easy to recognize a totally unimodular matrix, but Poincaré pointed out a special case of totally unimodular matrixes.</p>
+<blockquote>
+<p>If the matrix's coefficients are either 1, 0 or -1 and in each column, we have less than 1 time the coefficient 1 and less than 1 time the coefficient -1; then the matrix is totally unimodular.</p>
+</blockquote>
+<p>Another more general property exists:</p>
+<blockquote>
+<p>The matrix coefficients are either 1,0 or -1, each column has less than 2 nonnull coefficients, and the lines can be split into two subsets I₁ and I₂ such that if two columns have a coefficient with the same sign, they should belong to different subsets and vice versa.</p>
+</blockquote>
+<p><strong>Example of perfect formulation</strong></p>
+<p>A well-known example of a natural formulation that perfectly describes the polyhedron of feasible solutions is the formulation of the <a href="https://en.wikipedia.org/wiki/Minimum-cost_flow_problem#:~:text=The%20minimum%2Dcost%20flow%20problem,flow%20through%20a%20flow%20network.">minimum-cost flow</a> problem; it’s valid for the general case, but the uncapacitated one is easier to prove because it’s a direct application of the Pointcaré theorem.</p>
+<p>The problem consists of finding a flow through the edges from a source s to a destination t by minimizing the cost of the taken edges.</p>
+<p><img alt="1_MOe74HY_vwurw8UU1ivbqw.png" src="1_MOe74HY_vwurw8UU1ivbqw.png" /></p>
+<p>As each edge appears in two constraints (one for each of its endpoints), once with the coefficient -1 and once with the coefficient 1, the matrix is totally unimodular, and thus the formulation is perfect.</p>
+<h2>Getting back to our problem</h2>
+<p>Now that we have some background on comparing different formulations of the same problem let’s compare the extended formulation with the aggregated one of the capacitated lot-sizing problem.</p>
+<h3>According to the number of variables</h3>
+<p>The extended formulation has <em>T²</em> continuous variables. The aggregated one has only <em>T</em> continuous variables, so it’s asymptotically more important, i.e. the difference in the number of variables between the two formulations keeps growing as we elongate the time interval.</p>
+<p>Still, as the variables are continuous, it’s not a big drawback.</p>
+<p>On the other hand, they have a similar number of continuous variables and constraints.</p>
+<h3>According to the tightness of the formulation</h3>
+<p>The extended formulation is tighter than the aggregated one because if we check the setup constraints, we can notice that :</p>
+<p><img alt="1_ixHs_H31bdph0dqW1jAcnw.png" src="1_ixHs_H31bdph0dqW1jAcnw.png" /></p>
+<p>This says that if a solution satisfies the setup constraint of the aggregated formulation, it will satisfy the extended formulation's setup constraint; then, the setup constraint in the extended formulation is more restrictive.</p>
+<p>So the constraints defined by the setup constraints of the aggregated formulation define a polyhedron that is contained into the polyhedron defined by the extended formulation ones. Thus, the extended formulation is tighter.</p>
+<h3>Which formulation is the better?</h3>
+<p>In my opinion, the extended one, because an augmentation in the number of continuous variables is not a high cost for strengthening the formulation.</p>
+<p>This intuition is reinforced by the fact that, for the uncapacitated case, the extended formulation is proven to be an ideal formulation.</p>
+<h2>Conclusion</h2>
+<p>MIP offer an extensive panel of modelisation tools that can linearize almost everything. This brief overview of how it can help us model an industrial problem shows us that understanding some linear modelling insights can improve our model’s quality and performance.</p>
+<p>I precise that this blog post is not meant to be an exhaustive study of the linear optimization field, which is too deep to be covered so quickly; it’s just some basic concepts I refer to when developing or studying a MIP formulation.</p>
+<p>If you seek a deeper understanding of the lot-sizing problems and their application, I recommend this <a href="https://www.sciencedirect.com/science/article/abs/pii/S0377221717304368">article</a>.</p>
+<h3>Acknowledgement</h3>
+<p>I want to thank Sofia Kedad Sidhoum and Pierre Fouillhoux, my operational research teachers, </p>
+<p><a href="https://medium.com/u/a339456f15e5?source=post_page---user_mention--27e1cc1ed581---------------------------------------">Nadym Mallek</a></p>
+<p>, </p>
+<p><a href="https://medium.com/u/895063a310f4?source=post_page---user_mention--27e1cc1ed581---------------------------------------">Ludovic Benistant</a></p>
+<p>, </p>
+<p><a href="https://medium.com/u/f017502742e1?source=post_page---user_mention--27e1cc1ed581---------------------------------------">Racha Salhi</a></p>
+<p>and </p>
+<p><a href="https://medium.com/u/27e40232d348?source=post_page---user_mention--27e1cc1ed581---------------------------------------">dhtdean</a></p>
+<p>for reviewing my article.</p>
+    </section>
+</article>
+
+
+<footer class="article-footer">
+    <div class="footer-line">
+        <span>O</span>
+    </div>
+    <p><a href="../../index.html">← Back to home</a></p>
+</footer>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.24/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.24/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.24/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {
+        delimiters: [
+            {left:'$$', right:'$$', display:true},
+            {left:'$', right:'$', display:false}
+        ]
+    });"></script>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/julia.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", (event) => {
+    hljs.highlightAll();
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const progressBar = document.querySelector('.progress-bar');
+    const previousSubtitle = document.querySelector('.previous-subtitle');
+    const currentSubtitle = document.querySelector('.current-subtitle');
+    const nextSubtitle = document.querySelector('.next-subtitle');
+    const headings = document.querySelectorAll('.main-article section h2, .main-article section h3');
+    const articleTitleEl = document.querySelector('.main-article .article-title');
+    const articleTitle = articleTitleEl.textContent;
+
+    headings.forEach((h, i) => {
+        if (!h.id) h.id = 'heading-' + i;
+    });
+    if (!articleTitleEl.id) articleTitleEl.id = 'article-title';
+
+    function updateProgress() {
+        const scrollTop = window.scrollY;
+        const docHeight = document.body.scrollHeight - window.innerHeight;
+        const scrollPercent = (scrollTop / docHeight) * 100;
+        progressBar.style.height = scrollPercent + '%';
+
+        let currentIndex = -1;
+        headings.forEach((h, i) => {
+            if (h.offsetTop - 50 <= scrollTop) currentIndex = i;
+        });
+
+        let current = currentIndex >= 0 ? headings[currentIndex] : null;
+
+        if (current) {
+            currentSubtitle.textContent = current.textContent;
+            currentSubtitle.dataset.targetId = current.id;
+
+            previousSubtitle.textContent = headings[currentIndex - 1]?.textContent || '';
+            previousSubtitle.dataset.targetId = headings[currentIndex - 1]?.id || '';
+
+            nextSubtitle.textContent = headings[currentIndex + 1]?.textContent || '';
+            nextSubtitle.dataset.targetId = headings[currentIndex + 1]?.id || '';
+        } else {
+            currentSubtitle.textContent = articleTitle;
+            currentSubtitle.dataset.targetId = articleTitleEl.id;
+
+            previousSubtitle.textContent = '';
+            previousSubtitle.dataset.targetId = '';
+
+            nextSubtitle.textContent = headings[0]?.textContent || '';
+            nextSubtitle.dataset.targetId = headings[0]?.id || '';
+        }
+    }
+
+    function scrollToSubtitle(el) {
+        const targetId = el.dataset.targetId;
+        if (!targetId) return;
+        const target = document.getElementById(targetId);
+        if (!target) return;
+
+        window.scrollTo({
+            top: target.offsetTop,
+            behavior: 'smooth'
+        });
+
+        const onScroll = () => {
+            const scrollTop = window.scrollY;
+            if (Math.abs(scrollTop - target.offsetTop) < 2) {
+                updateProgress();
+                window.removeEventListener('scroll', onScroll);
+            }
+        };
+        window.addEventListener('scroll', onScroll);
+    }
+
+    [previousSubtitle, currentSubtitle, nextSubtitle].forEach(el => {
+        el.addEventListener('click', () => scrollToSubtitle(el));
+    });
+
+    window.addEventListener('scroll', updateProgress);
+    updateProgress();
+});
+</script>
+
+
+</body>
+</html>
