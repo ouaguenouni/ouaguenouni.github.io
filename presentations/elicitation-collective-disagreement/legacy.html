@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Efficient Elicitation of Collective Disagreements</title>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.24/dist/katex.min.css">
+
+<style>
+  /* Same ET Bembo serif as the main site, restrained Tufte-style palette. */
+  @font-face {
+    font-family: 'ETBembo';
+    src: url('https://cdnjs.cloudflare.com/ajax/libs/tufte-css/1.8.0/et-book/et-book-roman-line-figures/et-book-roman-line-figures.woff') format('woff');
+    font-weight: normal; font-style: normal;
+  }
+  @font-face {
+    font-family: 'ETBembo';
+    src: url('https://cdnjs.cloudflare.com/ajax/libs/tufte-css/1.8.0/et-book/et-book-display-italic-old-style-figures/et-book-display-italic-old-style-figures.woff') format('woff');
+    font-weight: normal; font-style: italic;
+  }
+  @font-face {
+    font-family: 'ETBembo';
+    src: url('https://cdnjs.cloudflare.com/ajax/libs/tufte-css/1.8.0/et-book/et-book-bold-line-figures/et-book-bold-line-figures.woff') format('woff');
+    font-weight: bold; font-style: normal;
+  }
+
+  :root { --ink:#111; --muted:#6b6b6b; --rule:#cccccc; --accent:#9a1b1b; }
+
+  html, body, .reveal { background:#ffffff; }
+
+  .reveal {
+    font-family: 'ETBembo', 'Palatino Linotype', 'Book Antiqua', Palatino, 'Times New Roman', serif;
+    color: var(--ink);
+    font-size: 32px;
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .reveal .slides { text-align: left; }
+  .reveal .slides section { padding: 0 1.2rem; }
+
+  .reveal h1 { font-weight:400; font-size:1.75em; line-height:1.15; letter-spacing:-0.015em; margin:0 0 .5em; color:var(--ink); }
+  .reveal h2 { font-weight:400; font-size:1.5em;  line-height:1.18; letter-spacing:-0.01em; margin:0 0 .6em; color:var(--ink); }
+  .reveal h3 { font-weight:400; font-style:italic; font-size:1.08em; color:var(--ink); margin:.4em 0 .2em; }
+
+  .reveal p, .reveal li { line-height:1.5; }
+  .reveal ul { margin-left:1em; }
+  .reveal li { margin:.4em 0; }
+  .reveal li::marker { color:var(--muted); }
+  .reveal strong { font-weight:700; }
+  .reveal a { color:var(--accent); text-decoration:none; }
+
+  .reveal .lead   { font-size:1.18em; line-height:1.5; }
+  .reveal .muted  { color:var(--muted); }
+  .reveal .small  { font-size:.74em; }
+  .reveal .kicker { font-size:.58em; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); margin-bottom:.7em; }
+  .reveal .hl     { color:var(--accent); }
+  .reveal .diff   { color:var(--accent); font-weight:700; }
+
+  .reveal figure { margin:0; text-align:center; }
+  .reveal img.fig { display:block; margin:0 auto; max-height:60vh; max-width:100%; width:auto; border:none; box-shadow:none; background:none; }
+  .reveal figcaption { font-size:.55em; color:var(--muted); margin-top:.5em; line-height:1.4; text-align:center; }
+
+  .reveal table.matrix { border-collapse:collapse; font-size:.82em; margin:.2em auto; }
+  .reveal table.matrix th, .reveal table.matrix td { padding:.16em .7em; text-align:center; }
+  .reveal table.matrix thead th { border-bottom:1px solid var(--rule); font-weight:700; }
+  .reveal table.matrix tbody th { font-weight:400; color:var(--muted); text-align:right; border-right:1px solid var(--rule); }
+
+  .reveal .twocol { display:grid; grid-template-columns:1fr 1fr; gap:1.4rem; align-items:start; }
+  .reveal blockquote { border-left:2px solid var(--rule); margin:.4em 0; padding-left:.8em; font-style:italic; box-shadow:none; }
+
+  .reveal .title-affil { font-size:.5em; color:var(--muted); line-height:1.55; }
+  .reveal .authors { font-size:.6em; margin:.3em 0 .2em; }
+  .reveal .erc { position:absolute; bottom:16px; right:16px; width:112px; height:auto; }
+
+  .reveal .slide-number { font-size:13px; color:var(--muted); background:none; }
+  .reveal .katex { font-size:1em; }
+  .reveal .controls { color:var(--muted); }
+  .reveal .progress { color:var(--accent); }
+</style>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+<!-- 1. TITLE -->
+<section>
+  <h1>Efficient Elicitation of<br>Collective Disagreements</h1>
+  <p class="authors">Mohamed Ouaguenouni<span class="muted"><sup>1</sup></span>, Felipe Garrido-Lucero<span class="muted"><sup>1</sup></span>, Umberto Grandi<span class="muted"><sup>1</sup></span>, César Hidalgo<span class="muted"><sup>2,3,4</sup></span>, Magdalena Tydrichova<span class="muted"><sup>5</sup></span></p>
+  <p class="title-affil">
+    1. IRIT, Université Toulouse Capitole, Toulouse, France<br>
+    2. Center for Collective Learning, IAST, Toulouse School of Economics, France<br>
+    3. Center for Collective Learning, CIAS, Corvinus University of Budapest, Hungary<br>
+    4. AMBS, University of Manchester, UK &nbsp;&nbsp; 5. Centrale Supélec, Paris Saclay, France
+  </p>
+  <p class="small muted" style="margin-top:1.1em;">Théorie Algorithmique de la Décision et des Jeux (TADJ) &nbsp;&middot;&nbsp; 21 June 2026</p>
+  <img class="erc" src="figs/LOGO_ERC-FLAG_FP.png" alt="ERC / EU funding flag">
+  <aside class="notes">Joint work; supported by the ERC grant 101166894 "Advancing Digital Democratic Innovation" (ADDI).</aside>
+</section>
+
+<!-- 2. MOTIVATION: aggregation asks who wins -->
+<section>
+  <p class="kicker">Motivation</p>
+  <p class="lead">Most of social choice asks one question: given the votes, <strong>which alternative wins?</strong></p>
+  <aside class="notes">Aggregation rules select the most preferred alternatives from declared preferences.</aside>
+</section>
+
+<!-- 3. MOTIVATION: disagreement is structural -->
+<section>
+  <p class="kicker">Motivation</p>
+  <p class="lead">Agreement is half the story. A population also has to face its <span class="hl">disagreements</span>.</p>
+  <p class="muted">On Pol.is, the proposals with the narrowest margins are surfaced next to the consensual ones.</p>
+  <aside class="notes">Waldron: a society confronts and resolves disagreements before reaching agreement. Pol.is highlights divisive proposals alongside consensual ones.</aside>
+</section>
+
+<!-- 4. MOTIVATION: structure helps deliberation -->
+<section>
+  <p class="kicker">Motivation</p>
+  <p class="lead">Some disagreement is <strong>structural</strong>: the population splits into camps.</p>
+  <p class="lead">Identifying that structure is the goal.</p>
+  <aside class="notes">An alternative is divisive when one group favours it while another opposes it.</aside>
+</section>
+
+<!-- 5. THE COST OF PREFERENCES -->
+<section>
+  <p class="kicker">The tension</p>
+  <ul>
+    <li>Full rankings reveal everything but are costly to collect.</li>
+    <li>Pairwise comparisons are cheap and intuitive.</li>
+    <li class="fragment">Pairwise comparisons miss the structure of disagreement.</li>
+  </ul>
+  <aside class="notes">Surveys ask pairwise comparisons (simple) or full rankings (complete but costly); pairwise cannot separate structural disagreement from noise.</aside>
+</section>
+
+<!-- 6. TWO QUESTIONS -->
+<section>
+  <p class="kicker">This talk</p>
+  <p>Two questions, treated together:</p>
+  <ul>
+    <li class="fragment">What aggregate data is needed to <strong>measure</strong> disagreement?</li>
+    <li class="fragment">How do we <strong>elicit</strong> it under a query budget?</li>
+  </ul>
+  <aside class="notes">We find the minimal aggregated preference information for several disagreement measures, then design protocols to elicit it.</aside>
+</section>
+
+<!-- 7. CONCEPTS: alternatives -->
+<section>
+  <p class="kicker">Concepts and notation</p>
+  <p class="lead"><strong>Alternatives.</strong> A finite set \(\mathcal{A}=\{a_1,\dots,a_m\}\), with \(m \geq 3\).</p>
+  <aside class="notes">The options voters rank: candidates, proposals, items.</aside>
+</section>
+
+<!-- 8. CONCEPTS: voter -->
+<section>
+  <p class="kicker">Concepts and notation</p>
+  <p class="lead"><strong>Voter.</strong> A strict ranking \(\succ\) of \(\mathcal{A}\).</p>
+  <p class="muted">For example \(a \succ b \succ c\): \(a\) first, \(c\) last.</p>
+  <aside class="notes">Each voter holds a strict linear order over the alternatives.</aside>
+</section>
+
+<!-- 9. CONCEPTS: profile -->
+<section>
+  <p class="kicker">Concepts and notation</p>
+  <p class="lead"><strong>Profile.</strong> A distribution \(\pi\) over the \(m!\) rankings.</p>
+  <p class="muted">Example over \(\{a,b,c\}\): \(\quad \pi = \tfrac12\,(a \succ b \succ c) + \tfrac12\,(c \succ b \succ a)\).</p>
+  <aside class="notes">A profile is a probability distribution over rankings; a voter is a ranking drawn from it.</aside>
+</section>
+
+<!-- 10. DEFINITION: rank -->
+<section>
+  <p class="kicker">Concepts and notation</p>
+  <p><strong>Definition (rank).</strong></p>
+  <p style="margin-top:.2em;">\[ r_a \;:=\; 1 + |\{\, b \neq a : b \succ a \,\}| \]</p>
+  <p class="muted">The position of \(a\) in a voter's ranking; \(r_a = 1\) means first.</p>
+  <aside class="notes">The rank of a counts how many alternatives beat it, plus one.</aside>
+</section>
+
+<!-- 11. RANK AS A DISTRIBUTION -->
+<section>
+  <p class="kicker">Key shift</p>
+  <p class="lead">An alternative does not have one rank.</p>
+  <p class="lead">Across voters, \(a\) holds a <span class="hl">distribution</span> of ranks, \(\Pr[r_a = i]\).</p>
+  <aside class="notes">Disagreement about a is a property of this rank distribution.</aside>
+</section>
+
+<!-- 12. PAIRWISE PROPORTIONS -->
+<section>
+  <p class="kicker">Pairwise data</p>
+  <p>For two alternatives, \(\;p_{xy} := \Pr[x \succ y]\).</p>
+  <p class="muted">The aggregate of all pairwise comparisons. The standard, low-cost query.</p>
+  <aside class="notes">Pairwise proportions are degree-2 data and underlie many voting rules.</aside>
+</section>
+
+<!-- 13a. RANK DISTRIBUTION — pairwise numbers first, then the uniform histogram (auto-animate) -->
+<section data-auto-animate>
+  <h2 data-id="rd-h">Disagreement lives in the rank distribution</h2>
+  <p data-id="rd-pw">All pairwise proportions coincide: \(\;\; p_{ab}=p_{ba}=p_{ac}=p_{ca}=p_{bc}=p_{cb}=\tfrac12\).</p>
+  <p class="fragment" data-id="rd-sent">Now look at the rank of one alternative \(a\). It can be distributed as:</p>
+  <div class="fragment" style="text-align:center; margin-top:0.4em;">
+    <span data-id="huni" style="display:inline-block;">
+      <svg class="hist" viewBox="0 0 220 178" width="220" aria-label="rank distribution of a, uniform">
+        <line x1="38" y1="150" x2="182" y2="150" stroke="#cccccc" stroke-width="1.5"/>
+        <rect x="49"  y="63" width="22" height="87" fill="#9a1b1b"/>
+        <rect x="99"  y="63" width="22" height="87" fill="#9a1b1b"/>
+        <rect x="149" y="63" width="22" height="87" fill="#9a1b1b"/>
+        <text x="60"  y="56" text-anchor="middle" font-size="12" fill="#6b6b6b">1/3</text>
+        <text x="110" y="56" text-anchor="middle" font-size="12" fill="#6b6b6b">1/3</text>
+        <text x="160" y="56" text-anchor="middle" font-size="12" fill="#6b6b6b">1/3</text>
+        <text x="60"  y="168" text-anchor="middle" font-size="13" fill="#6b6b6b">1</text>
+        <text x="110" y="168" text-anchor="middle" font-size="13" fill="#6b6b6b">2</text>
+        <text x="160" y="168" text-anchor="middle" font-size="13" fill="#6b6b6b">3</text>
+      </svg>
+      <div class="small muted">impartial culture</div>
+    </span>
+  </div>
+  <aside class="notes">The pairwise data is fixed at one half for every pair, yet it does not pin down the rank of a single alternative.</aside>
+</section>
+
+<!-- 13b. RANK DISTRIBUTION — clone into the antagonism histogram (auto-animate) -->
+<section data-auto-animate>
+  <h2 data-id="rd-h">Disagreement lives in the rank distribution</h2>
+  <p data-id="rd-pw">All pairwise proportions coincide: \(\;\; p_{ab}=p_{ba}=p_{ac}=p_{ca}=p_{bc}=p_{cb}=\tfrac12\).</p>
+  <p data-id="rd-sent">Now look at the rank of one alternative \(a\). It can be distributed as:</p>
+  <div class="twocol" style="margin-top:0.4em; align-items:start;">
+    <div style="text-align:center;">
+      <span data-id="huni" style="display:inline-block;">
+        <svg class="hist" viewBox="0 0 220 178" width="220" aria-label="rank distribution of a, uniform">
+          <line x1="38" y1="150" x2="182" y2="150" stroke="#cccccc" stroke-width="1.5"/>
+          <rect x="49"  y="63" width="22" height="87" fill="#9a1b1b"/>
+          <rect x="99"  y="63" width="22" height="87" fill="#9a1b1b"/>
+          <rect x="149" y="63" width="22" height="87" fill="#9a1b1b"/>
+          <text x="60"  y="56" text-anchor="middle" font-size="12" fill="#6b6b6b">1/3</text>
+          <text x="110" y="56" text-anchor="middle" font-size="12" fill="#6b6b6b">1/3</text>
+          <text x="160" y="56" text-anchor="middle" font-size="12" fill="#6b6b6b">1/3</text>
+          <text x="60"  y="168" text-anchor="middle" font-size="13" fill="#6b6b6b">1</text>
+          <text x="110" y="168" text-anchor="middle" font-size="13" fill="#6b6b6b">2</text>
+          <text x="160" y="168" text-anchor="middle" font-size="13" fill="#6b6b6b">3</text>
+        </svg>
+        <div class="small muted">impartial culture</div>
+      </span>
+    </div>
+    <div style="text-align:center;">
+      <span data-id="hant" style="display:inline-block;">
+        <svg class="hist" viewBox="0 0 220 178" width="220" aria-label="rank distribution of a, antagonism">
+          <line x1="38" y1="150" x2="182" y2="150" stroke="#cccccc" stroke-width="1.5"/>
+          <rect x="49"  y="20" width="22" height="130" fill="#9a1b1b"/>
+          <rect x="149" y="20" width="22" height="130" fill="#9a1b1b"/>
+          <text x="60"  y="13" text-anchor="middle" font-size="12" fill="#6b6b6b">1/2</text>
+          <text x="160" y="13" text-anchor="middle" font-size="12" fill="#6b6b6b">1/2</text>
+          <text x="110" y="142" text-anchor="middle" font-size="12" fill="#b9bdc0">0</text>
+          <text x="60"  y="168" text-anchor="middle" font-size="13" fill="#6b6b6b">1</text>
+          <text x="110" y="168" text-anchor="middle" font-size="13" fill="#6b6b6b">2</text>
+          <text x="160" y="168" text-anchor="middle" font-size="13" fill="#6b6b6b">3</text>
+        </svg>
+        <div class="small muted">antagonism</div>
+      </span>
+    </div>
+  </div>
+  <p style="margin-top:0.2em;">Same pairwise data, opposite rank structure.</p>
+  <aside class="notes">The antagonism profile shares every pairwise proportion with impartial culture, yet splits the rank of a between first and last.</aside>
+</section>
+
+<!-- 14. TAKEAWAY -->
+<section>
+  <p class="lead">To see the difference, we need data that lives <span class="hl">above the pairwise level</span>.</p>
+  <aside class="notes">The two profiles differ only in higher-order statistics; this motivates the plurality matrix.</aside>
+</section>
+
+<!-- 15. PLURALITY MATRIX: definition -->
+<section>
+  <h2>The plurality matrix</h2>
+  <p>For a subset \(S\) and \(a \in S\):</p>
+  <p style="margin-top:.2em;">\[ p_S^{\pi}(a) \;:=\; \Pr_\pi(a \text{ is ranked first within } S) \]</p>
+  <aside class="notes">The matrix entry records, for each subset S, the probability that a tops S.</aside>
+</section>
+
+<!-- 16. DEGREE -->
+<section>
+  <h2>Degree</h2>
+  <p>Group the rows by subset size \(|S|\).</p>
+  <ul>
+    <li><strong>Degree 2:</strong> pairwise comparisons.</li>
+    <li><strong>Degree \(m\):</strong> plurality scores.</li>
+  </ul>
+  <p class="muted small">No degree can be recovered from another.</p>
+  <aside class="notes">Degree 2 is pairwise; degree m is the proportion ranking each alternative first.</aside>
+</section>
+
+<!-- 17. LEVEL -->
+<section>
+  <h2>Level of a measure</h2>
+  <p>A statistic has <strong>level \(k\)</strong> when degree \(\leq k\) data expresses it, and degree \(\leq k-1\) does not.</p>
+  <p class="muted small">The smallest subset size needed to compute it.</p>
+  <aside class="notes">Level is the minimal degree required to express a measure.</aside>
+</section>
+
+<!-- 18. MATRIX degree 2 / degree 3 (fragment row) -->
+<section data-transition="fade">
+  <h2>Same pairwise data, different matrix</h2>
+  <div class="twocol" style="margin-top:0.3em;">
+    <div style="text-align:center;">
+      <div class="small muted">\(\mathcal{P}_{\pi_{\mathrm{IC}}}\)&nbsp; impartial culture</div>
+      <table class="matrix">
+        <thead><tr><th>\(\mathcal{S}\times\mathcal{A}\)</th><th>a</th><th>b</th><th>c</th></tr></thead>
+        <tbody>
+          <tr><th>{a,b}</th><td>1/2</td><td>1/2</td><td>·</td></tr>
+          <tr><th>{a,c}</th><td>1/2</td><td>·</td><td>1/2</td></tr>
+          <tr><th>{b,c}</th><td>·</td><td>1/2</td><td>1/2</td></tr>
+          <tr class="fragment" data-fragment-index="1"><th>{a,b,c}</th><td class="diff">1/3</td><td class="diff">1/3</td><td class="diff">1/3</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="text-align:center;">
+      <div class="small muted">\(\mathcal{P}_{\pi_{\mathrm{AN}}}\)&nbsp; antagonism</div>
+      <table class="matrix">
+        <thead><tr><th>\(\mathcal{S}\times\mathcal{A}\)</th><th>a</th><th>b</th><th>c</th></tr></thead>
+        <tbody>
+          <tr><th>{a,b}</th><td>1/2</td><td>1/2</td><td>·</td></tr>
+          <tr><th>{a,c}</th><td>1/2</td><td>·</td><td>1/2</td></tr>
+          <tr><th>{b,c}</th><td>·</td><td>1/2</td><td>1/2</td></tr>
+          <tr class="fragment" data-fragment-index="1"><th>{a,b,c}</th><td class="diff">1/2</td><td class="diff">1/2</td><td class="diff">0</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <p style="text-align:center; margin-top:0.6em;">Degree 2: <strong>identical</strong>.<span class="fragment" data-fragment-index="1">&nbsp;&nbsp; Degree 3: <strong class="diff">different</strong>.</span></p>
+  <aside class="notes">Both matrices coincide at degree 2; the degree-3 row is where the two profiles part.</aside>
+</section>
+
+<!-- 19. AGREEMENT INDEX -->
+<section>
+  <p class="kicker">Three measures</p>
+  <p><strong>Agreement index</strong> \(A(\pi)\): how far each pair is from a tie, averaged.</p>
+  <p style="margin-top:.2em;">\[ A(\pi) = \tbinom{m}{2}^{-1}\!\!\sum_{\{x,y\}} \big|\,2\,p_{xy}-1\,\big| \]</p>
+  <p class="hl">Level 2.</p>
+  <aside class="notes">The agreement index ranges from 0 (all pairs split) to 1 (unanimity), and uses only pairwise data.</aside>
+</section>
+
+<!-- 20. RANK VARIANCE -->
+<section>
+  <p class="kicker">Three measures</p>
+  <p><strong>Rank variance</strong> of \(a\): how much its rank moves across voters.</p>
+  <p style="margin-top:.2em;">\[ \mathrm{Var}(a) = \mathbb{E}\big[(r_a - \mathbb{E}[r_a])^2\big] \]</p>
+  <p class="hl">Level 3.</p>
+  <aside class="notes">Rank variance is a level-3 measure; the closed form uses degree-2 and degree-3 entries.</aside>
+</section>
+
+<!-- 21. DIVISIVENESS -->
+<section>
+  <p class="kicker">Three measures</p>
+  <p><strong>Divisiveness</strong> of \(a\): split the voters on each pair \((a,b)\), then compare how high \(a\) ranks on average (its Borda score) in the two camps.</p>
+  <p class="hl">Level 3.</p>
+  <aside class="notes">Divisiveness compares the Borda score of a among voters preferring a to b versus the reverse, averaged over b; it is level 3.</aside>
+</section>
+
+<!-- 22. RECAP: pairwise not enough -->
+<section>
+  <p class="lead">Rank variance and divisiveness are <strong>level 3</strong>.</p>
+  <p class="lead">Pairwise comparisons alone cannot recover them.</p>
+  <aside class="notes">Impartial culture and antagonism share all degree-2 data yet differ in variance and divisiveness.</aside>
+</section>
+
+<!-- 23. LEVEL HIERARCHY: idea -->
+<section>
+  <h2>The level hierarchy</h2>
+  <p class="lead">Level \(\ell\) = what \(\ell\)-wise data tells you about the rank distribution.</p>
+  <aside class="notes">Each degree of the plurality matrix reads a different part of the rank distribution.</aside>
+</section>
+
+<!-- 24. MEAN FIXED BY PAIRWISE -->
+<section>
+  <p class="kicker">Hierarchy</p>
+  <p>Pairwise data fixes the <strong>mean rank</strong>:</p>
+  <p style="margin-top:.2em;">\[ \mathbb{E}[r_a] = m - \mathrm{Bor}(a) \]</p>
+  <p class="muted small">The Borda score is a level-2 measure.</p>
+  <aside class="notes">The expected rank equals m minus the Borda score, which is degree-2 data.</aside>
+</section>
+
+<!-- 25. VARIANCE NEEDS DEGREE 3 -->
+<section>
+  <p class="kicker">Hierarchy</p>
+  <p class="lead">Pairwise data fixes the mean, and <span class="hl">nothing above it</span>.</p>
+  <p>The variance already needs degree 3.</p>
+  <aside class="notes">The mean is pinned at degree 2; the variance is the first quantity that requires degree 3.</aside>
+</section>
+
+<!-- 26. CENTRAL MOMENTS -->
+<section>
+  <h2>Central moments</h2>
+  <p style="margin-top:.1em;">\[ M_k(a) = \mathbb{E}\big[(r_a - \mathbb{E}[r_a])^k\big] \]</p>
+  <p class="lead">\(M_k\) is a measure of <strong>level \(k+1\)</strong>.</p>
+  <aside class="notes">The k-th central moment of the rank has level exactly k+1.</aside>
+</section>
+
+<!-- 27. SKEWNESS -->
+<section>
+  <p class="kicker">Reading the moments</p>
+  <p><strong>Skewness</strong> \(\gamma_1\): asymmetry of the rank distribution.</p>
+  <p class="hl">Level 4.</p>
+  <aside class="notes">Skewness measures the asymmetry of the distribution of the rank of a.</aside>
+</section>
+
+<!-- 28. EXCESS KURTOSIS -->
+<section>
+  <p class="kicker">Reading the moments</p>
+  <p><strong>Excess kurtosis</strong> \(\gamma_2\): tail extremity, the tendency to produce outliers.</p>
+  <p class="hl">Level 5.</p>
+  <aside class="notes">Excess kurtosis relates to tail extremity.</aside>
+</section>
+
+<!-- 29. (gamma1, gamma2) plane -->
+<section>
+  <p class="lead">\((\gamma_1, \gamma_2)\) is a two-dimensional summary of the rank distribution.</p>
+  <p>No level-2 or level-3 measure can capture it.</p>
+  <aside class="notes">Skewness and excess kurtosis together give a 2D summary invisible to lower levels.</aside>
+</section>
+
+<!-- 30. STRICTNESS THEOREM (+ backup) -->
+<section>
+  <section>
+    <h2>The hierarchy is strict</h2>
+    <p>For every \(k \geq 2\), there are two profiles \(\pi, \pi'\) with</p>
+    <p style="text-align:center; margin:.3em 0;">\( p_S^{\pi}(a) = p_S^{\pi'}(a)\) for all \(|S| \leq k\), &nbsp; yet they differ at some \(|T| = k+1\).</p>
+    <p class="fragment">No measure of level \(k\) tells them apart.</p>
+    <p class="small muted">Down for the proof sketch.</p>
+    <aside class="notes">The proof constructs the two profiles explicitly; the bound matches the moment levels.</aside>
+  </section>
+  <section>
+    <p class="kicker">Backup &middot; proof sketch</p>
+    <p>Set \(m = d+2\) (the separating degree \(d\) plays the role of \(k\)). Profile \(\pi_w\): draw \(r_a\) from a distribution \(w\) on positions, place the rest uniformly.</p>
+    <p style="margin-top:.2em;">\[ p_S^{\pi_w}(a) = \sum_{j=1}^{m} w_j\,\frac{\binom{m-j}{\,s-1}}{\binom{m-1}{\,s-1}} \]</p>
+    <p class="small">Linear in \(w\), depending on \(S\) only through \(s=|S|\). Matching up to degree \(d\) is \(d\) equations of distinct polynomial degree (rank \(d\)); the degree-\((d{+}1)\) separation is a degree-\(d\) polynomial, not implied.</p>
+    <p class="small">Witness \(d=3,\,m=5\): \(w\) uniform, \(w'=\tfrac{1}{20}(3,7,1,5,4)\). Then \(p_S(a)=1/|S|\) for \(|S|\in\{2,3\}\); at \(|S|=4\), \(1/4\) versus \(19/80\).</p>
+  </section>
+</section>
+
+<!-- 31. EVERY LEVEL IS OCCUPIED -->
+<section>
+  <p class="lead">Every level is occupied.</p>
+  <p>The \(k\)-central moment is a measure of level exactly \(k+1\).</p>
+  <aside class="notes">Moments give a meaningful measure at every level, so the hierarchy does not collapse on its own.</aside>
+</section>
+
+<!-- 32. STRUCTURAL COLLAPSE -->
+<section>
+  <h2>When structure helps</h2>
+  <p>Under <strong>Plackett-Luce</strong> (latent strengths) or <strong>single-peaked</strong> (options on a line) preferences, every degree is a function of degree 2.</p>
+  <p class="lead">The hierarchy collapses to level 2.</p>
+  <p class="small muted fragment">Single-peaked needs the axis known in advance; Plackett-Luce needs only pairwise comparisons.</p>
+  <aside class="notes">Plackett-Luce needs no access to the latent strengths; single-peaked needs the axis known in advance.</aside>
+</section>
+
+<!-- 33. ELICITATION GOAL -->
+<section>
+  <h2>Eliciting the matrix</h2>
+  <p>Estimate every entry to accuracy \(\varepsilon\) with probability \(1-\delta\).</p>
+  <p class="muted small">Degree 2 is just pairwise comparisons. Degree \(\geq 3\) needs a richer query.</p>
+  <aside class="notes">We take a PAC view: epsilon-approximate each entry with probability one minus delta.</aside>
+</section>
+
+<!-- 34. k-CHAIN -->
+<section>
+  <p class="kicker">Primitive</p>
+  <p><strong>\(k\)-chain.</strong> Compare \(a_1, a_2\), then the running winner against each next alternative.</p>
+  <p>\(\;|S|-1\) pairwise comparisons. Lowest cognitive load.</p>
+  <aside class="notes">The chain reports nested-prefix winners, one sample per degree, with k minus 1 comparisons.</aside>
+</section>
+
+<!-- 35. k-RANKING -->
+<section>
+  <p class="kicker">Primitive</p>
+  <p><strong>\(k\)-ranking.</strong> Rank the whole subset \(S\).</p>
+  <p>\(\;\Theta(k \log k)\) comparisons. By transitivity, a ranking of \(S\) fixes the winner of every subset: \(\binom{|S|}{k}\) samples at each degree \(k\).</p>
+  <aside class="notes">A full ranking of S determines the top of every subset of S, giving many samples at higher cognitive load.</aside>
+</section>
+
+<!-- 36. COST AXES (+ backups) -->
+<section>
+  <section>
+    <h2>Two cost axes</h2>
+    <p>For a protocol of length \(N\) with \(c_j\) comparisons at step \(j\):</p>
+    <p style="text-align:center; margin:.4em 0;">\( B = \sum_{j} c_j \qquad \mathrm{MCL} = \max_j c_j \)</p>
+    <ul>
+      <li><strong>Budget</strong> \(B\): total comparisons.</li>
+      <li><strong>Max cognitive load</strong> \(\mathrm{MCL}\): the heaviest single query.</li>
+    </ul>
+    <p class="small muted">Down for the budget derivation.</p>
+    <aside class="notes">Budget is the total cost; MCL is the cost of the heaviest query, from one comparison to a full ranking.</aside>
+  </section>
+  <section>
+    <p class="kicker">Backup &middot; budget</p>
+    <p class="small">Degree-\(k\) entries: \(Q_k = k\binom{m}{k}\). Per-entry samples (Hoeffding + union bound): \(T_k = \dfrac{\ln(2Q_k/\delta)}{2\varepsilon^2}\).</p>
+    <ul class="small">
+      <li>\(k\)-chain: \(N_{\mathrm{chain}} = \binom{m}{k} T_k\) voters, \(\mathrm{MCL}=k-1\).</li>
+      <li>\(k\)-ranking: \(N_{\mathrm{rank}} = \dfrac{\binom{m}{k} T_k}{k\log k}\) voters, \(\mathrm{MCL}=k\log k\).</li>
+    </ul>
+  </section>
+  <section>
+    <p class="kicker">Backup &middot; sampling without replacement</p>
+    <p class="small">Each voter answers once, so samples are drawn without replacement. Serfling sharpens Hoeffding:</p>
+    <p class="small" style="text-align:center;">\( T_\ell' = T_\ell\,\dfrac{n+1}{n+T_\ell} \).</p>
+    <p class="small">When \(n \geq N_{\mathrm{chain}}\) the reduction stays below \(2\%\) once \(\binom{m}{\ell}\geq 50\), so the paper keeps the Hoeffding bound.</p>
+  </section>
+</section>
+
+<!-- 37. THE TRADE-OFF -->
+<section>
+  <p class="lead">At a fixed budget, comparisons per voter trade off against the number of voters.</p>
+  <p class="muted">Chains and rankings sit at the two ends.</p>
+  <aside class="notes">At a fixed budget, cognitive load per voter trades against the number of voters.</aside>
+</section>
+
+<!-- 38. MCL LOWER BOUND -->
+<section>
+  <p class="kicker">A limit</p>
+  <p>Any protocol that reaches degree \(k\) needs \(\mathrm{MCL} \geq k-1\).</p>
+  <p class="muted small">Chains achieve it. So a level-3 measure forces at least one voter to compare three alternatives jointly.</p>
+  <aside class="notes">Identifying the top of a size-k subset needs at least k minus 1 comparisons; chains are optimal in MCL.</aside>
+</section>
+
+<!-- 39. PARETO FIGURE -->
+<section>
+  <h2>Budget against cognitive load</h2>
+  <figure>
+    <img class="fig" src="figs/fig_pareto_front_final_nobg.png" alt="Budget versus maximum cognitive load for chain and ranking protocols at degrees 2 to 5, m=10, epsilon=0.05, Plackett-Luce ground truth.">
+    <figcaption>Chains sit at minimal load and win when the population is large; rankings trade higher load for lower budget.</figcaption>
+  </figure>
+  <aside class="notes">Chains are optimal at low MCL or large population; rankings become optimal otherwise.</aside>
+</section>
+
+<!-- 40. TWO REGIMES -->
+<section>
+  <p class="lead">Two regimes on one frontier.</p>
+  <ul>
+    <li><strong>Digital democracy:</strong> low load, many participants. Use chains.</li>
+    <li><strong>Expert panel:</strong> high load, few participants. Use rankings.</li>
+  </ul>
+  <aside class="notes">Low-MCL chains suit consultations where attention is scarce; high-MCL rankings suit expert settings.</aside>
+</section>
+
+<!-- 41. SYNTHETIC FIGURE -->
+<section>
+  <h2>Synthetic profiles in the moment plane</h2>
+  <figure>
+    <img class="fig" src="figs/fig_synth.png" alt="Standardised skewness versus excess kurtosis for seven preference models over 256 alternatives, with the Pearson boundary and the unimodal-bimodal transition parabolas.">
+    <figcaption>Skewness against excess kurtosis, 256 alternatives, seven models.</figcaption>
+  </figure>
+  <aside class="notes">Structured models stay unimodal; Mallows mixtures move toward the bimodal region.</aside>
+</section>
+
+<!-- 42. SYNTHETIC TAKEAWAY -->
+<section>
+  <p class="kicker">Synthetic data</p>
+  <ul>
+    <li>Below the dashed parabola: bimodal rank distribution, a two-camp split.</li>
+    <li>Single-peaked, Plackett-Luce and \(k\)-Euclidean stay unimodal (above).</li>
+    <li>Mallows mixtures (two opposed consensus rankings blended) fall below.</li>
+    <li class="fragment">Five profiles share all degree-3 data; only skewness (level 4) and kurtosis (level 5) tell them apart.</li>
+  </ul>
+  <aside class="notes">Skewness and excess kurtosis detect structure that no degree-3 measure can see.</aside>
+</section>
+
+<!-- 43. REAL FIGURE -->
+<section>
+  <h2>Real elections</h2>
+  <figure>
+    <img class="fig" src="figs/fig_political_vs_synthetic_swapped_legend_L.png" alt="Moment plane for real political datasets beside synthetic families, with representative candidate rank distributions.">
+    <figcaption>Glasgow STV, NSW Legislative Assembly, and the 2017 Voter Autrement survey, beside the synthetic families.</figcaption>
+  </figure>
+  <aside class="notes">Real elections populate the whole plane and do not concentrate near impartial culture.</aside>
+</section>
+
+<!-- 44. REAL TAKEAWAY -->
+<section>
+  <p class="kicker">Real data</p>
+  <p>Real elections fill the whole moment plane.</p>
+  <p>The plane separates high-disagreement alternatives that rank variance alone would merge.</p>
+  <p class="small muted">Caveat: only voters who gave complete rankings are plotted, which over-represents the most engaged.</p>
+  <aside class="notes">Le Pen and Melenchon both score high on rank variance; the moment plane tells them apart.</aside>
+</section>
+
+<!-- 45. CONTRIBUTIONS -->
+<section>
+  <h2>Contributions</h2>
+  <ul>
+    <li>The plurality matrix: aggregate data stratified by subset size.</li>
+    <li>The level of a measure, and rank variance and divisiveness at level 3.</li>
+    <li class="fragment">A strict hierarchy, with a moment at every level.</li>
+    <li class="fragment">Two elicitation protocols and their Pareto frontier.</li>
+  </ul>
+  <aside class="notes">A stratified framework, a placement of measures, strictness, and the elicitation protocols.</aside>
+</section>
+
+<!-- 46. LIMITATIONS -->
+<section>
+  <p class="kicker">Limitations</p>
+  <ul>
+    <li>The matrix records only "tops a subset" events; some measures fall outside it.</li>
+    <li>Voters are i.i.d., truthful, noiseless; load is counted in pairwise comparisons.</li>
+    <li>Experiments use voters who gave complete rankings.</li>
+  </ul>
+  <aside class="notes">The k-Kemeny family lies outside the framework; the assumptions are standard but restrictive.</aside>
+</section>
+
+<!-- 47. FUTURE WORK -->
+<section>
+  <p class="kicker">Ahead</p>
+  <p>Top-\(k\) lists, approval ballots, partial orders.</p>
+  <p>Bayesian variants with priors over noise and load.</p>
+  <aside class="notes">Extending beyond complete, noiseless, homogeneous preferences.</aside>
+</section>
+
+<!-- 48. CLOSE -->
+<section>
+  <h1>Thank you</h1>
+  <p class="muted">Questions welcome.</p>
+  <p class="small"><a href="mailto:ouaguenouni.hachemi@gmail.com">ouaguenouni.hachemi@gmail.com</a></p>
+  <aside class="notes">To export this deck to PDF, open it with ?print-pdf and print to PDF from Chrome.</aside>
+</section>
+
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/notes/notes.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.24/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.24/dist/contrib/auto-render.min.js"></script>
+<script>
+  Reveal.initialize({
+    hash: true,
+    slideNumber: 'c/t',
+    transition: 'fade',
+    transitionSpeed: 'fast',
+    controls: true,
+    plugins: [ RevealNotes ]
+  }).then(() => {
+    renderMathInElement(document.querySelector('.reveal .slides'), {
+      delimiters: [
+        { left: '$$', right: '$$', display: true },
+        { left: '\\[', right: '\\]', display: true },
+        { left: '\\(', right: '\\)', display: false },
+        { left: '$', right: '$', display: false }
+      ],
+      ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+      throwOnError: false
+    });
+  });
+</script>
+</body>
+</html>

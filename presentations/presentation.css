@@ -1,0 +1,58 @@
+/* Shared tweaks for reveal.js talks.
+   Keeps the restrained black/grey look of the main site and fixes a few
+   defaults (no UPPERCASE headings, readable code, a simple 2-column helper). */
+
+.reveal h1,
+.reveal h2,
+.reveal h3,
+.reveal h4 {
+    text-transform: none;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+}
+
+.reveal a {
+    color: #1a73e8;
+    text-decoration: none;
+}
+.reveal a:hover { text-decoration: underline; }
+
+/* Two-column layout: wrap two <div>s in <div class="columns"> */
+.reveal .columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.2em;
+    align-items: center;
+    text-align: left;
+}
+
+/* Images: no heavy frame, never overflow the slide */
+.reveal section img {
+    border: none;
+    box-shadow: none;
+    border-radius: 6px;
+    max-height: 58vh;
+}
+
+/* Code blocks: fill width, stay on screen */
+.reveal pre {
+    box-shadow: none;
+    width: 100%;
+}
+.reveal pre code {
+    border-radius: 6px;
+    max-height: 60vh;
+    font-size: 0.62em;
+    line-height: 1.4;
+}
+
+.reveal blockquote {
+    box-shadow: none;
+    border-left: 4px solid #ddd;
+    background: #fafafa;
+    font-style: italic;
+}
+
+.reveal table { font-size: 0.8em; }
+
+.reveal .slide-number { font-size: 14px; }

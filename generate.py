@@ -209,9 +209,13 @@ def convert_md_to_html(md_file, output_file=None, template_file='article_templat
         if local_thumb.exists():
             thumbnail = os.path.relpath(local_thumb, start=Path.cwd()).replace('\\', '/')
 
+    # og.png is a derived social-preview image. Regenerating it every build
+    # rewrites identical-looking bytes and dirties git, so only build it when
+    # missing. Delete the file to force a refresh (e.g. after a title change).
     og_path = Path(md_file).parent / 'og.png'
-    bg_path = thumbnail if thumbnail else None
-    generate_og_thumbnail(og_path, title, background_path=bg_path)
+    if not og_path.exists():
+        bg_path = thumbnail if thumbnail else None
+        generate_og_thumbnail(og_path, title, background_path=bg_path)
 
     html_output = html_output.replace('{{DESCRIPTION}}', description)
 
@@ -239,6 +243,139 @@ def convert_md_to_html(md_file, output_file=None, template_file='article_templat
         'draft': is_draft,
         'read_time': str(time_read)
     }
+
+
+# ---------------------------------------------------------------------------
+# Presentations (reveal.js slide decks compiled from Markdown)
+#
+# Each talk lives in presentations/<name>/slides.md and is compiled to
+# presentations/<name>/index.html. Slides are SEPARATED by lines:
+#     ---   new horizontal slide
+#     --    new vertical sub-slide (press down-arrow to reach)
+# A line of exactly  Note:  starts speaker notes for that slide.
+# A leading  <!-- .slide: data-... -->  comment sets section attributes
+# (e.g. data-background).
+#
+# Crucially, math ($...$ and $$...$$) is protected with the SAME stashing
+# trick the articles use, so LaTeX survives Markdown conversion intact and
+# KaTeX renders it client-side — unlike reveal's built-in Markdown parser,
+# which mangles backslashes and underscores.
+# ---------------------------------------------------------------------------
+
+def _render_slide_body(content, md_dir):
+    """Convert one slide's Markdown to HTML, protecting math and HTML embeds."""
+    html_embed_store = []
+
+    def _stash_html_embed(m):
+        file_path = m.group(1).strip()
+        idx = len(html_embed_store)
+        full_path = Path(md_dir) / file_path
+        if full_path.exists():
+            with open(full_path, 'r', encoding='utf-8') as f:
+                html_content = isolate_html_scripts(f.read())
+            html_embed_store.append(f'<div class="embedded-html" id="embed-{idx}">\n{html_content}\n</div>')
+        else:
+            print(f"⚠️  Warning: HTML file not found: {full_path}")
+            html_embed_store.append(f'<p style="color: red;">Error: HTML file not found: {file_path}</p>')
+        return f"\n\n{{{{HTMLEMBED_{idx}}}}}\n\n"
+
+    content = re.sub(r':::html\s+(.+?)\s+:::', _stash_html_embed, content, flags=re.DOTALL)
+
+    block_store, inline_store = [], []
+
+    def _stash_block(m):
+        block_store.append(m.group(1))
+        return f"\n\n{{{{MATHBLOCK_{len(block_store) - 1}}}}}\n\n"
+
+    def _stash_inline(m):
+        inline_store.append(m.group(1))
+        return f"{{{{MATHINLINE_{len(inline_store) - 1}}}}}"
+
+    content = re.sub(r'\$\$(.*?)\$\$', _stash_block, content, flags=re.DOTALL)
+    content = re.sub(r'(?<!\$)\$(?!\$)(.+?)(?<!\$)\$(?!\$)', _stash_inline, content, flags=re.DOTALL)
+
+    md = markdown.Markdown(extensions=['extra'])
+    html = md.convert(content)
+
+    for i, embed in enumerate(html_embed_store):
+        html = html.replace(f"{{{{HTMLEMBED_{i}}}}}", embed)
+    for i, tex in enumerate(block_store):
+        html = html.replace(f"{{{{MATHBLOCK_{i}}}}}", f"$$\n{tex}\n$$")
+    for i, tex in enumerate(inline_store):
+        html = html.replace(f"{{{{MATHINLINE_{i}}}}}", f"${tex}$")
+    return html
+
+
+def _render_one_slide(raw, md_dir):
+    """Turn one slide's raw Markdown into a <section> (with optional notes/attrs)."""
+    attrs = ''
+    attr_match = re.search(r'<!--\s*\.slide:\s*(.*?)-->', raw, flags=re.DOTALL)
+    if attr_match:
+        attrs = ' ' + attr_match.group(1).strip()
+        raw = raw.replace(attr_match.group(0), '')
+
+    notes_html = ''
+    parts = re.split(r'(?m)^Note:[ \t]*$', raw, maxsplit=1)
+    body = parts[0]
+    if len(parts) > 1 and parts[1].strip():
+        notes_html = '\n<aside class="notes">\n' + _render_slide_body(parts[1].strip(), md_dir) + '\n</aside>'
+
+    body_html = _render_slide_body(body.strip(), md_dir)
+    return f"<section{attrs}>\n{body_html}{notes_html}\n</section>"
+
+
+def convert_slides_to_html(md_file, output_file=None, template_file='presentation_template.html'):
+    with open(md_file, 'r', encoding='utf-8') as f:
+        content = f.read()
+
+    md_dir = Path(md_file).parent
+    title = md_dir.name.replace('-', ' ').replace('_', ' ').title()
+
+    frontmatter_match = re.search(r'^---\s*\n(.*?)\n---\s*\n', content, re.DOTALL)
+    if frontmatter_match:
+        frontmatter = frontmatter_match.group(1)
+        content = content[frontmatter_match.end():]
+        title_match = re.search(r'title:\s*(.+)', frontmatter)
+        if title_match:
+            title = title_match.group(1).strip()
+
+    sections = []
+    for h_slide in re.split(r'(?m)^---[ \t]*$', content):
+        verticals = [v for v in re.split(r'(?m)^--[ \t]*$', h_slide) if v.strip()]
+        if not verticals:
+            continue
+        rendered = [_render_one_slide(v, md_dir) for v in verticals]
+        if len(rendered) == 1:
+            sections.append(rendered[0])
+        else:
+            sections.append("<section>\n" + "\n".join(rendered) + "\n</section>")
+
+    slides_html = "\n\n".join(sections)
+
+    with open(template_file, 'r', encoding='utf-8') as f:
+        template = f.read()
+
+    html_output = template.replace('{{TITLE}}', title).replace('{{SLIDES}}', slides_html)
+
+    if output_file is None:
+        output_file = md_dir / 'index.html'
+    with open(output_file, 'w', encoding='utf-8') as f:
+        f.write(html_output)
+
+    print(f"✓ Built presentation: {output_file}  ({len(sections)} slides) — {title}")
+    return {'title': title, 'link': os.path.relpath(output_file, start=Path.cwd()).replace('\\', '/')}
+
+
+def generate_all_presentations(presentations_dir='presentations', template='presentation_template.html'):
+    presentations_path = Path(presentations_dir)
+    if not presentations_path.exists():
+        return
+    for subdir in sorted(presentations_path.iterdir()):
+        if not subdir.is_dir() or subdir.name.startswith('_'):
+            continue
+        slides_md = subdir / 'slides.md'
+        if slides_md.exists():
+            convert_slides_to_html(slides_md, output_file=subdir / 'index.html', template_file=template)
 
 
 def generate_all_articles(articles_dir='articles', article_template='article_template.html', index_template='index_template.html', main_index='index.html'):
@@ -293,54 +430,85 @@ def generate_all_articles(articles_dir='articles', article_template='article_tem
 
 class ArticleEventHandler(FileSystemEventHandler):
     def __init__(self, articles_dir='articles', article_template='article_template.html',
-                 index_template='index_template.html', main_index='index.html'):
+                 index_template='index_template.html', main_index='index.html',
+                 presentations_dir='presentations', presentation_template='presentation_template.html'):
         self.articles_dir = articles_dir
         self.article_template = article_template
         self.index_template = index_template
         self.main_index = main_index
+        self.presentations_dir = presentations_dir
+        self.presentation_template = presentation_template
         self.last_regenerate = 0
         self.debounce_seconds = 1
 
+    # Editors save in different ways (in-place write, or write-temp-then-rename),
+    # so react to created/modified/moved alike.
     def on_modified(self, event):
-        if event.is_directory:
+        if not event.is_directory:
+            self._react(event.src_path)
+
+    def on_created(self, event):
+        if not event.is_directory:
+            self._react(event.src_path)
+
+    def on_moved(self, event):
+        if not event.is_directory:
+            self._react(getattr(event, 'dest_path', event.src_path))
+
+    def _react(self, src_path):
+        file_path = Path(src_path)
+        # Ignore generated output so we don't loop forever.
+        if file_path.name == 'index.html' and self.presentations_dir in str(file_path):
             return
 
-        file_path = Path(event.src_path)
-
-        if (file_path.name == 'article.md' or
+        is_article_change = (file_path.name == 'article.md' or
             file_path.name in [self.article_template, self.index_template] or
-            file_path.suffix in ['.html', '.png'] and self.articles_dir in str(file_path)):
+            (file_path.suffix in ['.html', '.png'] and self.articles_dir in str(file_path)))
 
-            current_time = time.time()
-            if current_time - self.last_regenerate < self.debounce_seconds:
-                return
+        is_presentation_change = (file_path.name == self.presentation_template or
+            (file_path.suffix in ['.md', '.svg', '.png', '.html'] and self.presentations_dir in str(file_path)))
 
-            self.last_regenerate = current_time
-            print(f"\n🔄 Change detected in {file_path.name}, regenerating...")
-            try:
+        if not (is_article_change or is_presentation_change):
+            return
+
+        current_time = time.time()
+        if current_time - self.last_regenerate < self.debounce_seconds:
+            return
+
+        self.last_regenerate = current_time
+        print(f"\n🔄 Change detected in {file_path.name}, regenerating...")
+        try:
+            if is_article_change:
                 generate_all_articles(
                     articles_dir=self.articles_dir,
                     article_template=self.article_template,
                     index_template=self.index_template,
                     main_index=self.main_index
                 )
-            except Exception as e:
-                print(f"❌ Error during regeneration: {e}")
+            generate_all_presentations(
+                presentations_dir=self.presentations_dir,
+                template=self.presentation_template
+            )
+        except Exception as e:
+            print(f"❌ Error during regeneration: {e}")
 
 
 def watch_and_generate(articles_dir='articles', article_template='article_template.html',
                       index_template='index_template.html', main_index='index.html'):
 
-    print("🚀 Starting article generator with file watching...")
-    print(f"📁 Watching directory: {articles_dir}")
+    print("🚀 Starting site generator with file watching...")
+    print(f"📁 Watching: {articles_dir} and presentations\n")
     print("📝 Press Ctrl+C to stop\n")
 
     generate_all_articles(articles_dir, article_template, index_template, main_index)
+    generate_all_presentations()
 
     event_handler = ArticleEventHandler(articles_dir, article_template, index_template, main_index)
     observer = Observer()
 
     observer.schedule(event_handler, articles_dir, recursive=True)
+    if Path('presentations').exists():
+        observer.schedule(event_handler, 'presentations', recursive=True)
     observer.schedule(event_handler, '.', recursive=False)
 
     observer.start()
@@ -362,3 +530,4 @@ if __name__ == "__main__":
         watch_and_generate()
     else:
         generate_all_articles()
+        generate_all_presentations()

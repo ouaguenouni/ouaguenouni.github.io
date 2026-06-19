@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Building Talks in the Browser — Ouaguenouni Mohamed</title>
+
+    <!-- reveal.js core + a clean light theme -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/white.css" id="theme">
+    <!-- code highlighting theme -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/monokai.css">
+    <!-- math -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.24/dist/katex.min.css">
+    <!-- site-matching tweaks -->
+    <link rel="stylesheet" href="../presentation.css">
+</head>
+<body>
+    <div class="reveal">
+        <div class="slides">
+<section>
+<!--
+  A slide deck written in PURE MARKDOWN, compiled by generate.py.
+
+    • New slide        : a line with only   ---
+    • Sub-slide (down)  : a line with only   --
+    • Speaker notes     : a line that is just  Note:   (text after it = notes)
+    • Reveal on click   : add  {: .fragment}  to a bullet
+    • Slide background  : <!- - .slide: data-background="#0b3d2e" - ->  at the top
+
+  Save the file → the watcher rebuilds → refresh the browser.
+  (For a horizontal rule INSIDE a slide use ***  — never --- .)
+-->
+
+<h1>Building Talks in the Browser</h1>
+<h4>A placeholder presentation</h4>
+<p>Ouaguenouni Mohamed</p>
+<p>Use <code>←</code> / <code>→</code> (or Space) to move · press <code>S</code> for speaker view</p>
+<aside class="notes">
+<p>This is a speaker note — only you see it in the speaker view (press <strong>S</strong>).
+It gives you notes, a timer, and a preview of the next slide.</p>
+</aside>
+</section>
+
+<section>
+<h2>Why not Beamer?</h2>
+<ul>
+<li>Slides are <strong>Markdown</strong>, not LaTeX boilerplate</li>
+<li><strong>Save → refresh</strong>, no <code>pdflatex</code> round-trip</li>
+<li>Real <strong>LaTeX math</strong> still works: $e^{i\pi} + 1 = 0$</li>
+<li>Code highlighting, images, tables, web embeds</li>
+<li>One keystroke to <strong>export a PDF</strong> handout</li>
+</ul>
+<aside class="notes">
+<p>The math uses the exact same dollar-sign delimiters as your articles, and is
+compiled with the same pipeline — so anything you wrote in KaTeX pastes straight in.</p>
+</aside>
+</section>
+
+<section>
+<h2>Driving the talk</h2>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>→</code> / <code>Space</code></td>
+<td>Next step / slide</td>
+</tr>
+<tr>
+<td><code>←</code></td>
+<td>Previous</td>
+</tr>
+<tr>
+<td><code>S</code></td>
+<td>Speaker view (notes + timer)</td>
+</tr>
+<tr>
+<td><code>O</code></td>
+<td>Overview of every slide</td>
+</tr>
+<tr>
+<td><code>F</code></td>
+<td>Fullscreen · <code>Esc</code> to exit</td>
+</tr>
+<tr>
+<td><code>B</code></td>
+<td>Black / pause the screen</td>
+</tr>
+</tbody>
+</table>
+</section>
+
+<section>
+<h2>Bullets that build</h2>
+<p>Add <code>{: .fragment}</code> to reveal a bullet on click — this is Beamer's
+<code>\pause</code> / <code>\onslide</code>:</p>
+<ul>
+<li>First this appears {: .fragment}</li>
+<li>then this {: .fragment}</li>
+<li>finally this {: .fragment}</li>
+</ul>
+<aside class="notes">
+<p>Each <code>→</code> reveals the next fragment, then moves on to the following slide.</p>
+</aside>
+</section>
+
+<section>
+<h2>Math, like in your papers</h2>
+<p>Inline — the gradient step is
+$\theta_{t+1} = \theta_t - \eta\,\nabla L(\theta_t)$.</p>
+<p>A display equation:</p>
+<p>$$
+
+\mathbb{E}_{x \sim p}\big[\,f(x)\,\big]
+  = \int_{\mathcal{X}} f(x)\, p(x)\, \mathrm{d}x
+
+$$</p>
+</section>
+
+<section>
+<h2>Multi-line math</h2>
+<p><code>aligned</code> environments work just like in LaTeX:</p>
+<p>$$
+
+\begin{aligned}
+\max_{x} \quad & c^{\top} x \\
+\text{s.t.} \quad & A x \le b \\
+                  & x \ge 0
+\end{aligned}
+
+$$</p>
+</section>
+
+<section>
+<h2>Code, highlighted</h2>
+<pre><code class="language-python">def softmax(z):
+    z = z - z.max()          # numerical stability
+    e = np.exp(z)
+    return e / e.sum()
+
+print(softmax(np.array([2.0, 1.0, 0.1])))
+</code></pre>
+<p>Fenced code blocks are highlighted automatically (here: Python).</p>
+</section>
+
+<section>
+<h2>Two columns</h2>
+<div class="columns">
+<div>
+<p><strong>Text on the left</strong></p>
+<ul>
+<li>Idea or claim</li>
+<li>A second point</li>
+<li>A plain HTML grid</li>
+</ul>
+</div>
+<div>
+<p><img alt="A small schematic" src="diagram.svg" /></p>
+</div>
+</div>
+</section>
+
+<section>
+<h2>Figures</h2>
+<figure>
+<img src="diagram.svg" style="width:55%">
+<figcaption style="color:#666; font-size:0.6em">Figure 1 — any PNG / JPG / SVG, sized with CSS.</figcaption>
+</figure>
+
+<p>Drop the file in the talk folder, then <code>![alt](diagram.svg)</code>.</p>
+</section>
+
+<section>
+<h2>Animation in a figure</h2>
+<p><img src="descent.svg" style="width:62%"></p>
+<p>Animated <strong>SVG</strong>, <strong>GIF</strong> and <strong>video</strong> play right in the slide.
+A clip autoplays on entry with <code>&lt;video data-autoplay src="clip.mp4"&gt;</code>.</p>
+</section>
+
+<section>
+<h2>Interactive figures</h2>
+<p>The same <code>:::html</code> embed your articles use works here too — a live Plotly /
+D3 / canvas widget, hoverable on the slide:</p>
+<p><div class="embedded-html" id="embed-0">
+<div id="liveplot" style="width:100%; height:420px;"></div>
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<script>
+(function() {
+
+    const x = [], y = [];
+    for (let i = 0; i <= 80; i++) { const t = i / 8; x.push(t); y.push(Math.exp(-t / 4) * Math.cos(2 * t)); }
+    Plotly.newPlot('liveplot',
+        [{ x: x, y: y, mode: 'lines', line: { color: '#1a73e8', width: 3 } }],
+        {
+            margin: { t: 10, r: 10, b: 36, l: 40 },
+            paper_bgcolor: 'rgba(0,0,0,0)',
+            plot_bgcolor: 'rgba(0,0,0,0)',
+            xaxis: { title: 't' }, yaxis: { title: 'damped cosine' },
+            font: { size: 14 }
+        },
+        { responsive: true, displayModeBar: false }
+    );
+
+})();
+</script>
+
+</div></p>
+</section>
+
+<section data-auto-animate>
+<h2>Auto-Animate</h2>
+<div data-id="ball" style="width:120px; height:120px; background:#1a73e8; border-radius:50%; margin:2.5rem auto;"></div>
+
+<p>Give matching elements a <code>data-id</code> — they <strong>morph</strong> between slides. Press <code>→</code>.</p>
+</section>
+
+<section data-auto-animate>
+<h2>Auto-Animate</h2>
+<div data-id="ball" style="width:320px; height:320px; background:#0b8043; border-radius:50%; margin:2.5rem auto;"></div>
+
+<p>Build a diagram or equation step by step — this replaces Beamer overlays.</p>
+</section>
+
+<section data-background="#0b3d2e">
+<h2>Section dividers</h2>
+<p>This slide has a dark background, set with a one-line comment at the top of
+the slide:</p>
+<p>``</p>
+<p>Great for separating the parts of a talk.</p>
+</section>
+
+<section>
+<section>
+<h2>Vertical slides for depth</h2>
+<p>Press <code>↓</code> to drill into detail, or <code>→</code> to skip the whole section.</p>
+</section>
+<section>
+<h3>Backup detail 1</h3>
+<p>Stacking slides vertically keeps optional material (proofs, backup, Q&amp;A)
+out of the main left-to-right flow.</p>
+</section>
+<section>
+<h3>Backup detail 2</h3>
+<p><code>↑</code> goes back up · <code>→</code> continues the main thread.</p>
+</section>
+</section>
+
+<section>
+<h2>Quotes</h2>
+<blockquote>
+<p>Everything should be made as simple as possible, but not simpler.</p>
+</blockquote>
+<p>A normal Markdown blockquote.</p>
+</section>
+
+<section>
+<h1>Thank you</h1>
+<p>Questions?</p>
+<p><a href="mailto:ouaguenouni.hachemi@gmail.com">ouaguenouni.hachemi@gmail.com</a></p>
+<aside class="notes">
+<p>To export this deck to PDF, add ?print-pdf to the URL and use the browser's
+"Save as PDF". See PRESENTATIONS.md for details.</p>
+</aside>
+</section>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/highlight.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/notes/notes.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.24/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.24/dist/contrib/auto-render.min.js"></script>
+    <script>
+        Reveal.initialize({
+            hash: true,            // each slide gets its own URL
+            slideNumber: 'c/t',    // show "current / total"
+            transition: 'slide',
+            plugins: [ RevealHighlight, RevealNotes ]
+        }).then(() => {
+            // Render math AFTER slides are in the DOM. Same $ / $$ as the articles.
+            renderMathInElement(document.querySelector('.reveal .slides'), {
+                delimiters: [
+                    { left: '$$', right: '$$', display: true },
+                    { left: '$',  right: '$',  display: false },
+                    { left: '\\(', right: '\\)', display: false },
+                    { left: '\\[', right: '\\]', display: true }
+                ],
+                ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+            });
+        });
+        // Let embedded interactive charts (Plotly/D3/canvas) re-fit when their
+        // slide becomes visible — a slide is hidden when first drawn.
+        Reveal.on('ready', () => window.dispatchEvent(new Event('resize')));
+        Reveal.on('slidechanged', () => window.dispatchEvent(new Event('resize')));
+    </script>
+</body>
+</html>

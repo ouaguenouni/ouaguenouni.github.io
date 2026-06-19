@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+  <title>Incremental Preference Elicitation — interactive figures</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/white.css"/>
+  <style>
+    .reveal section iframe {
+      width: 92vw; height: 78vh; border: 0;
+      box-shadow: 0 1px 14px rgba(0,0,0,0.12); background: #fff;
+    }
+    .reveal h2 { color: #1a1a1a; }
+    .reveal .small { font-size: 0.6em; color: #555; }
+    .reveal .credit { position: absolute; bottom: 6px; right: 14px;
+      font-size: 0.4em; color: #999; }
+  </style>
+</head>
+<body>
+<div class="reveal">
+  <div class="slides">
+
+    <section>
+      <h2>Incremental Preference Elicitation</h2>
+      <p class="small">Interactive supplementary figures · use ← / → to navigate</p>
+      <ul class="small" style="display:inline-block; text-align:left;">
+        <li>Pareto frontier — budget &amp; population vs cognitive load</li>
+        <li>Moment plane — synthetic profile families</li>
+        <li>Moment plane — real PrefLib preferential data</li>
+      </ul>
+    </section>
+
+    <section data-background-color="#ffffff">
+      <h2>Cost of the precision target</h2>
+      <iframe data-src="widgets/pareto.html" loading="lazy"></iframe>
+      <p class="small">Toggle Budget&nbsp;B / Population&nbsp;N · hover points for k, λ, CI · scroll to zoom.</p>
+      <span class="credit">pareto_yB_line_single_final.pdf · fig_pareto_bis.pdf</span>
+    </section>
+
+    <section data-background-color="#ffffff">
+      <h2>Moment plane — synthetic families</h2>
+      <iframe data-src="widgets/synth_moment.html" loading="lazy"></iframe>
+      <p class="small">Each point = one alternative's rank-shape (γ₁, γ₂). ▲ = reference shapes A–D/U.</p>
+      <span class="credit">fig_synth_bis.pdf</span>
+    </section>
+
+    <section data-background-color="#ffffff">
+      <h2>Moment plane — real preferential data</h2>
+      <iframe data-src="widgets/real_moment.html" loading="lazy"></iframe>
+      <p class="small">PrefLib political profiles · Q1–Q4 representative candidates with rank histograms.</p>
+      <span class="credit">final_real_world_parabole.pdf</span>
+    </section>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script>
+  Reveal.initialize({
+    hash: true,
+    width: "100%", height: "100%", margin: 0,
+    controls: true, progress: true,
+    // Keep iframes interactive: only preload the current/adjacent slides.
+    preloadIframes: true,
+  });
+</script>
+</body>
+</html>

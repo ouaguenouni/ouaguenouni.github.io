@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 280" font-family="sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#333"/>
+    </marker>
+  </defs>
+  <rect x="30"  y="110" width="120" height="60" rx="8" fill="#eef3ff" stroke="#1a73e8" stroke-width="2"/>
+  <text x="90"  y="145" text-anchor="middle" font-size="18" fill="#111">Data</text>
+  <rect x="270" y="110" width="120" height="60" rx="8" fill="#eafaf0" stroke="#0b8043" stroke-width="2"/>
+  <text x="330" y="145" text-anchor="middle" font-size="18" fill="#111">Model</text>
+  <line x1="150" y1="140" x2="262" y2="140" stroke="#333" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="210" y="128" text-anchor="middle" font-size="14" fill="#555">train</text>
+  <text x="210" y="40" text-anchor="middle" font-size="16" fill="#999">a placeholder schematic</text>
+</svg>

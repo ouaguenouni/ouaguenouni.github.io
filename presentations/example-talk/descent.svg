@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 300" font-family="sans-serif">
+  <!-- axes -->
+  <line x1="40" y1="30" x2="40" y2="262" stroke="#bbb" stroke-width="2"/>
+  <line x1="40" y1="262" x2="452" y2="262" stroke="#bbb" stroke-width="2"/>
+  <text x="14" y="150" font-size="14" fill="#777" transform="rotate(-90 14,150)">loss</text>
+  <text x="240" y="290" font-size="14" fill="#777" text-anchor="middle">training step</text>
+
+  <!-- the loss curve -->
+  <path d="M48,55 C 150,250 230,252 452,252" fill="none" stroke="#1a73e8" stroke-width="3"/>
+
+  <!-- a marker that rolls down the curve, forever -->
+  <circle r="9" fill="#0b8043">
+    <animateMotion dur="3.5s" repeatCount="indefinite"
+                   keyPoints="0;1" keyTimes="0;1" calcMode="spline"
+                   keySplines="0.2 0 0.2 1"
+                   path="M48,55 C 150,250 230,252 452,252"/>
+  </circle>
+</svg>
