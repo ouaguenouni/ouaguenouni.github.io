@@ -3,37 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Talks &amp; Slides - Ouaguenouni Mohamed</title>
-    <meta name="description" content="Talks and slide decks by Ouaguenouni Mohamed.">
+    <title>Talks &amp; Slides — Mohamed Ouaguenouni</title>
+    <meta name="description" content="Talks and slide decks by Mohamed Ouaguenouni, including an interactive deck on the efficient elicitation of collective disagreements.">
+    <meta name="robots" content="index, follow">
+    <link rel="icon" href="data:,">
+    <script>document.documentElement.className += ' js';</script>
     <link rel="stylesheet" type="text/css" href="../style.css">
-    <style>
-        /* talks have no thumbnail column — use a single column */
-        .article-item { grid-template-columns: 1fr; }
-    </style>
 </head>
 <body>
-    <header class="site-header">
-        <h1><a href="../index.html">Ouaguenouni Mohamed</a></h1>
+    <div class="scroll-progress" aria-hidden="true"></div>
+    <header class="masthead">
+        <h1><a href="../index.html">Mohamed Ouaguenouni</a></h1>
+        <p class="role">Talks &amp; slides</p>
+        <nav class="topnav">
+            <a href="../index.html">← Home</a>
+            <a href="../index.html#research">Research</a>
+            <a href="../index.html#publications">Publications</a>
+            <a href="../index.html#outreach">Outreach</a>
+        </nav>
     </header>
 
-    <div class="articles">
-        <h2>Talks &amp; Slides</h2>
+    <section class="block" style="margin-top:1.6rem;">
+        <p class="kicker">Slides &amp; decks</p>
+        <h2>Talks</h2>
 
-        <article class="article-item">
-            <div class="article-content">
-                <h3 class="article-title"><a href="example-talk/index.html">Building Talks in the Browser</a></h3>
-                <p class="article-description">A placeholder deck demonstrating the reveal.js workflow: Markdown slides, LaTeX math, code highlighting, fragments, speaker notes, and PDF export.</p>
-                <p class="article-meta">Example · slides</p>
+        <article class="talk featured">
+            <div class="talk-body">
+                <h3 class="talk-title"><a href="elicitation-collective-disagreement/index.html">Efficient Elicitation of Collective Disagreements</a></h3>
+                <p class="talk-meta">Théorie Algorithmique de la Décision et des Jeux (TADJ) · 21 June 2026 · interactive deck</p>
+                <p class="talk-desc">A build-in-the-browser talk: a measure of <em>where</em> a population disagrees (not just whether it does), a hierarchy that grades how much information a disagreement measure really uses, and a low-cognitive-load protocol to elicit it. Built with reveal.js, with live Plotly figures — the skewness × kurtosis moment plane and a population-vs-cognitive-load frontier — that you can drive directly from the slides.</p>
+                <p class="talk-links"><a class="live" href="elicitation-collective-disagreement/index.html">Open the slides →</a></p>
             </div>
+            <a class="talk-thumb" href="elicitation-collective-disagreement/index.html"><img src="elicitation-collective-disagreement/figs/talk-thumb.png" alt="Title slide of the disagreement-elicitation talk"></a>
         </article>
 
-    </div>
+        <h2 class="sub">Conference presentations</h2>
+        <ul class="talklist">
+            <li>Learning and Optimizing with an SSB Representation of Intransitive Preferences on Sets — <span class="tv">ECAI 2024, Santiago de Compostela</span></li>
+            <li>A Hybrid Approach to Preference Learning with Interaction Terms — <span class="tv">ECAI 2023, Kraków</span></li>
+            <li>Robust Ordinal Regression for Collaborative Preference Learning with Opinion Synergies — <span class="tv">AAMAS 2023, London</span></li>
+            <li>Modélisation et apprentissage de préférences non-transitives entre ensembles — <span class="tv">ROADEF 2024, Amiens</span></li>
+            <li>Approche bayésienne pour l'élicitation de semi-valeurs à partir de préférences partielles — <span class="tv">ROADEF 2024, Amiens</span></li>
+            <li>Régression ordinale robuste pour l'élicitation de préférences multi-attributs avec synergies — <span class="tv">ROADEF 2023, Rennes</span></li>
+        </ul>
+    </section>
 
     <footer class="article-footer">
         <div class="footer-line">
             <span>O</span>
         </div>
-        <p><a href="../index.html">← Back to home</a></p>
+        <p class="colophon"><a href="../index.html">← Back to home</a></p>
     </footer>
+    <script src="../site.js"></script>
 </body>
 </html>

@@ -2,6 +2,7 @@
 title: A comprehensive study of Mixed Integer Programming with JuMP on Julia (Part 3)
 date: 17/09/2021
 description: I am solving a problem with an exponential number of constraints with the Branch-and-Cut framework
+medium: https://towardsdatascience.com/a-comprehensive-study-of-mixed-integer-programming-with-jump-on-julia-part-3-847ad5b3c625
 ---
 
 I am solving a problem with an exponential number of constraints with the Branch-and-Cut framework
@@ -31,32 +32,56 @@ Imagine that you have many clients, each with its demand positioned on a map, a 
 
 First, we’ll define a type representing a client in Julia; the client must have its position and demand; this could be done using the **struct** keyword.
 
-```
-struct Clientpositiondemandend;client1 = Client([0,10], 25)
+```julia
+struct Client
+    position
+    demand
+end;
+client1 = Client([0,10], 25)
 ```
 
 To generate a random instance, we’ll say that the coordinates are in a square 100x100, and the demand is an integer between 15 and 30; the following function gives us a random client :
 
-```
-function random\_client(pos\_range, demande\_range)position = rand(pos\_range, (1, 2))demand = rand(demande\_range, 1)client = Client(position, demand[1])return clientend;client1 = random\_client(1:100, 15:30);
+```julia
+function random\_client(pos\_range, demande\_range)
+    position = rand(pos\_range, (1, 2))
+    demand = rand(demande\_range, 1)
+    client = Client(position, demand[1])
+    return client
+end;
+client1 = random\_client(1:100, 15:30);
 ```
 
 Now that we have a representation of the clients, we can define a representation of the problem, which contains in addition to the clients the coordinates of the depot, the number of trucks *m* and their capacity *Q*.
 
-```
-struct CVRP\_ProblemclientsdepotmQend;
+```julia
+struct CVRP\_Problem
+    clients
+    depot
+    m
+    Q
+end;
 ```
 
 And thus, a function that generates a random instance.
 
-```
-function random\_instance(n\_clients, depot, m, Q)clients = Dict([(i,random\_client(0:100, 10:30)) for i in 1:n\_clients])problem = CVRP\_Problem(clients, depot, m , Q)return problemend;
+```julia
+function random\_instance(n\_clients, depot, m, Q)
+    clients = Dict([(i,random\_client(0:100, 10:30)) for i in 1:n\_clients])
+    problem = CVRP\_Problem(clients, depot, m , Q)
+    return problem
+end;
 ```
 
 And now, to visualise the problem, let’s set up a function to display the problem.
 
-```
-function display\_problem(problem)x\_pos = [c.position[1] for c in values(problem.clients)]y\_pos = [c.position[2] for c in values(problem.clients)]scatter(x\_pos, y\_pos, shape = :circle, markersize = 6, label= "Client")scatter!([problem.depot[1]], [problem.depot[2]], shape = :square, markersize = 8, label= "Depot")end;
+```julia
+function display\_problem(problem)
+    x\_pos = [c.position[1] for c in values(problem.clients)]
+    y\_pos = [c.position[2] for c in values(problem.clients)]
+    scatter(x\_pos, y\_pos, shape = :circle, markersize = 6, label= "Client")
+    scatter!([problem.depot[1]], [problem.depot[2]], shape = :square, markersize = 8, label= "Depot")
+end;
 ```
 
 This function gives us for a random problem the following figure :
@@ -75,11 +100,19 @@ Now we’ll define some proper notations :
 
 First, we define a notation for the sum of decision variables, given a set of edges E, we define :
 
-![0\_0-AxC\_Yi-40oTdZK.png](0\_0-AxC\_Yi-40oTdZK.png)
+$$
+x(E) = \sum_{e \in E} x_e
+$$
 
 After that, we define the “neighbour” operator δ
 
-![0\_eSwX3pXORMdncu\_T.png](0\_eSwX3pXORMdncu\_T.png)
+$$
+\begin{aligned}
+\delta(x) &= \delta^+(x) \cup \delta^-(x) \\
+\delta^+(x) &= \{ e ; (x, e) \in E \} \\
+\delta^-(x) &= \{ e ; (e, x) \in E \}
+\end{aligned}
+$$
 
 So, δ⁺ is the arcs that go from a vertex and δ⁻ the arcs that go to a vertex; here is an illustration to clarify the concept.
 
@@ -87,20 +120,47 @@ So, δ⁺ is the arcs that go from a vertex and δ⁻ the arcs that go to a vert
 
 So to build vehicle routes, we should constraint the solution with the following constraint that ensures that each client is visited one time (one entry and one exit) :
 
-![0\_2tFEiYjG699Ot93F.png](0\_2tFEiYjG699Ot93F.png)
+$$
+\begin{aligned}
+\forall n \in V / \{0\}; \quad \sum_{i \in \delta^+(x)} x_{n,i} &= 1 \\
+\forall n \in V / \{0\}; \quad \sum_{i \in \delta^-(x)} x_{i,n} &= 1
+\end{aligned}
+$$
 
 Since each client’s demand is below the capacity of a truck, if a client is visited by one truck, it’s sufficient to deliver the quantity he demands.
 
 And to constraint the number of trucks, we should also constraint the depot (vertex 0) with the following constraint so that there are not more exits than the number of trucks *m*.
 
-![0\_vMvs6EUgRkvc0EbW.png](0\_vMvs6EUgRkvc0EbW.png)
+$$
+\begin{aligned}
+\sum_{i \in \delta^+(0)} x_{0,i} &\leq m \\
+\sum_{i \in \delta^-(0)} x_{i,0} &\leq m
+\end{aligned}
+$$
 
 The objective is to reduce the route’s total cost, representing the overall distance covered by the tour.
 
 The complete program so far is given by the following code.
 
-```
-cvrp = Model(GLPK.Optimizer)x=@variable(cvrp,x[0:length(problem.clients),0:length(problem.clients)],Bin)@constraint(cvrp, sum(get\_out(x, 0)) <= problem.m)@constraint(cvrp, sum(get\_in(x, 0)) <= problem.m)for i in 1:length(problem.clients)@constraint(cvrp, sum(get\_in(x, i)) == 1)@constraint(cvrp, sum(get\_out(x, i)) == 1)end;obj\_coef = []for i in 0:length(problem.clients)for j in 0:length(problem.clients)append!(obj\_coef, [get\_cost(problem, i, j) \* x[i,j] ] )end;end;@objective(cvrp,Min,sum(obj\_coef))optimize!(cvrp)termination\_status(cvrp)objective\_value(cvrp)
+```julia
+cvrp = Model(GLPK.Optimizer)
+x=@variable(cvrp,x[0:length(problem.clients),0:length(problem.clients)],Bin)
+@constraint(cvrp, sum(get\_out(x, 0)) <= problem.m)
+@constraint(cvrp, sum(get\_in(x, 0)) <= problem.m)
+for i in 1:length(problem.clients)
+    @constraint(cvrp, sum(get\_in(x, i)) == 1)
+    @constraint(cvrp, sum(get\_out(x, i)) == 1)
+end;
+obj\_coef = []
+for i in 0:length(problem.clients)
+    for j in 0:length(problem.clients)
+        append!(obj\_coef, [get\_cost(problem, i, j) \* x[i,j] ] )
+    end;
+end;
+@objective(cvrp,Min,sum(obj\_coef))
+optimize!(cvrp)
+termination\_status(cvrp)
+objective\_value(cvrp)
 ```
 
 But is this formulation sufficient to solve the vehicle routing problem? — of course, no otherwise, this article would be too short.
@@ -140,22 +200,51 @@ We have w ≤ Q naturally*.*
 
 And this could be represented by the following inequalities :
 
-![0\_c7nWZLVXMuBcySL8.png](0\_c7nWZLVXMuBcySL8.png)
+$$
+\forall i \in V / \{0\}; \forall j \in V / \{0\}; \quad w_i - w_j \leq d_i - (Q + d_i)(1 - x_{i,j})
+$$
 
 Because if xᵢⱼ = 1 the constraint becomes:
 
-![0\_Bzfcq7eNn3DNVxFb.png](0\_Bzfcq7eNn3DNVxFb.png)
+$$
+w_i - w_j \leq d_i
+$$
 
 which is what we needed, and if xᵢⱼ = 0 the constraint gives us:
 
-![0\_PlEVn-adlMT1WQ\_X.png](0\_PlEVn-adlMT1WQ\_X.png)
+$$
+w_i - w_j \geq Q
+$$
 
 which is trivial and thus don’t constraint the solution.
 
 After adding the MTZ constraints, the code becomes:
 
-```
-cvrp = Model(GLPK.Optimizer)x=@variable(cvrp,x[0:length(problem.clients),0:length(problem.clients)],Bin)@constraint(cvrp, sum(get\_out(x, 0)) <= problem.m)@constraint(cvrp, sum(get\_in(x, 0)) <= problem.m)for i in 1:length(problem.clients)@constraint(cvrp, sum(get\_in(x, i)) == 1)@constraint(cvrp, sum(get\_out(x, i)) == 1)end;w = @variable(cvrp,w[0:length(problem.clients)])for (i,vi) in problem.clientsfor j in 0:length(problem.clients)if(i == j)continueend;c = @constraint(cvrp, w[i] - w[j] >= vi.demand - (problem.Q +vi.demand)\*(1-x[i,j]))end;end;obj\_coef = []for i in 0:length(problem.clients)for j in 0:length(problem.clients)append!(obj\_coef, [get\_cost(problem, i, j) \* x[i,j] ] )end;end;@objective(cvrp,Min,sum(obj\_coef))
+```julia
+cvrp = Model(GLPK.Optimizer)
+x=@variable(cvrp,x[0:length(problem.clients),0:length(problem.clients)],Bin)
+@constraint(cvrp, sum(get\_out(x, 0)) <= problem.m)
+@constraint(cvrp, sum(get\_in(x, 0)) <= problem.m)
+for i in 1:length(problem.clients)
+    @constraint(cvrp, sum(get\_in(x, i)) == 1)
+    @constraint(cvrp, sum(get\_out(x, i)) == 1)
+end;
+w = @variable(cvrp,w[0:length(problem.clients)])
+for (i,vi) in problem.clients
+    for j in 0:length(problem.clients)
+        if(i == j)
+            continue
+        end;
+    c = @constraint(cvrp, w[i] - w[j] >= vi.demand - (problem.Q +vi.demand)\*(1-x[i,j]))
+    end;
+end;
+obj\_coef = []
+for i in 0:length(problem.clients)
+    for j in 0:length(problem.clients)
+        append!(obj\_coef, [get\_cost(problem, i, j) \* x[i,j] ] )
+    end;
+end;
+@objective(cvrp,Min,sum(obj\_coef))
 ```
 
 And for the precedent instance, it gives us:
@@ -168,7 +257,9 @@ The resource capacity constraints are a family of constraints to replace and/or 
 
 These constraints say that if we have a set of clients S with a sum of demands D = ∑dᵢ (i ∈ S), then we need at least W(S) trucks to serve them :
 
-![0\_2UiWeSgu662pMCvM.png](0\_2UiWeSgu662pMCvM.png)
+$$
+W(S) = \left\lceil \frac{D}{K} \right\rceil
+$$
 
 These constraints could replace the MTZ constraints because they make the solution involving sub tours not valid.
 
@@ -191,15 +282,21 @@ Suppose the separation algorithm runs in a polynomial time. In that case, even i
 
 Here the separation problem is to find given a solution a set of clients such that
 
-![0\_mAlM8-jflS\_CuKAp.png](0\_mAlM8-jflS\_CuKAp.png)
+$$
+x(\delta(S)) \geq 2 \left\lceil \frac{\sum_{i \in S} d_i}{Q} \right\rceil
+$$
 
 if any, and by noting
 
-![0\_SGeIlvOOWdqTMY7z.png](0\_SGeIlvOOWdqTMY7z.png)
+$$
+f(S) = x(\delta(S)) - 2 \left\lceil \frac{\sum_{i \in S} d_i}{Q} \right\rceil
+$$
 
 this is equivalent to solving the following optimisation problem :
 
-![0\_wGwyIB3xWe9lCnrj.png](0\_wGwyIB3xWe9lCnrj.png)
+$$
+\min_{S \subset C} f(S)
+$$
 
 And if the min is 0, then it means that there is not any violated inequality.
 
@@ -225,28 +322,61 @@ The delta operator should be extended to a set of vertices like that.
 
 δ for a group of vertices S is the set of edges with exactly one endpoint in S, and this could be implemented as follows :
 
-```
-function delta(problem, S, x)L = []for i in Sfor j in 0:length(problem.clients)if !(j in S)i\_min = min(i,j)i\_max = max(i,j)if !(x[i\_min,i\_max] in L)append!(L, [x[i\_min,i\_max]]);end;end;end;end;return Lend;
+```julia
+function delta(problem, S, x)
+    L = []
+    for i in S
+        for j in 0:length(problem.clients)
+            if !(j in S)
+                i\_min = min(i,j)
+                i\_max = max(i,j)
+                if !(x[i\_min,i\_max] in L)
+                    append!(L, [x[i\_min,i\_max]]);
+                end;
+            end;
+        end;
+    end;
+    return L
+end;
 ```
 
 Then, we need a function that computes the total demand of a set of clients.
 
-```
-function demand\_s(problem, S)d = 0;for c in Sd = d + problem.clients[c].demand;end;return d;end;
+```julia
+function demand\_s(problem, S)
+    d = 0;
+    for c in S
+        d = d + problem.clients[c].demand;
+    end;
+    return d;
+end;
 ```
 
 And this allows us to define the function to minimise.
 
-```
-function W(problem, x, cs, cb\_data)L = delta\_cb(problem, cs, x, cb\_data)return L - 2\*ceil(demand\_s(problem, cs)/problem.Q)end;
+```julia
+function W(problem, x, cs, cb\_data)
+    L = delta\_cb(problem, cs, x, cb\_data)
+    return L - 2\*ceil(demand\_s(problem, cs)/problem.Q)
+end;
 ```
 
 Finally, to verify if W is negative on the connected components that form a subtour, we first need to detect the connected components in the graph produced by a solution.
 
 To do so, we’ll use the library “LightGraph.jl”, and the first step is to write a function that creates a graph object from a set of *x* variables.
 
-```
-function build\_simple\_graph(problem, x)g = SimpleGraph(length(problem.clients));for i in 0:nv(g)for j in i+1:nv(g)if(value(x[i,j]) == 1)add\_edge!(g, i, j)end;end;end;return g;end;
+```julia
+function build\_simple\_graph(problem, x)
+    g = SimpleGraph(length(problem.clients));
+    for i in 0:nv(g)
+        for j in i+1:nv(g)
+            if(value(x[i,j]) == 1)
+                add\_edge!(g, i, j)
+            end;
+        end;
+    end;
+    return g;
+end;
 ```
 
 Then, we run without the MTZ constraints and visualise the solution.
@@ -267,14 +397,54 @@ Please ignore the direction of arrows, as in [this](https://www.sciencedirect.co
 
 This is, by the way, the code that created the linear program :
 
-```
-cvrp = Model(GLPK.Optimizer)n = length(problem.clients)x = @variable(cvrp,x[i= 0:n, j = i+1:n ],Int)for i in 0:nfor j in i+1:nif( i == 0)c = @constraint(cvrp, 0 <= x[i,j] <= 2)elsec= @constraint(cvrp, 0 <= x[i,j] <= 1)end;end;end;c= @constraint(cvrp, sum(delta(problem, [0], x)) == 2\*problem.m )for i in 1:nδ = delta(problem, [i], x)if(length(δ) == 0)continueend;c = @constraint(cvrp, sum(δ) == 2 )end;obj\_coef = []for i in 0:nfor j in i+1:nappend!(obj\_coef, [get\_cost(problem, i, j) \* x[i,j] ] )end;end;@objective(cvrp,Min,sum(obj\_coef))
+```julia
+cvrp = Model(GLPK.Optimizer)
+n = length(problem.clients)
+x = @variable(cvrp,x[i= 0:n, j = i+1:n ],Int)
+for i in 0:n
+    for j in i+1:n
+        if( i == 0)
+            c = @constraint(cvrp, 0 <= x[i,j] <= 2)
+        else
+            c= @constraint(cvrp, 0 <= x[i,j] <= 1)
+        end;
+    end;
+end;
+c= @constraint(cvrp, sum(delta(problem, [0], x)) == 2\*problem.m )
+for i in 1:n
+    δ = delta(problem, [i], x)
+    if(length(δ) == 0)
+        continue
+    end;
+    c = @constraint(cvrp, sum(δ) == 2 )
+end;
+obj\_coef = []
+for i in 0:n
+    for j in i+1:n
+        append!(obj\_coef, [get\_cost(problem, i, j) \* x[i,j] ] )
+    end;
+end;
+@objective(cvrp,Min,sum(obj\_coef))
 ```
 
 And this is the callback I used to check for each integral solution if its connected components satisfy the resource constraints :
 
-```
-function ressource\_constraints(cb\_data)status = callback\_node\_status(cb\_data, cvrp)if(status == MOI.CALLBACK\_NODE\_STATUS\_INTEGER)g = build\_simple\_graph\_cb(problem, x, cb\_data)comp = connected\_components(g)for c in compf = W(problem, x,c, cb\_data);if(f <0 )con = @build\_constraint(sum(delta(problem, c, x)) >=2\*ceil(demand\_s(problem, c)/problem.Q))MOI.submit(cvrp, MOI.LazyConstraint(cb\_data), con)end;end;end;end;MOI.set(cvrp, MOI.LazyConstraintCallback(), ressource\_constraints);
+```julia
+function ressource\_constraints(cb\_data)
+    status = callback\_node\_status(cb\_data, cvrp)
+    if(status == MOI.CALLBACK\_NODE\_STATUS\_INTEGER)
+        g = build\_simple\_graph\_cb(problem, x, cb\_data)
+        comp = connected\_components(g)
+        for c in comp
+            f = W(problem, x,c, cb\_data);
+            if(f <0 )
+                con = @build\_constraint(sum(delta(problem, c, x)) >=2\*ceil(demand\_s(problem, c)/problem.Q))
+                MOI.submit(cvrp, MOI.LazyConstraint(cb\_data), con)
+            end;
+        end;
+    end;
+end;
+MOI.set(cvrp, MOI.LazyConstraintCallback(), ressource\_constraints);
 ```
 
 And it gives us the following outputs:

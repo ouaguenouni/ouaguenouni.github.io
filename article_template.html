@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{TITLE}} - Ouaguenouni Mohamed</title>
+    <script>document.documentElement.className += ' js';</script>
     <link rel="stylesheet" type="text/css" href="../../style.css">
     <link rel="stylesheet" type="text/css" href="../../article.css">
     <meta property="og:title" content="{{TITLE}}">
@@ -31,6 +32,7 @@
 
 <article class="main-article">
     <h1 class="article-title">{{TITLE}}</h1>
+    <p class="article-subtitle">{{SUBTITLE}}</p>
     <p class="article-meta">{{READ_TIME}} · Published on {{DATE}}</p>
     <section>
         {{CONTENT}}
@@ -44,6 +46,23 @@
     </div>
     <p><a href="../../index.html">← Back to home</a></p>
 </footer>
+
+<script>
+/* deck-style ease-up reveal for article blocks (degrades gracefully) */
+(function () {
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var sel = '.main-article section > h2, .main-article section > h3, .main-article section > p,' +
+        '.main-article section > pre, .main-article section > figure, .main-article section > .tablewrap,' +
+        '.main-article section > table, .main-article section > .katex-display, .main-article section > p > img';
+    var items = [].slice.call(document.querySelectorAll(sel));
+    function show(el) { el.classList.add('r-in'); }
+    if (reduce || !('IntersectionObserver' in window)) { items.forEach(show); return; }
+    var io = new IntersectionObserver(function (es) {
+        es.forEach(function (e) { if (e.isIntersecting) { show(e.target); io.unobserve(e.target); } });
+    }, { rootMargin: '0px 0px -7% 0px', threshold: 0.05 });
+    items.forEach(function (el) { io.observe(el); });
+})();
+</script>
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.24/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.24/dist/katex.min.js"></script>

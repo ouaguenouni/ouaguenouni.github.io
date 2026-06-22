@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The power of democracy in Feature Selection - Ouaguenouni Mohamed</title>
+    <script>document.documentElement.className += ' js';</script>
     <link rel="stylesheet" type="text/css" href="../../style.css">
     <link rel="stylesheet" type="text/css" href="../../article.css">
     <meta property="og:title" content="The power of democracy in Feature Selection">
@@ -31,11 +32,10 @@
 
 <article class="main-article">
     <h1 class="article-title">The power of democracy in Feature Selection</h1>
+    <p class="article-subtitle">Using Condorcet Methods to aggregate Feature Selection rankings</p>
     <p class="article-meta">11 min read · Published on 26 April 2021</p>
     <section>
-        <p>Using Condorcet Methods to aggregate Feature Selection rankings</p>
-<hr />
-<p>According to Wikipedia, <strong>feature selection</strong>, also known as <strong>variable selection</strong>, <strong>attribute selection,</strong> or <strong>variable subset selection</strong>, is the process of selecting a subset of relevant <a href="https://en.wikipedia.org/wiki/Feature_(machine_learning)">features</a> (variables, predictors) for use in model construction.</p>
+        <p>According to Wikipedia, <strong>feature selection</strong>, also known as <strong>variable selection</strong>, <strong>attribute selection,</strong> or <strong>variable subset selection</strong>, is the process of selecting a subset of relevant <a href="https://en.wikipedia.org/wiki/Feature_(machine_learning)">features</a> (variables, predictors) for use in model construction.</p>
 <p>Feature selection techniques are used for several reasons:</p>
 <ul>
 <li>simplification of models to make them easier to interpret by researchers/users.</li>
@@ -139,7 +139,25 @@
 <p>In this tutorial, I will explain the implementation of the Kemeny aggregator, but we can quickly implement the others the same way.</p>
 <h3>Weighted Majority Graph</h3>
 <p>First, we have to implement a weighted majority graph builder; to do so, we’ll consider the adjacency matrix representation and use NumPy.</p>
-<pre><code>def build\_weighted\_majority\_graph(self, rankings, n\_candidates):graph = np.zeros((n\_candidates, n\_candidates))rankings = np.array(rankings)candidates = list(np.unique(rankings))for i in range(len(candidates)):for k in range(i+1,len(candidates)):r = 0for ranking in rankings:p1 = np.where(ranking == candidates[i])[0][0]p2 = np.where(ranking == candidates[k])[0][0]if (p1 &lt; p2):r += 1else:r -= 1if(r &gt; 0):graph[i,k] = relif(r &lt; 0):graph[k,i] = -rreturn graph
+<pre><code class="language-python">def build\_weighted\_majority\_graph(self, rankings, n\_candidates):
+    graph = np.zeros((n\_candidates, n\_candidates))
+    rankings = np.array(rankings)
+    candidates = list(np.unique(rankings))
+    for i in range(len(candidates)):
+        for k in range(i+1,len(candidates)):
+            r = 0
+            for ranking in rankings:
+                p1 = np.where(ranking == candidates[i])[0][0]
+                p2 = np.where(ranking == candidates[k])[0][0]
+                if (p1 &lt; p2):
+                    r += 1
+                else:
+                    r -= 1
+            if(r &gt; 0):
+                graph[i,k] = r
+            elif(r &lt; 0):
+                graph[k,i] = -r
+    return graph
 </code></pre>
 <p>After that, we have to think about how we could obtain the Kemeny ranking from the majority graph. To do so, we’ll use the linear programming paradigm.</p>
 <p>If you are not familiar with this paradigm, I suggest to you my article about it in Julia, but, as you will notice, it’s pretty similar.</p>
@@ -149,12 +167,46 @@
 <p>Each variable xᵢⱼ is set to 1 if the candidate j is preferred to the candidate i in the final ranking.</p>
 <p>If a ranking is an order of preferences, not any order of preferences is a ranking. First, a ranking is a <strong>total</strong> order, which means that we either prefer one or the other for any pair of candidates. Also, a ranking is an order where the preference is <strong>transitive</strong> because if we rank x before y and y before z, we necessarily rank x before z.</p>
 <p>This could be represented with the following constraints:</p>
-<p><img alt="1_M0SVqJqE9PbwHDRPRX4OnA.png" src="1_M0SVqJqE9PbwHDRPRX4OnA.png" /></p>
+<p>$$
+
+\begin{aligned}
+x_{i,j} + x_{j,i} &= 1 \\
+x_{i,j} + x_{j,k} + x_{k,i} &\geq 1
+\end{aligned}
+
+$$</p>
 <p>The first inequality means: “We have <strong><em>i</em></strong> after <strong><em>j</em></strong> or<strong><em>j</em></strong> after <strong><em>i</em></strong> in the ranking,” and the second one is violated if “we have <strong><em>i</em></strong> before <strong><em>j</em></strong>, <strong><em>j</em></strong>before <strong><em>k</em></strong> and not <strong><em>i</em></strong> before <strong><em>k</em></strong> in the ranking.”</p>
 <p>Now, we have to determine the objective function to optimize.</p>
 <p>As we said before, we have to minimize the number of disagreements, so, to have the number of disagreements of a ranking, we build a weighted sum of the variables where each variable xᵢⱼ is weighted by the weight of the arc (i,j).</p>
 <p>We can do this with the following code:</p>
-<pre><code>import numpy as npimport pulp as pldef aggregate\_kemeny(graph):prob = pl.LpProblem(&quot;Kemeny Ranking Problem&quot;, pl.LpMinimize)nodes = range(graph.shape[0])x = pl.LpVariable.dicts(&quot;X&quot;, (nodes, nodes), cat='Binary')e = 0for i in range(graph.shape[0]):for j in range(graph.shape[0]):if (i == j):continueprob += (x[i][j] + x[j][i] == 1)for k in range(graph.shape[0]):if(k == j):continueprob += (x[i][j] + x[j][k] + x[k][i] &gt;= 1)e += graph[i,j] \* x[i][j]prob += eprob.solve()rates = np.zeros(graph.shape[0])for i in nodes:for j in nodes:if(i == j):continueif(pl.value(x[i][j]) == 1):rates[j] += 1return rates.argsort()[::-1]
+<pre><code class="language-python">import numpy as np
+import pulp as pl
+
+def aggregate\_kemeny(graph):
+    prob = pl.LpProblem(&quot;Kemeny Ranking Problem&quot;, pl.LpMinimize)
+    nodes = range(graph.shape[0])
+    x = pl.LpVariable.dicts(&quot;X&quot;, (nodes, nodes), cat='Binary')
+    e = 0
+    for i in range(graph.shape[0]):
+        for j in range(graph.shape[0]):
+            if (i == j):
+                continue
+            prob += (x[i][j] + x[j][i] == 1)
+            for k in range(graph.shape[0]):
+                if(k == j):
+                    continue
+                prob += (x[i][j] + x[j][k] + x[k][i] &gt;= 1)
+            e += graph[i,j] \* x[i][j]
+    prob += e
+    prob.solve()
+    rates = np.zeros(graph.shape[0])
+    for i in nodes:
+        for j in nodes:
+            if(i == j):
+                continue
+            if(pl.value(x[i][j]) == 1):
+                rates[j] += 1
+    return rates.argsort()[::-1]
 </code></pre>
 <h2>Experimental results</h2>
 <p>In this experimentation, I first investigated the differences between the rankings of different feature selection methods.</p>
@@ -172,7 +224,48 @@
 <p>As we can notice, the aggregation of the measures provides us a ranking that is as close as possible to each ranking.</p>
 <p>The second thing I wanted to investigate is the performance of the aggregated ranking.</p>
 <p>To do so, I used a randomly sampled dataset, and I compared the accuracy achieved by the best subset of features for each measure and multiple aggregations of different measures.</p>
-<p><img alt="1_5OIScBzVo8LteFcb3Nh7SA.png" src="1_5OIScBzVo8LteFcb3Nh7SA.png" /></p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Accuracy</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A(Corre Corre Logis )</td>
+<td>0.825</td>
+</tr>
+<tr>
+<td>A(Corre Corre Logis CHI2_ )</td>
+<td>0.835</td>
+</tr>
+<tr>
+<td>A(Corre Corre Logis CHI2_ MI_Fu )</td>
+<td>0.805</td>
+</tr>
+<tr>
+<td>CHI2_Function</td>
+<td>0.530</td>
+</tr>
+<tr>
+<td>CorrelationSP_Function</td>
+<td>0.785</td>
+</tr>
+<tr>
+<td>Correlation_Function</td>
+<td>0.815</td>
+</tr>
+<tr>
+<td>LogisticRegression_Function</td>
+<td>0.815</td>
+</tr>
+<tr>
+<td>MI_Function</td>
+<td>0.780</td>
+</tr>
+</tbody>
+</table>
 <p>We can notice many things :</p>
 <ul>
 <li>Some feature selection methods are very efficient for some datasets and very inefficient for others, but the aggregations always have good overall performances.</li>
@@ -195,6 +288,23 @@ But how could we build such a model and train it while limiting the very costly 
     </div>
     <p><a href="../../index.html">← Back to home</a></p>
 </footer>
+
+<script>
+/* deck-style ease-up reveal for article blocks (degrades gracefully) */
+(function () {
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var sel = '.main-article section > h2, .main-article section > h3, .main-article section > p,' +
+        '.main-article section > pre, .main-article section > figure, .main-article section > .tablewrap,' +
+        '.main-article section > table, .main-article section > .katex-display, .main-article section > p > img';
+    var items = [].slice.call(document.querySelectorAll(sel));
+    function show(el) { el.classList.add('r-in'); }
+    if (reduce || !('IntersectionObserver' in window)) { items.forEach(show); return; }
+    var io = new IntersectionObserver(function (es) {
+        es.forEach(function (e) { if (e.isIntersecting) { show(e.target); io.unobserve(e.target); } });
+    }, { rootMargin: '0px 0px -7% 0px', threshold: 0.05 });
+    items.forEach(function (el) { io.observe(el); });
+})();
+</script>
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.24/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.24/dist/katex.min.js"></script>

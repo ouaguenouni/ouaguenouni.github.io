@@ -2,6 +2,7 @@
 title: A comprehensive study of Mixed Integer Programming with JuMP on Julia (Part 1)
 date: 29/03/2021
 description: Some basics of Linear/Mixed Integer Programming & How to use a heuristic callback inside a MIP solver.
+medium: https://towardsdatascience.com/a-comprehensive-study-of-mixed-integer-programming-with-jump-on-julia-part-1-8d47418324d4
 ---
 
 Some basics of Linear/Mixed Integer Programming & How to use a heuristic callback inside a MIP solver.
@@ -37,7 +38,15 @@ Let’s start by presenting how a linear program is structured and how a solver 
 
 To make it visualizable, we will take an example where we will try to optimize a linear function of two variables with respect to a set of linear constraints.
 
-![1\_5LoEvrZpdCnY18Pc7y6Wsg.png](1\_5LoEvrZpdCnY18Pc7y6Wsg.png)
+$$
+\begin{aligned}
+\max \quad & x + 2y \\
+\text{Subject to} \quad & x \leq 10.0 \\
+& y \leq 7.5 \\
+& x \geq 0.0 \\
+& y \geq 0.0
+\end{aligned}
+$$
 
 Geometrically, if we take each constraint and replace the inequality with equality, each constraint will be a line equation. This line will separate R² into two parts and invalidate one of them according to the direction of the inequality.
 
@@ -47,22 +56,29 @@ As a warm-up to Julia, let’s see how we can draw the polytope of constraints b
 
 First, we use Pkg, which is the built-in package manager of Julia, to add the required Packages,
 
-```
-using Pkg;Pkg.add("LinearAlgebra");Pkg.add("Plots");Pkg.add("PyPlot");
+```julia
+using Pkg;
+Pkg.add("LinearAlgebra");
+Pkg.add("Plots");
+Pkg.add("PyPlot");
 ```
 
 After adding them, we can import them.
 
-```
-using LinearAlgebrausing Plotspyplot()
+```julia
+using LinearAlgebra
+using Plots
+pyplot()
 ```
 
 The last line aims to complete some package plot functionalities for visualization (check the doc [here](https://docs.juliaplots.org/latest/tutorial/) for more details).
 
 An easy way to draw any function is to sample points and compute the associated images, and this can be done in Julia the following way :
 
-```
-x\_v = LinRange(-2,15,100)plot([x\_v], [x\_v .+ 7.5], label ="Y=x + 7.5")plot!([x\_v], [-2x\_v .+ 20], label ="Y= -2x + 20")
+```julia
+x\_v = LinRange(-2,15,100)
+plot([x\_v], [x\_v .+ 7.5], label ="Y=x + 7.5")
+plot!([x\_v], [-2x\_v .+ 20], label ="Y= -2x + 20")
 ```
 
 The first line will sample 100 points from the interval [-2, 15]; a part of this; you have several things to notice :
@@ -77,8 +93,14 @@ These lines will produce the following plot :
 
 and now let’s print the polytope of constraints :
 
-```
-x\_v = LinRange(-2,15,100)y\_v = LinRange(-2,15,100)plot([0\*x\_v], [y\_v],label ="Y Axis")plot!([x\_v], [0\*x\_v],label ="X Axis")plot!([x\_v], [0\*x\_v .+ 7.5], label ="Y=7.5")plot!([0\*x\_v .+ 10], [y\_v],label ="X=10")plot!(title = "Polytop of Constraints")
+```julia
+x\_v = LinRange(-2,15,100)
+y\_v = LinRange(-2,15,100)
+plot([0\*x\_v], [y\_v],label ="Y Axis")
+plot!([x\_v], [0\*x\_v],label ="X Axis")
+plot!([x\_v], [0\*x\_v .+ 7.5], label ="Y=7.5")
+plot!([0\*x\_v .+ 10], [y\_v],label ="X=10")
+plot!(title = "Polytop of Constraints")
 ```
 ![1\_lRdOuACl1xAUNhY\_H9e7MA.png](1\_lRdOuACl1xAUNhY\_H9e7MA.png)
 
@@ -94,31 +116,37 @@ We can visually conclude that the best solution is at the intersection of the gr
 
 The traditional add/import lines (we will use GLPK as a solver, but nothing is dependant on it).
 
-```
-Pkg.add("JuMP")Pkg.add("GLPK")using JuMPusing GLPK
+```julia
+Pkg.add("JuMP")
+Pkg.add("GLPK")
+using JuMP
+using GLPK
 ```
 
 Now we declare our model and set the optimizer from GLPK:
 
-```
-prgrm = Model()set\_optimizer(prgrm, GLPK.Optimizer)
+```julia
+prgrm = Model()
+set\_optimizer(prgrm, GLPK.Optimizer)
 ```
 
 We add the variables and precise their scope; by default, the variables are continuous :
 
-```
-@variable(prgrm, 0<=x)@variable(prgrm, 0<=y)
+```julia
+@variable(prgrm, 0<=x)
+@variable(prgrm, 0<=y)
 ```
 
 Now we create and add the two remaining constraints; the first two are in the scope of the variables;
 
-```
-@constraint(prgrm, x <= 10)@constraint(prgrm, y <= 7.5)
+```julia
+@constraint(prgrm, x <= 10)
+@constraint(prgrm, y <= 7.5)
 ```
 
 Finally, we add the objective function and precise sense of optimization, which will be, in this case, a maximization :
 
-```
+```julia
 @objective(prgrm, Max, x+2y)
 ```
 
@@ -128,19 +156,20 @@ One interesting feature of JuMP and especially when using it with Jupyter-notebo
 
 And now solving it is as easy to say as it is to do :
 
-```
+```julia
 optimize!(prgrm)
 ```
 
 After that, we can access the values of the variables after optimization like this:
 
-```
-value.(x)value.(y)
+```julia
+value.(x)
+value.(y)
 ```
 
 And so one we can update our precedent plot to confirm our graphical resolution with the line :
 
-```
+```julia
 plot!([value.(x)], [value.(y)], seriestype = :scatter, label="Optimum")
 ```
 
@@ -248,8 +277,9 @@ So when we solved P.1 and obtain a fractional solution whose value is 20, we are
 
 The first question you should all have in mind is: “Am I going to do all this every time I have to solve a MIP ? ” and the answer is, of course, no, I have to precise that the variables are integers and the solver will do this job (among other things) for us.
 
-```
-@variable(prgrm, 0<=x, Int)@variable(prgrm, 0<=y, Int)
+```julia
+@variable(prgrm, 0<=x, Int)
+@variable(prgrm, 0<=y, Int)
 ```
 
 But the most attentive among you are certainly wondering what if the solver, when constructing the enumeration tree, had started with the other child who doesn't give us instantly an integer solution?
@@ -283,8 +313,15 @@ Since the edges are not weighted, we can represent the problem with an adjacency
 
 So, for instance, the precedent graph is encoded in the following matrix :
 
-```
-ADJ\_MAT = [[0 , 0 , 1, 0, 0, 0],[0 , 0 , 1, 0, 0, 0],[1 , 1 , 0, 1, 0, 0],[0 , 0 , 1, 0, 1, 0],[0 , 0 , 0, 1, 0, 1],[0 , 0 , 0, 0, 1, 0],]
+```julia
+ADJ\_MAT = [
+    [0 , 0 , 1, 0, 0, 0],
+    [0 , 0 , 1, 0, 0, 0],
+    [1 , 1 , 0, 1, 0, 0],
+    [0 , 0 , 1, 0, 1, 0],
+    [0 , 0 , 0, 1, 0, 1],
+    [0 , 0 , 0, 0, 1, 0],
+]
 ```
 
 (Now, I advise you to stop reading and to try to write the MIP formulation for the Vertex Cover Problem to check your understanding)
@@ -297,32 +334,48 @@ We are trying to decide for each vertex if we take it or not in the cover, so we
 
 We can create the variables as follows:
 
-```
-#WARNING : Everything on Julia is indexed by default starting from #1.n = size(ADJ\_MAT)[1]#We create a vector of variables indexed by 1 prefixed by x (x1, x2, ..., xn)@variable(prgrm2, 0<=x[1:n], Int)
+```julia
+#WARNING : Everything on Julia is indexed by default starting from #1.
+n = size(ADJ\_MAT)[1]
+#We create a vector of variables indexed by 1 prefixed by x (x1, x2, ..., xn)
+@variable(prgrm2, 0<=x[1:n], Int)
 ```
 
 * **What are the constraints?**
 
 A feasible solution must cover each edge, so we have to take one vertex or the other (or both) for each edge.
 
-![1\_ix0jINL1g0xBhOpbN14cgw.png](1\_ix0jINL1g0xBhOpbN14cgw.png)
+$$
+x_u + x_v \leq 1 \quad \forall (u,v) \in E
+$$
 
 These constraints can be created simply like this :
 
-```
-for i in 1:nfor j in 1:nif(ADJ\_MAT[i,j] == 1)c =@constraint(prgrm2, x[i] + x[j] >= 1)set\_name(c,"C")println(c)endendend
+```julia
+for i in 1:n
+    for j in 1:n
+        if(ADJ\_MAT[i,j] == 1)
+            c =@constraint(prgrm2, x[i] + x[j] >= 1)
+            set\_name(c,"C")
+            println(c)
+        end
+    end
+end
 ```
 
 * **What are we optimising?**
 
 The objective is to minimise the number of vertices we take in the cover:
 
-![1\_ul5CVzJ9Uq6a92a-f3kamQ.png](1\_ul5CVzJ9Uq6a92a-f3kamQ.png)
+$$
+\min \sum_{u \in V} x_u
+$$
 
 which can be generated like this :
 
-```
-@objective(prgrm2, Min, sum(x))#Output : 𝑥1+𝑥2+𝑥3+𝑥4+𝑥5+𝑥6
+```julia
+@objective(prgrm2, Min, sum(x))
+#Output : 𝑥1+𝑥2+𝑥3+𝑥4+𝑥5+𝑥6
 ```
 
 So the MIP formulation is the following:
@@ -376,15 +429,28 @@ The first step you have to design your callback; inside your callback, you can u
 
 So for our round-up approximation, here is the callback we propose :
 
-```
-function my\_callback\_function(cb\_data)println("Call to callback")new\_sol = []precedent = [callback\_value(cb\_data,x\_k ) for x\_k in x]for x\_i in xx\_val = callback\_value(cb\_data, x\_i)x\_new = ceil(Int, x\_val)append!(new\_sol, x\_new)endprintln("Precedent: ", precedent)println("New: ",new\_sol)status = MOI.submit(mod, MOI.HeuristicSolution(cb\_data), [x\_i for x\_i in x], [floor(Int, k) for k in new\_sol])println("status = ", status)end
+```julia
+function my\_callback\_function(cb\_data)
+    println("Call to callback")
+    new\_sol = []
+    precedent = [callback\_value(cb\_data,x\_k ) for x\_k in x]
+    for x\_i in x
+        x\_val = callback\_value(cb\_data, x\_i)
+        x\_new = ceil(Int, x\_val)
+        append!(new\_sol, x\_new)
+    end
+    println("Precedent: ", precedent)
+    println("New: ",new\_sol)
+    status = MOI.submit(mod, MOI.HeuristicSolution(cb\_data), [x\_i for x\_i in x], [floor(Int, k) for k in new\_sol])
+    println("status = ", status)
+end
 ```
 
 I added the print statements to track the calls to the heuristic.
 
 Now we register our callback :
 
-```
+```julia
 MOI.set(mod, MOI.HeuristicCallback(), my\_callback\_function)
 ```
 

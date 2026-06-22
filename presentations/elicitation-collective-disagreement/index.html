@@ -28,7 +28,8 @@
     font-weight: bold; font-style: normal;
   }
 
-  :root { --ink:#111; --muted:#6b6b6b; --rule:#cccccc; --accent:#9a1b1b; --green:#1b7a3d; }
+  :root { --ink:#111; --muted:#6b6b6b; --rule:#cccccc; --accent:#9a1b1b; --green:#1b7a3d;
+          --ease:cubic-bezier(.22,.61,.36,1); --dur:.4s; --rise:7px; --slidein:-8px; }
 
   html, body, .reveal { background:#ffffff; }
 
@@ -68,10 +69,12 @@
   .reveal .titletop { position:absolute; left:20px; right:22px; top:26px; display:flex;
     justify-content:space-between; align-items:center; }
   .reveal .titletop .erc  { width:156px; height:auto; display:block; }
-  .reveal .titletop .addi { width:212px; height:auto; display:block; }
+  .reveal .titletop .addi { width:178px; height:auto; display:block; }
 
   /* Preference profile table: orders as rows, a column pi of proportions. */
-  .reveal table.profile { border-collapse:collapse; font-size:.95em; margin:.5em auto 0; }
+  .reveal table.profile { border-collapse:collapse; font-size:.95em; margin:.2em auto 0; }
+  /* objective: lead sits directly under its kicker */
+  .reveal section > .kicker + .lead { margin-top:0; }
   .reveal table.profile th, .reveal table.profile td { padding:.16em 1.3em; text-align:center; }
   .reveal table.profile thead th { font-weight:700; border-bottom:1px solid var(--rule); padding-bottom:.25em; }
   .reveal table.profile td.pi { color:var(--accent); }
@@ -126,12 +129,12 @@
   .reveal .scene .concl { position:absolute; left:0; top:372px; width:100%; text-align:center; opacity:0; transition:opacity .6s ease; }
   .reveal .scene.s8 .concl { opacity:1; }
 
-  .reveal .step { position:absolute; width:0; height:0; opacity:0; overflow:hidden; pointer-events:none; }
+  .reveal .step, .reveal .mpstep { position:absolute; width:0; height:0; opacity:0; overflow:hidden; pointer-events:none; }
 
   /* ----- Slide: three measures + evaluation table (flow layout, step-gated) ----- */
   .reveal .scene.flow { position:static; width:auto; height:auto; margin:0; }
   .reveal .measures h2 { margin-bottom:.35em; }
-  .reveal .mlist { margin:.4em 0 .35em; }
+  .reveal .mlist { width:max-content; max-width:100%; margin:.4em auto .35em; }
   .reveal .mlist .m { opacity:0; transition:opacity .5s ease; margin:.45em 0; font-size:.72em; }
   .reveal .scene.s1 .m1 { opacity:1; }
   .reveal .scene.s2 .m2 { opacity:1; }
@@ -155,26 +158,28 @@
   .reveal .scene.s9 .qline { opacity:1; }
 
   /* ----- Recurring "fil rouge" question thread: nested Socratic chain, grows over the talk ----- */
+  /* pin the fil-rouge slides to a constant top so the title doesn't hop as the thread grows */
+  .reveal section.thread-slide { top: 10% !important; }
   .reveal .thread-slide .tslide-title { font-size:1.15em; color:var(--ink); margin-bottom:0; }
   .reveal .thread-slide hr.trule { border:0; border-top:1px solid var(--rule); margin:.5em 0 0; }
   .reveal .thr { position:relative; margin-top:1.1em; font-size:.78em; line-height:1.42; max-width:1040px; }
   .reveal .thr .ti { position:relative; margin:.5em 0; }
   .reveal .thr .ti.a { color:var(--muted); }
   .reveal .thr .root { padding-left:34px; font-size:1.06em; }
-  .reveal .thr .root .node { position:absolute; left:3px; top:.34em; width:15px; height:15px; border-radius:50%; background:var(--accent); }
+  .reveal .thr .root .node { position:absolute; left:3px; top:.3em; width:15px; height:15px; border-radius:50%; background:var(--accent); }
   .reveal .thr .nest { margin-left:10px; border-left:2px solid rgba(154,27,27,.4); padding-left:30px; margin-top:.1em; }
   .reveal .thr .arrow { color:var(--accent); margin-right:.4em; }
   .reveal .thr .tlink { color:var(--accent); border-bottom:1px solid var(--accent); white-space:nowrap; text-decoration:none; }
   /* a folded (already explored) root: collapsed to one muted line */
-  .reveal .thr .folded { position:relative; color:var(--muted); font-size:.92em; padding-left:30px; margin-bottom:1.1em; }
-  .reveal .thr .folded .foldtri { position:absolute; left:2px; top:0; color:var(--accent); opacity:.55; }
+  .reveal .thr .folded { position:relative; color:var(--muted); font-size:.92em; padding-left:34px; margin-bottom:1.1em; }
+  .reveal .thr .folded .foldtri { position:absolute; left:3px; top:0; color:var(--accent); opacity:.55; }
   .reveal .thr .folded .foldmark { font-style:italic; font-size:.8em; margin-left:.5em; }
   /* animated fold: an active root smoothly collapses into the grey "explored" style */
   .reveal .thr .root.folding { transition:color .55s ease, font-size .55s ease; }
   .reveal .thr .root.folding .ft2 { position:absolute; left:2px; top:.05em; color:var(--accent); opacity:0; transition:opacity .45s ease; }
   .reveal .thr .root.folding .fm2 { font-style:italic; font-size:.8em; margin-left:.5em; color:var(--muted); opacity:0; transition:opacity .45s ease; }
   .reveal .thr .root.folding .node { transition:opacity .45s ease; }
-  .reveal .thr .nest.foldnest { max-height:340px; opacity:1; overflow:hidden; transition:max-height .65s ease, opacity .5s ease, margin .5s ease; }
+  .reveal .thr .nest.foldnest { max-height:420px; opacity:1; overflow:hidden; transition:max-height .65s ease, opacity .5s ease, margin .5s ease; }
   .reveal .thr .root.newroot { opacity:0; transition:opacity .6s ease; }
   .reveal .scene.s1 .root.folding { color:var(--muted); font-size:.92em; }
   .reveal .scene.s1 .root.folding .node { opacity:0; }
@@ -182,40 +187,47 @@
   .reveal .scene.s1 .root.folding .fm2 { opacity:1; }
   .reveal .scene.s1 .nest.foldnest { max-height:0; opacity:0; margin-top:0; }
   .reveal .scene.s2 .root.newroot { opacity:1; }
+  .reveal .thr .root.newroot .tlink { opacity:0; transition:opacity .45s var(--ease); }
+  .reveal .scene.s2 .root.newroot .tlink { opacity:1; transition-delay:.35s; }
 
   /* ----- Moments of the rank distribution slide ----- */
-  .reveal .moments .mdef { max-width:880px; margin:0 auto .55em; line-height:1.42; }
+  .reveal .moments .mdef { max-width:880px; margin:.45em auto; line-height:1.42; }
   .reveal .moments .mdef .dterm { color:var(--accent); font-style:italic; }
-  .reveal .moments .mline { max-width:880px; margin:.4em auto; font-size:.85em; line-height:1.42; }
+  .reveal .moments .mline { max-width:880px; margin:.45em auto; font-size:.85em; line-height:1.42; }
   .reveal .moments .mline .imp { color:var(--accent); margin:0 .2em; }
-  .reveal .moments .mprop { max-width:920px; margin:.6em auto .2em; line-height:1.42; }
+  .reveal .moments .mprop { max-width:880px; margin:.45em auto; line-height:1.42; }
   .reveal .moments .mprop .lbl { color:var(--accent); font-style:italic; font-weight:700; margin-right:.25em; }
-  .reveal .moments .mfoot { text-align:center; margin-top:.4em; font-size:.9em; }
-  .reveal .moments .mfoot .imp { color:var(--accent); margin-right:.2em; }
+  .reveal .moments .mfoot { text-align:center; margin-top:.45em; font-size:.9em; }
+  .reveal .moments .mfoot .imp { color:var(--accent); margin:0 .2em; }
   .reveal .moments .katex-display { margin:.4em 0; }
 
   /* ----- Elicitation slides ----- */
-  .reveal .elicit .kicker { margin-bottom:.5em; }
-  .reveal .elicit p { max-width:900px; margin:.5em auto; line-height:1.46; font-size:.9em; }
-  .reveal .elicit .el-lead { font-size:1.0em; }
+  .reveal .elicit .kicker { margin:0 auto .5em; max-width:900px; }
+  .reveal .elicit p { max-width:900px; margin:.38em auto; line-height:1.4; font-size:.86em; }
+  .reveal .elicit .el-lead { font-size:.95em; }
   .reveal .elicit .el-why { font-style:italic; color:var(--muted); }
-  .reveal .elicit .el-tie { margin-top:.55em; }
+  .reveal .elicit .el-def { margin-left:1.1em; text-indent:-1.1em; }
+  .reveal .elicit .el-tie { margin-top:.35em; }
   .reveal .elicit .two { max-width:900px; margin:.4em auto; }
   .reveal .elicit .two .f { display:inline-block; }
 
-  /* two primitives (slide 2) — horizontal columns */
-  .reveal .prims-slide .kicker { margin-bottom:.7em; }
-  .reveal .prims { display:flex; justify-content:center; max-width:1000px; margin:.3em auto; }
-  .reveal .prim { flex:1 1 0; max-width:450px; padding:0 34px; box-sizing:border-box; }
-  .reveal .prim + .prim { border-left:1px solid var(--rule); }
-  .reveal .prim .ph { font-size:1.12em; color:var(--accent); font-style:italic; margin-bottom:.45em; }
-  .reveal .prim .pdesc { font-size:.82em; line-height:1.45; margin:0 0 .8em; }
-  .reveal .prim .prow { font-size:.84em; margin:.5em 0; line-height:1.4; }
-  .reveal .prim .prow .lbl { display:block; font-size:.72em; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin-bottom:.1em; }
+  /* two primitives (slide 2) — comparison table: metric rows align across both columns */
+  .reveal .prims-slide .kicker { margin-bottom:.7em; text-align:center; }
+  .reveal .primtab { display:grid; grid-template-columns:0.74fr 1fr 1fr; max-width:1040px; margin:.6em auto 0;
+    border-top:2px solid var(--ink); border-bottom:2px solid var(--ink); align-items:start; }
+  .reveal .primtab > div { padding:.5em 26px; box-sizing:border-box; }
+  .reveal .primtab .ph { font-size:1.1em; color:var(--accent); font-style:italic; }
+  .reveal .primtab .dsc { font-size:.8em; line-height:1.42; }
+  .reveal .primtab .v { font-size:.86em; line-height:1.42; }
+  .reveal .primtab .rl { text-align:right; line-height:1.3; }
+  .reveal .primtab .rl .rh { display:block; color:var(--ink); font-style:italic; font-size:.86em; }
+  .reveal .primtab .rl .rs { display:block; color:var(--muted); font-size:.66em; letter-spacing:.05em; text-transform:uppercase; margin-top:.12em; }
+  .reveal .primtab .r1 { border-top:1px solid var(--ink); padding-top:.55em; }
+  .reveal .primtab .r2 { border-top:1px solid #e6e6e6; padding-top:.55em; }
   .reveal .ptrade { max-width:920px; margin:1em auto 0; text-align:center; font-size:.92em; }
 
   /* theorem block (slide 3) */
-  .reveal .thm-slide .kicker { margin-bottom:.6em; }
+  .reveal .thm-slide .kicker { margin:0 auto .6em; max-width:900px; }
   .reveal .thm-slide .lead2 { max-width:900px; margin:.3em auto .5em; font-size:.95em; }
   .reveal .thmbox { max-width:900px; margin:.3em auto; text-align:left; line-height:1.5;
     border-left:3px solid var(--accent); background:#faf7f7; padding:.6em 1.1em; }
@@ -223,15 +235,17 @@
   .reveal .thmbox p { font-size:.88em; margin:.25em 0; }
   .reveal .thmbox ul { margin:.35em 0 .35em 1.2em; }
   .reveal .thmbox li { font-size:.9em; margin:.3em 0; line-height:1.45; }
-  .reveal .thm-take { max-width:900px; margin:.7em auto 0; text-align:center; font-size:.95em; }
+  .reveal .thm-take { max-width:900px; margin:1em auto 0; text-align:center; font-size:.95em; }
 
   /* ----- Interactive moment-plane slides ----- */
   .reveal .mp-play .kicker, .reveal .mp-explain .kicker, .reveal .mp-real .kicker, .reveal .mp-pareto .kicker { margin-bottom:.3em; }
-  .reveal .mpframe { width:100%; height:600px; border:0; display:block; background:#fff; }
-  .reveal .mp-pareto .mpframe { height:560px; }
-  .reveal .mphint { text-align:center; margin:.35em 0 0; }
+  .reveal .mpframe { width:100%; height:560px; border:0; display:block; background:#fff; }
+  .reveal .mp-pareto .mpframe { height:540px; }
+  .reveal .mphint { text-align:center; margin:.2em 0 0; line-height:1.35; }
+  .reveal .mp-pareto .mphint { max-width:980px; margin:.25em auto 0; font-size:.7em; }
 
   /* ----- Counter-example slide: third distribution created, then using -> defined on ----- */
+  .reveal .counterex .kicker { text-align:center; }
   .reveal .cxtab { margin:.4em auto; border-collapse:collapse; opacity:0; transition:opacity .5s ease; }
   .reveal .scene.s1 .cxtab { opacity:1; }
   .reveal .cxtab th, .reveal .cxtab td { padding:.3em 1.1em; text-align:center; }
@@ -260,6 +274,7 @@
 
   /* PMCSS-START */
   /* ----- Plurality matrix + level: flow layout (centered like the counter-example), no histograms ----- */
+  .reveal .pmslide .kicker { max-width:840px; margin-left:auto; margin-right:auto; }
   .reveal .pmdefs { max-width:840px; margin:0 auto; }
   .reveal .defrow { opacity:0; transition:opacity .55s ease; line-height:1.36; }
   .reveal .dterm { color:var(--accent); font-style:italic; }
@@ -269,7 +284,7 @@
   .reveal .scene.s1 .defrow.def1 { opacity:1; }
   .reveal .scene.s2 .defrow.def2 { opacity:1; }
 
-  .reveal .pm-example { display:flex; justify-content:center; align-items:flex-start; gap:130px; margin:.8em 0 .7em; opacity:0; transition:opacity .55s ease; }
+  .reveal .pm-example { display:flex; justify-content:center; align-items:flex-start; gap:130px; margin:.6em 0 .5em; opacity:0; transition:opacity .55s ease; }
   .reveal .scene.s3 .pm-example { opacity:1; }
   .reveal .pcol { display:flex; flex-direction:column; align-items:center; }
   .reveal .pcol .plab { font-size:.74em; color:var(--muted); margin-bottom:.45em; }
@@ -291,14 +306,14 @@
   .reveal .pm-reason { max-width:840px; margin:0 auto; text-align:left; }
   .reveal .pm-reason .r1 { font-size:.74em; color:var(--muted); line-height:1.4; opacity:0; transition:opacity .5s ease; }
   .reveal .pm-reason .rimp { font-size:.88em; margin-top:.3em; opacity:0; transition:opacity .5s ease; }
-  .reveal .pm-reason .r2 { font-size:1.0em; margin-top:.45em; opacity:0; transition:opacity .5s ease; }
+  .reveal .pm-reason .r2 { font-size:.92em; margin-top:.3em; opacity:0; transition:opacity .5s ease; }
   .reveal .pm-reason .r2 .small { font-size:.74em; }
   .reveal .scene.s5 .pm-reason .r1 { opacity:1; }
   .reveal .scene.s6 .pm-reason .rimp { opacity:1; }
   .reveal .scene.s7 .pm-reason .r2 { opacity:1; }
   /* PMCSS-END */
   .reveal .deriv { font-size:.88em; }
-  .reveal .deriv .prop { margin:0 0 .55em; line-height:1.4; }
+  .reveal .deriv .prop { margin:0 0 .7em; line-height:1.4; }
   .reveal .deriv .proof { margin:.3em 0; line-height:1.4; }
   .reveal .deriv .lbl { color:var(--accent); font-style:italic; font-weight:700; margin-right:.25em; }
   .reveal .deriv .eqs { margin:.1em 0; }
@@ -315,6 +330,23 @@
   .reveal .katex { font-size:1em; }
   .reveal .controls { color:var(--muted); }
   .reveal .progress { color:var(--accent); }
+
+  /* ===== Shared motion vocabulary (one curve, one duration) ===== */
+  /* Every content fragment eases up as it appears (the .step / .mpstep markers are excluded). */
+  .reveal .slides section .fragment:not(.step):not(.mpstep) {
+    transform: translateY(var(--rise));
+    transition: opacity var(--dur) var(--ease), transform var(--dur) var(--ease); }
+  .reveal .slides section .fragment:not(.step):not(.mpstep).visible { transform: none; }
+  /* nested thread answers ease in from the gutter rule instead */
+  .reveal .slides section .fragment.fade-left:not(.step):not(.mpstep) { transform: translateX(var(--slidein)); }
+  .reveal .slides section .fragment.fade-left:not(.step):not(.mpstep).visible { transform: none; }
+
+  /* Every kicker eases in when its slide arrives — a calm, consistent header beat. */
+  @keyframes kfade { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:none; } }
+  .reveal section.present > .kicker { animation: kfade .45s var(--ease) both; }
+  /* Title heading gets one calm entrance to match the incremental feel elsewhere. */
+  @keyframes titlefade { from { opacity:0; transform:translateY(7px); } to { opacity:1; transform:none; } }
+  .reveal section.present.titleslide h1 { animation: titlefade .7s var(--ease) both; }
 </style>
 </head>
 <body>
@@ -340,10 +372,10 @@
 </section>
 
 <!-- 2. SETTING — alternatives, voters, strict orders, and a profile pi -->
-<section>
+<section class="setting">
   <p>We have a set of <strong>alternatives</strong> \(\mathcal{A}\) (the candidates), and a set of <strong>voters</strong>.</p>
   <p>Each voter ranks \(\mathcal{A}\) by a strict total order: complete and transitive.</p>
-  <p class="muted" style="margin-top:.6em;">Example: \(\mathcal{A} = \{a,b,c\}\), with its \(3! = 6\) orders.</p>
+  <p class="muted" style="margin-top:.3em;">Example: \(\mathcal{A} = \{a,b,c\}\), with its \(3! = 6\) orders.</p>
 
   <table class="profile">
     <thead>
@@ -370,8 +402,8 @@
 <!-- 3. OBJECTIVE / WHY -->
 <section>
   <p class="kicker">Objective</p>
-  <p class="lead">Understand how disagreement structures the population.</p>
-  <p>Sometimes that structure matters more than the consensus, and it guides the deliberation.</p>
+  <p class="lead fragment">Understand how disagreement structures the population.</p>
+  <p class="fragment">Sometimes that structure matters more than the consensus, and it guides the deliberation.</p>
   <aside class="notes">Aggregation finds the consensus; we ask how the population splits, because the split is what a deliberation has to resolve.</aside>
 </section>
 
@@ -480,7 +512,7 @@
     <p class="qline">Why can divisiveness and rank variance distinguish the uniform from the antagonistic profile, but not the agreement index?</p>
   </div>
 
-  <span class="fragment step"></span><span class="fragment step"></span><span class="fragment step"></span><span class="fragment step"></span><span class="fragment step"></span><span class="fragment step"></span><span class="fragment step"></span><span class="fragment step"></span>
+  <span class="fragment step"></span><span class="fragment step"></span><span class="fragment step"></span><span class="fragment step"></span><span class="fragment step"></span><span class="fragment step"></span><span class="fragment step"></span><span class="fragment step"></span><span class="fragment step"></span>
 
   <aside class="notes">Steps: introduce the agreement index, rank variance, divisiveness (each with its paper formula); show the two rank distributions of a; fill the divisiveness values, then rank variance, then the agreement index; highlight the agreement index in red (equal on both); then the question that motivates the hierarchy.</aside>
 </section>
@@ -515,7 +547,7 @@
           <th>
             <svg viewBox="0 0 230 96" width="168" aria-label="uniform distribution">
               <line x1="8" y1="84" x2="222" y2="84" stroke="#cccccc" stroke-width="1.2"/>
-              <rect x="12" y="75" width="10" height="9" fill="#9a1b1b"/><rect x="26" y="75" width="10" height="9" fill="#9a1b1b"/><rect x="40" y="75" width="10" height="9" fill="#9a1b1b"/><rect x="54" y="75" width="10" height="9" fill="#9a1b1b"/><rect x="68" y="75" width="10" height="9" fill="#9a1b1b"/><rect x="82" y="75" width="10" height="9" fill="#9a1b1b"/><rect x="96" y="75" width="10" height="9" fill="#9a1b1b"/><rect x="110" y="75" width="10" height="9" fill="#9a1b1b"/><rect x="124" y="75" width="10" height="9" fill="#9a1b1b"/><rect x="138" y="75" width="10" height="9" fill="#9a1b1b"/><rect x="152" y="75" width="10" height="9" fill="#9a1b1b"/><rect x="166" y="75" width="10" height="9" fill="#9a1b1b"/><rect x="180" y="75" width="10" height="9" fill="#9a1b1b"/><rect x="194" y="75" width="10" height="9" fill="#9a1b1b"/><rect x="208" y="75" width="10" height="9" fill="#9a1b1b"/>
+              <rect x="12" y="67" width="10" height="17" fill="#9a1b1b"/><rect x="26" y="67" width="10" height="17" fill="#9a1b1b"/><rect x="40" y="67" width="10" height="17" fill="#9a1b1b"/><rect x="54" y="67" width="10" height="17" fill="#9a1b1b"/><rect x="68" y="67" width="10" height="17" fill="#9a1b1b"/><rect x="82" y="67" width="10" height="17" fill="#9a1b1b"/><rect x="96" y="67" width="10" height="17" fill="#9a1b1b"/><rect x="110" y="67" width="10" height="17" fill="#9a1b1b"/><rect x="124" y="67" width="10" height="17" fill="#9a1b1b"/><rect x="138" y="67" width="10" height="17" fill="#9a1b1b"/><rect x="152" y="67" width="10" height="17" fill="#9a1b1b"/><rect x="166" y="67" width="10" height="17" fill="#9a1b1b"/><rect x="180" y="67" width="10" height="17" fill="#9a1b1b"/><rect x="194" y="67" width="10" height="17" fill="#9a1b1b"/><rect x="208" y="67" width="10" height="17" fill="#9a1b1b"/>
             </svg>
             <div class="collab">\(\pi_{\mathrm{IC}}\)</div>
           </th>
@@ -627,26 +659,26 @@
   </section>
 
   <section class="deriv">
-    <p class="prop"><span class="lbl">Proposition.</span> The rank variance is a measure of <strong>level&nbsp;3</strong>:
+    <p class="prop fragment"><span class="lbl">Proposition.</span> The rank variance is a measure of <strong>level&nbsp;3</strong>:
       \[ \mathrm{Var}(a) \;=\; \sum_{b\neq a} p_{ab}\,(1-p_{ab}) \;+\!\! \sum_{b\neq c} \big(p_{abc}(a) - p_{ab}\,p_{ac}\big). \]</p>
-    <p class="proof"><span class="lbl">Proof.</span> Let \(X_b := \mathbb{1}[a\succ b]\), so \(r_a = m - \sum_{b\neq a} X_b\). Then</p>
-    <div class="eqs">
+    <p class="proof fragment"><span class="lbl">Proof.</span> Let \(X_b := \mathbb{1}[a\succ b]\), so \(r_a = m - \sum_{b\neq a} X_b\). Then</p>
+    <div class="eqs fragment">
       \[ \mathrm{Var}(r_a) = \mathbb{E}\big[(\textstyle\sum_b X_b)^2\big] - \big(\mathbb{E}[\textstyle\sum_b X_b]\big)^2, \]
       \[ \mathbb{E}\big[(\textstyle\sum_b X_b)^2\big] = \sum_b \underbrace{\mathbb{E}[X_b^2]}_{p_{ab}} + \sum_{b\neq c} \underbrace{\mathbb{E}[X_b X_c]}_{p_{abc}(a)}, \qquad \big(\mathbb{E}[\textstyle\sum_b X_b]\big)^2 = \sum_{b,c} p_{ab}\,p_{ac}. \]
     </div>
-    <p class="qed">Collecting terms gives the formula above — degree&nbsp;2 plus degree&nbsp;3 entries.\(\quad\square\)</p>
+    <p class="qed fragment">Collecting terms gives the formula above — degree&nbsp;2 plus degree&nbsp;3 entries.\(\quad\square\)</p>
     <aside class="notes">Proof of the rank-variance proposition; the closed form mixes degree-2 and degree-3 plurality entries, so the measure is level 3. Skippable (press right to leave, down for the divisiveness proof).</aside>
   </section>
 
   <section class="deriv">
-    <p class="prop"><span class="lbl">Proposition.</span> The divisiveness is a measure of <strong>level&nbsp;3</strong>:
+    <p class="prop fragment"><span class="lbl">Proposition.</span> The divisiveness is a measure of <strong>level&nbsp;3</strong>:
       \[ \mathrm{Div}(a) = \frac{1}{m-1}\sum_{b\neq a} \Big| 1 + \!\!\sum_{c\neq a,b}\!\! \Big[ p_{abc}(a)\Big(\tfrac{1}{1-p_{ab}} + \tfrac{1}{p_{ab}}\Big) - \tfrac{p_{ac}}{1-p_{ab}} \Big] \Big|. \]</p>
-    <p class="proof"><span class="lbl">Proof.</span> Splitting voters by their verdict on \(\{a,b\}\), divisiveness is the gap in \(a\)'s mean rank between the two camps:
+    <p class="proof fragment"><span class="lbl">Proof.</span> Splitting voters by their verdict on \(\{a,b\}\), divisiveness is the gap in \(a\)'s mean rank between the two camps:
       \[ \mathrm{Div}(a) = \frac{1}{m-1}\sum_{b\neq a} \big| \mathbb{E}[r_a \mid b\succ a] - \mathbb{E}[r_a \mid a\succ b] \big|. \]</p>
-    <div class="eqs">
+    <div class="eqs fragment">
       \[ \mathbb{E}[r_a \mid b\succ a] = m + \frac{1}{1-p_{ab}}\!\!\sum_{c\neq a,b}\!\!\big(p_{abc}(a) - p_{ac}\big), \qquad \mathbb{E}[r_a \mid a\succ b] = m - 1 - \frac{1}{p_{ab}}\!\!\sum_{c\neq a,b}\!\! p_{abc}(a). \]
     </div>
-    <p class="qed">Substituting both back gives the formula above — degree&nbsp;2 and degree&nbsp;3 entries.\(\quad\square\)</p>
+    <p class="qed fragment">Substituting both back gives the formula above — degree&nbsp;2 and degree&nbsp;3 entries.\(\quad\square\)</p>
     <aside class="notes">Proof of the divisiveness proposition: each conditional Borda score equals m minus a conditional mean rank; inclusion-exclusion gives the two conditional expectations, whose substitution yields a degree-2/degree-3 closed form, so level 3. Skippable.</aside>
   </section>
 </section>
@@ -664,10 +696,10 @@
       <span class="node"></span>How to characterize the level of information used by a measure?
     </div>
     <div class="nest">
-      <div class="ti a fragment"><span class="arrow">&#8658;</span>Its <strong>level</strong>: the smallest degree of the plurality matrix it needs.</div>
-      <div class="ti a fragment"><span class="arrow">&#8658;</span>Rank variance and divisiveness are <strong>level 3</strong> — the degree-3 matrix, not the full profile.</div>
-      <div class="ti a fragment"><span class="arrow">&#8658;</span>Most measures sit at level 2 (Borda, Copeland, agreement index) or level 3 (rank variance, divisiveness).</div>
-      <div class="ti a fragment"><span class="arrow">&#8658;</span>Yet some structural disagreement stays invisible to every level-2 and level-3 measure.</div>
+      <div class="ti a fragment fade-left"><span class="arrow">&#8658;</span>Its <strong>level</strong>: the smallest degree of the plurality matrix it needs.</div>
+      <div class="ti a fragment fade-left"><span class="arrow">&#8658;</span>Rank variance and divisiveness are <strong>level 3</strong> — the degree-3 matrix, not the full profile.</div>
+      <div class="ti a fragment fade-left"><span class="arrow">&#8658;</span>Most measures sit at level 2 (Borda, Copeland, agreement index) or level 3 (rank variance, divisiveness).</div>
+      <div class="ti a fragment fade-left"><span class="arrow">&#8658;</span>Yet some structural disagreement stays invisible to every level-2 and level-3 measure.</div>
     </div>
   </div>
   <aside class="notes">Back to the thread: the second root is now answered. The level of a measure is the degree of the plurality matrix it needs; rank variance and divisiveness are level 3; most literature measures are level 2 or 3; yet some structure escapes both — which opens the next question.</aside>
@@ -741,9 +773,9 @@
       <span class="node"></span>Can we find measures with a level higher than 3?
     </div>
     <div class="nest">
-      <div class="ti a fragment"><span class="arrow">&#8658;</span>Yes — the central moments of the rank distribution; the \(k\)-th is <strong>level \(k+1\)</strong>.</div>
-      <div class="ti a fragment"><span class="arrow">&#8658;</span>So skewness is level 4, and excess kurtosis is level 5.</div>
-      <div class="ti q fragment"><span class="arrow">&#8658;</span>But are the moments above level 2 and 3 interpretable? <a class="tlink" href="#/13">see &rarr;</a></div>
+      <div class="ti a fragment fade-left"><span class="arrow">&#8658;</span>Yes — the central moments of the rank distribution; the \(k\)-th is <strong>level \(k+1\)</strong>.</div>
+      <div class="ti a fragment fade-left"><span class="arrow">&#8658;</span>So skewness is level 4, and excess kurtosis is level 5.</div>
+      <div class="ti q fragment fade-left"><span class="arrow">&#8658;</span>But are the moments above level 2 and 3 interpretable? <a class="tlink" href="#/13">see &rarr;</a></div>
     </div>
   </div>
   <aside class="notes">Back to the thread: the third root is answered — yes, the central moments reach every level, the k-th moment being level k+1, so skewness and kurtosis are level 4 and 5. A new point opens the next question: are these higher moments actually interpretable?</aside>
@@ -761,7 +793,7 @@
   <section class="mp-play">
     <p class="kicker">Interactive &middot; the moment plane</p>
     <iframe class="mpframe" data-src="moment_plane.html?mode=play" loading="lazy" title="Interactive moment plane"></iframe>
-    <p class="mphint small muted">Synthetic models <em>and</em> real elections. Click any point — cloud or &#9650; reference — for its rank distribution; toggle series by subsection under it. &nbsp;<a class="tlink" href="#/13/0">&larr; back to the guided view</a></p>
+    <p class="mphint small muted">Synthetic models <em>and</em> real elections. &nbsp;<a class="tlink" href="#/13/0">&larr; back to the guided view</a></p>
     <aside class="notes">Free sandbox: toggle model families in the legend, click any alternative (cloud or reference) to read its exact rank distribution.</aside>
   </section>
 </section>
@@ -770,7 +802,7 @@
 <section class="mp-real">
   <p class="kicker">The same plane &mdash; real elections</p>
   <iframe class="mpframe" data-src="moment_plane.html?mode=realguided" loading="lazy" title="Real-data moment plane"></iframe>
-  <p class="mphint small muted">Real ballots (Glasgow STV &middot; NSW LA &middot; French presidential) spread across the whole plane. &nbsp;<a class="tlink" href="#/13/1">open the interactive version &rarr;</a></p>
+  <p class="mphint small muted">Real ballots — Glasgow STV &middot; NSW LA &middot; French presidential. &nbsp;<a class="tlink" href="#/13/1">open the interactive version &rarr;</a></p>
   <aside class="notes">On real preferential data the candidates populate the whole moment plane — the point is just the spread. The four reference candidates Q1–Q4 on the right show the range of shapes; Le&nbsp;Pen (Q3) and Mélenchon (Q4) land in the skewed, high-kurtosis corners (consensus rejection / consensus winner, each with a committed minority). Caveat: only complete-ranking voters are included (over-represents engaged voters, sharpest for Le&nbsp;Pen). The interactive figure — synthetic models + real elections, toggleable by subsection — is the dedicated view (link).</aside>
 </section>
 
@@ -790,19 +822,22 @@
 <!-- 17. TWO PRIMITIVES -->
 <section class="prims-slide">
   <p class="kicker">Two elicitation primitives</p>
-  <div class="prims">
-    <div class="prim">
-      <div class="ph fragment" data-fragment-index="1">\(k\)-Chain</div>
-      <p class="pdesc fragment" data-fragment-index="1">\(k-1\) sequential pairwise comparisons: compare \(a_1, a_2\), then the running winner against \(a_3,\dots,a_k\).</p>
-      <p class="prow fragment" data-fragment-index="2"><span class="lbl">Cognitive load · one voter</span> \(k-1\) comparisons</p>
-      <p class="prow fragment" data-fragment-index="3"><span class="lbl">Independent samples at degree \(\ell\)</span> \(1\) — the winner of the size-\(\ell\) prefix</p>
-    </div>
-    <div class="prim">
-      <div class="ph fragment" data-fragment-index="1">\(k\)-Ranking</div>
-      <p class="pdesc fragment" data-fragment-index="1">a full ranking of the \(k\) alternatives, elicited by pairwise comparisons.</p>
-      <p class="prow fragment" data-fragment-index="2"><span class="lbl">Cognitive load · one voter</span> \(\lceil\log_2 k!\rceil \approx k\log k\) comparisons</p>
-      <p class="prow fragment" data-fragment-index="3"><span class="lbl">Independent samples at degree \(\ell\)</span> \(\binom{k}{\ell}\) — every \(\ell\)-subset's winner, by transitivity</p>
-    </div>
+  <div class="primtab">
+    <div></div>
+    <div class="ph fragment" data-fragment-index="1">\(k\)-Chain</div>
+    <div class="ph fragment" data-fragment-index="1">\(k\)-Ranking</div>
+
+    <div></div>
+    <div class="dsc fragment" data-fragment-index="1">\(k-1\) sequential pairwise comparisons: compare \(a_1, a_2\), then the running winner against \(a_3,\dots,a_k\).</div>
+    <div class="dsc fragment" data-fragment-index="1">a full ranking of the \(k\) alternatives, elicited by pairwise comparisons.</div>
+
+    <div class="rl r1 fragment" data-fragment-index="2"><span class="rh">Cognitive load</span><span class="rs">per voter</span></div>
+    <div class="v r1 fragment" data-fragment-index="2">\(k-1\) comparisons</div>
+    <div class="v r1 fragment" data-fragment-index="2">\(\lceil\log_2 k!\rceil \approx k\log k\) comparisons</div>
+
+    <div class="rl r2 fragment" data-fragment-index="3"><span class="rh">Independent samples</span><span class="rs">at degree \(\ell\)</span></div>
+    <div class="v r2 fragment" data-fragment-index="3">\(1\) — the winner of the size-\(\ell\) prefix</div>
+    <div class="v r2 fragment" data-fragment-index="3">\(\binom{k}{\ell}\) — every \(\ell\)-subset's winner, by transitivity</div>
   </div>
   <p class="ptrade fragment" data-fragment-index="4">A clear <strong>trade-off</strong>: the chain is light per voter but yields a single sample; the ranking yields \(\binom{k}{\ell}\) samples — at a higher cognitive cost.</p>
   <aside class="notes">Two primitives, side by side. A k-chain: k−1 sequential comparisons (winner stays), costing k−1 per voter, giving 1 sample at each degree (the nested prefixes). A k-ranking: a full ranking of the k items, costing ~k log k comparisons, but by transitivity it gives C(k,ℓ) independent samples at degree ℓ (the winner of every ℓ-subset). So: chain = cheap but few samples; ranking = many samples but heavy — a trade-off.</aside>
@@ -812,11 +847,11 @@
 <section class="thm-slide">
   <p class="kicker">Population vs cognitive load</p>
   <p class="lead2 fragment">For a fixed degree, the population and the per-voter load are tied by a precise law.</p>
-  <div class="thmbox fragment">
+  <div class="thmbox fragment fade-left">
     <p><span class="lbl">Theorem.</span> Fix a degree \(k\). To estimate every degree-\(k\) entry of the plurality matrix to accuracy \(\varepsilon\) with probability \(1-\delta\):</p>
     <ul>
       <li>a <strong>\(k\)-chain</strong> needs \(N = \binom{m}{k}\,T_k\) voters, at \(\mathrm{MCL} = k-1\);</li>
-      <li>a <strong>\(k\)-ranking</strong> needs \(N = \dbinom{m}{k}\,T_k \big/ (k\log k)\) voters, at \(\mathrm{MCL} = k\log k\).</li>
+      <li>a <strong>\(k\)-ranking</strong> needs \(N = \binom{m}{k}\,T_k \big/ (k\log k)\) voters, at \(\mathrm{MCL} = k\log k\).</li>
     </ul>
     <p class="small muted">where \(T_k = \ln(2Q_k/\delta)/(2\varepsilon^2)\) and \(Q_k = k\binom{m}{k}\) is the number of degree-\(k\) entries.</p>
   </div>
@@ -828,7 +863,7 @@
 <section class="mp-pareto">
   <p class="kicker">Population vs cognitive load &mdash; interactive</p>
   <iframe class="mpframe" data-src="pareto_widget.html" loading="lazy" title="Elicitation frontier explorer"></iframe>
-  <p class="mphint small muted">Fix any two of <em>degree</em>, <em>population</em>, <em>cognitive load</em> &mdash; the figure finds the third and the protocol (● chain &middot; ▢ ranking).</p>
+  <p class="mphint small muted">Fix any two of <em>degree</em>, <em>population</em>, <em>cognitive load</em> &mdash; the figure finds the third and the matching protocol.</p>
   <aside class="notes">The trade-off, made navigable. The figure is the paper's Pareto plot: population N (log) against maximum cognitive load λ, one curve per target degree ℓ; filled circle = the ℓ-chain, open square = a k-ranking. Three query modes: (A) fix the degree and the voters you have → the lightest achievable load and its protocol; (B) fix the degree and the load → the population needed; (C) fix voters and load → which degrees are reachable (shaded feasible region). Demonstrates concretely: at a fixed budget of voters, a heavier query unlocks higher degrees.</aside>
 </section>
 
@@ -877,7 +912,7 @@
       const sec = scene.closest('section');
       let n = 0;
       sec.querySelectorAll('.step').forEach(s => { if (s.classList.contains('visible')) n++; });
-      for (let i = 1; i <= 8; i++) scene.classList.toggle('s' + i, n >= i);
+      for (let i = 1; i <= 12; i++) scene.classList.toggle('s' + i, n >= i);
     });
   }
   Reveal.on('ready', syncSteps);

@@ -2,6 +2,7 @@
 title: Setting the points per question of a test automatically
 date: 12/12/2021
 description: How to use a linear program to select the grading scale of an exam that is both meritocratic and encouraging
+medium: https://towardsdatascience.com/setting-the-points-per-question-of-a-test-automatically-120186278e90
 ---
 
 How to use a linear program to select the grading scale of an exam that is both meritocratic and encouraging
@@ -21,8 +22,13 @@ The first thing I had to do was to correct the papers without a grading scale. T
 
 After that, I used Pandas to get the marks of each question and each student in a matrix as follows:
 
-```
-import pandas as pdimport numpy as npimport matplotlib.pyplot as pltdf = pd.read\_csv("TME\_Grades.csv")N = df.values.T #I Transpose because initially i Had a table with #the students in the rows and the exercices in the columns.
+```python
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+df = pd.read\_csv("TME\_Grades.csv")
+N = df.values.T #I Transpose because initially i Had a table with #the students in the rows and the exercices in the columns.
 ```
 
 Consider that we have *n* questions and *m* students, and let *N* be the *(n,m)* matrix that gives us the "relative score" of a student in a question.
@@ -31,8 +37,11 @@ The problem could be finding a set of weights *W* of size *n* such that W.N give
 
 Let's start by seeing how we create our model and our variables.
 
-```
-from docplex.mp.model import Modelmodel = Model("Exam\_Scoring")exercices\_vars = model.continuous\_var\_list(keys = np.arange(N.shape[0]), name= lambda k:"E\_"+str(k))
+```python
+from docplex.mp.model import Model
+
+model = Model("Exam\_Scoring")
+exercices\_vars = model.continuous\_var\_list(keys = np.arange(N.shape[0]), name= lambda k:"E\_"+str(k))
 ```
 
 The function "continuous\_var\_list" is given a list of keys; in our case, it's the number between 0 and the number of questions minus 1.
@@ -50,14 +59,17 @@ Since the difference between any two questions is the number of students who ans
 
 So, a meritocratic grading scale would give each question a weight that is proportional to :
 
-![0\_egL8BMSbEz8MNlDU.png](0\_egL8BMSbEz8MNlDU.png)
+$$
+m_i = \frac{n_i}{\sum_{q=0}^{n} n_q}
+$$
 
 Where *nᵢ* is the number of students that did not answer the question *i.*
 
 Let's try this grading scale to see my students' grades if I was utterly meritocratic.
 
-```
-not\_ans = N.shape[1] - N.sum(axis=1)m = 20\*(not\_ans /not\_ans.sum())
+```python
+not\_ans = N.shape[1] - N.sum(axis=1)
+m = 20\*(not\_ans /not\_ans.sum())
 ```
 
 This will give us the following grades.
@@ -79,8 +91,11 @@ The grade of a student given a set of weights could easily be computed as follow
 
 To ensure that condition one is respected, we will use the function argsort to sort the students by their marks in the meritocratic system and impose that the ranking doesn't change by saying that for each student, its mark must remain greater than the mark of the students that were below him in the previous order.
 
-```
-for i in range(len(sorted\_students)-1):gap = min(grades[i]-grades[i+1], 0.001)cst = sum(N[:, sorted\_students[i]]\*exercices\_vars) >= sum(N[:,sorted\_students[i+1]]\*exercices\_vars) + gapmodel.add\_constraint(cst)
+```python
+for i in range(len(sorted\_students)-1):
+    gap = min(grades[i]-grades[i+1], 0.001)
+    cst = sum(N[:, sorted\_students[i]]\*exercices\_vars) >= sum(N[:,sorted\_students[i+1]]\*exercices\_vars) + gap
+    model.add\_constraint(cst)
 ```
 
 Since we cannot use the strict comparison in linear programming, we use the large one with a variable that represents the gap we want to have between two students, if their meritocratic grades were the same gap will be equal to 0, in the other case, it will be a tiny float (here 0.001).
@@ -93,8 +108,15 @@ And in the other sense, setting a gap that is at least as great as the initial g
 
 The following constraints ensure the other condition:
 
-```
-for i,grade in enumerate(grades):if(grade==0):continuecst = (sum(N[:,i]\*exercices\_vars)) >= grademodel.add\_constraint(cst)model.add\_constraint(sum(exercices\_vars) == 20)for var in exercices\_vars:model.add\_constraint(var >= 0)
+```python
+for i,grade in enumerate(grades):
+    if(grade==0):
+        continue
+    cst = (sum(N[:,i]\*exercices\_vars)) >= grade
+    model.add\_constraint(cst)
+model.add\_constraint(sum(exercices\_vars) == 20)
+for var in exercices\_vars:
+    model.add\_constraint(var >= 0)
 ```
 
 Now that we know how to restrain the grading scale to make him fair for everyone, let's see what objectives we could use to enforce a specific grading scale.
@@ -104,13 +126,40 @@ Utilitarian and Egalitarian
 
 As a teacher, the first objective that comes intuitively is to maximize the overall class average; this could be done by setting the sum of new grades as a maximization objective.
 
-```
+```python
 model.maximize(sum(exercices\_vars@N)/ N.shape[1])
 ```
 
 In our example, the marks will change as follow:
 
-![1\_amDJ3U44F-0rC3X0KFwKMQ.png](1\_amDJ3U44F-0rC3X0KFwKMQ.png)
+| Before | After |
+| --- | --- |
+| 0.4685 | 0.5003 |
+| 0.6003 | 0.6003 |
+| 0.8346 | 1.3462 |
+| 0.9956 | 1.4462 |
+| 1.2006 | 2.1921 |
+| 1.6398 | 2.4376 |
+| 2.2694 | 2.5376 |
+| 2.7818 | 4.2293 |
+| 2.8404 | 4.6296 |
+| 2.8404 | 4.6296 |
+| 3.1918 | 4.7296 |
+| 3.3821 | 4.8296 |
+| 3.7482 | 4.9296 |
+| 4.0703 | 6.5213 |
+| 4.0996 | 6.6213 |
+| 5.0366 | 6.7213 |
+| 5.0366 | 7.8675 |
+| 5.0659 | 7.9675 |
+| 6.8814 | 9.0225 |
+| 7.6135 | 10.7050 |
+| 8.0234 | 10.8050 |
+| 8.7116 | 14.3839 |
+| 9.6925 | 14.5885 |
+| 14.1288 | 15.9118 |
+| 15.0512 | 16.4621 |
+| 15.0512 | 16.4621 |
 
 We can see that the ranking doesn't change; the overall marks increase, and the mean becomes 6.10.
 
@@ -118,13 +167,40 @@ This objective is called the utilitarian objective, but as we can see, the marks
 
 We can instead think about maximizing the minimum non-null score to promote an egalitarian increase of the scores; this is achieved by doing:
 
-```
+```python
 model.maximize(model.min([i for i in (exercices\_vars@N) if str(i) != "0"]))
 ```
 
 And gives us:
 
-![1\_tp5H-gDkjNzd--QnYUX8aQ.png](1\_tp5H-gDkjNzd--QnYUX8aQ.png)
+| Before | After |
+| --- | --- |
+| 0.4685 | 1.1264 |
+| 0.6003 | 1.2264 |
+| 0.8346 | 1.3264 |
+| 0.9956 | 1.4264 |
+| 1.2006 | 1.5264 |
+| 1.6398 | 2.1694 |
+| 2.2694 | 2.2694 |
+| 2.7818 | 2.7818 |
+| 2.8404 | 3.6958 |
+| 2.8404 | 3.6958 |
+| 3.1918 | 3.7958 |
+| 3.3821 | 4.9056 |
+| 3.7482 | 5.2056 |
+| 4.0703 | 5.3056 |
+| 4.0996 | 5.4056 |
+| 5.0366 | 5.5056 |
+| 5.0366 | 6.6320 |
+| 5.0659 | 6.7320 |
+| 6.8814 | 10.3112 |
+| 7.6135 | 10.4112 |
+| 8.0234 | 10.6239 |
+| 8.7116 | 12.4288 |
+| 9.6925 | 12.8335 |
+| 14.1288 | 14.2682 |
+| 15.0512 | 16.7638 |
+| 15.0512 | 16.7638 |
 
 The rise in grades is more evenly distributed among the students, and the mean is around 5.10.
 

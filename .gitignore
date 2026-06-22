@@ -2,3 +2,6 @@ venv/
 __pycache__/
 *.pyc
 .DS_Store
+
+# Private source (CV / qualification dossier) — never publish to GitHub Pages
+personal content/

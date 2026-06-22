@@ -2,6 +2,7 @@
 title: Quality-Diversity Algorithms: MAP-Polar
 date: 24/03/2021
 description: A new approach based on MAP-Elites applied to Robot Navigation
+medium: https://towardsdatascience.com/quality-diversity-algorithms-a-new-approach-based-on-map-elites-applied-to-robot-navigation-f51380deec5d
 ---
 
 A new approach based on MAP-Elites applied to Robot Navigation
@@ -71,7 +72,7 @@ In the observation returned, we can get the number of collisions and the positio
 Overview of the state of art algorithms
 ---------------------------------------
 
-Now we will review and experiment with some stat of the art algorithms for this task,
+Now we will review and experiment with some stat of the art algorithms for this task,<span class="fill"> starting with Novelty Search.</span>
 
 **Novelty Search:**
 
@@ -79,7 +80,9 @@ The novelty search is one of the most known diversity-based algorithms. Lehman a
 
 The novelty is defined independently from the context of the task as follows:
 
-![1\_6Z5C1p4vM68CVqURTdh4bw.png](1\_6Z5C1p4vM68CVqURTdh4bw.png)
+$$
+\rho(x) = \frac{1}{k} \sum_{i=0}^{k} \mathrm{dist}(x, \mu_i),
+$$
 
 Roughly it’s the mean of the distance of an individual's phenotype to the k nearest phenotypes. It will promote the genotypes that result in behaviour conduct in new positions.
 
@@ -103,7 +106,7 @@ And as we can see, the MAP-Elite selection is somehow objective-oriented. Still,
 
 **Spatial, Hierarchical, Illuminated Neuro-Evolution (SHINE) :**
 
-This approach was introduced by Davy Smith, Laurissa Tokarchuk and Geraint Wiggins [1] and combine elements from Novelty Search and MAP-Elites,
+This approach was introduced by Davy Smith, Laurissa Tokarchuk and Geraint Wiggins [1] and combine elements from Novelty Search and MAP-Elites,<span class="fill"> as described below.</span>
 
 It maintains an archive of the individuals by mapping their final positions in the maze. Instead of using a grid, it uses a hierarchical mapping based on a tree construction; a hyper-parameter “alpha” limits the tree height.
 

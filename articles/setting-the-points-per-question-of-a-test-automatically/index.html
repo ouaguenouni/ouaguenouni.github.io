@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Setting the points per question of a test automatically - Ouaguenouni Mohamed</title>
+    <script>document.documentElement.className += ' js';</script>
     <link rel="stylesheet" type="text/css" href="../../style.css">
     <link rel="stylesheet" type="text/css" href="../../article.css">
     <meta property="og:title" content="Setting the points per question of a test automatically">
@@ -31,22 +32,29 @@
 
 <article class="main-article">
     <h1 class="article-title">Setting the points per question of a test automatically</h1>
-    <p class="article-meta">6 min read · Published on 12 December 2021</p>
+    <p class="article-subtitle">How to use a linear program to select the grading scale of an exam that is both meritocratic and encouraging</p>
+    <p class="article-meta">7 min read · Published on 12 December 2021</p>
     <section>
-        <p>How to use a linear program to select the grading scale of an exam that is both meritocratic and encouraging</p>
-<hr />
-<p>As a young teacher, I recently had to give my first exam, and so I had to score my first papers, but before scoring them, I had to define for each question how many points it would be worth.</p>
+        <p>As a young teacher, I recently had to give my first exam, and so I had to score my first papers, but before scoring them, I had to define for each question how many points it would be worth.</p>
 <p>I found myself trying multiple rating scales repeatedly to find one that stimulates meritocracy while allowing for overall good grades.</p>
 <p>But then I noticed that a rating scale is a weighted sum, so finding a rating scale could be seen as an optimization problem; I then decided to design a way to automate this scaling by using Linear Programming and the solver CPLEX from ILOG.</p>
 <h2>Problem statement</h2>
 <p>The first thing I had to do was to correct the papers without a grading scale. To do so, I created a CSV file that has for each student and each question a float between 0 and 1 that represents the degree to which I judge that it has answered the question.</p>
 <p>After that, I used Pandas to get the marks of each question and each student in a matrix as follows:</p>
-<pre><code>import pandas as pdimport numpy as npimport matplotlib.pyplot as pltdf = pd.read\_csv(&quot;TME\_Grades.csv&quot;)N = df.values.T #I Transpose because initially i Had a table with #the students in the rows and the exercices in the columns.
+<pre><code class="language-python">import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+df = pd.read\_csv(&quot;TME\_Grades.csv&quot;)
+N = df.values.T #I Transpose because initially i Had a table with #the students in the rows and the exercices in the columns.
 </code></pre>
 <p>Consider that we have <em>n</em> questions and <em>m</em> students, and let <em>N</em> be the <em>(n,m)</em> matrix that gives us the "relative score" of a student in a question.</p>
 <p>The problem could be finding a set of weights <em>W</em> of size <em>n</em> such that W.N gives the students' marks<em>.</em></p>
 <p>Let's start by seeing how we create our model and our variables.</p>
-<pre><code>from docplex.mp.model import Modelmodel = Model(&quot;Exam\_Scoring&quot;)exercices\_vars = model.continuous\_var\_list(keys = np.arange(N.shape[0]), name= lambda k:&quot;E\_&quot;+str(k))
+<pre><code class="language-python">from docplex.mp.model import Model
+
+model = Model(&quot;Exam\_Scoring&quot;)
+exercices\_vars = model.continuous\_var\_list(keys = np.arange(N.shape[0]), name= lambda k:&quot;E\_&quot;+str(k))
 </code></pre>
 <p>The function "continuous_var_list" is given a list of keys; in our case, it's the number between 0 and the number of questions minus 1.</p>
 <p>After we created the variables needed, let's think about the constraints we want to implement, some of the constraints we want to have are intuitive; the set of weights is a set of real numbers that sum to a fixed number (let's say 20), and each weight must be strictly positive.</p>
@@ -55,10 +63,15 @@
 <p>If I wanted to be utterly meritocratic in my grading scale, I would give each question a weight proportional to its difficulty.</p>
 <p>Since the difference between any two questions is the number of students who answered each question, I could consider that one question is more complicated than another if fewer students answered it correctly.</p>
 <p>So, a meritocratic grading scale would give each question a weight that is proportional to :</p>
-<p><img alt="0_egL8BMSbEz8MNlDU.png" src="0_egL8BMSbEz8MNlDU.png" /></p>
+<p>$$
+
+m_i = \frac{n_i}{\sum_{q=0}^{n} n_q}
+
+$$</p>
 <p>Where <em>nᵢ</em> is the number of students that did not answer the question <em>i.</em></p>
 <p>Let's try this grading scale to see my students' grades if I was utterly meritocratic.</p>
-<pre><code>not\_ans = N.shape[1] - N.sum(axis=1)m = 20\*(not\_ans /not\_ans.sum())
+<pre><code class="language-python">not\_ans = N.shape[1] - N.sum(axis=1)
+m = 20\*(not\_ans /not\_ans.sum())
 </code></pre>
 <p>This will give us the following grades.</p>
 <p><img alt="1_NUabQpFk6L5FIK5TtD_HQA.png" src="1_NUabQpFk6L5FIK5TtD_HQA.png" /></p>
@@ -70,29 +83,265 @@
 <p>The grade of a student given a set of weights could easily be computed as follows:</p>
 <p><img alt="1_4K-GDpGap2dSfQLr-aI_qw.png" src="1_4K-GDpGap2dSfQLr-aI_qw.png" /></p>
 <p>To ensure that condition one is respected, we will use the function argsort to sort the students by their marks in the meritocratic system and impose that the ranking doesn't change by saying that for each student, its mark must remain greater than the mark of the students that were below him in the previous order.</p>
-<pre><code>for i in range(len(sorted\_students)-1):gap = min(grades[i]-grades[i+1], 0.001)cst = sum(N[:, sorted\_students[i]]\*exercices\_vars) &gt;= sum(N[:,sorted\_students[i+1]]\*exercices\_vars) + gapmodel.add\_constraint(cst)
+<pre><code class="language-python">for i in range(len(sorted\_students)-1):
+    gap = min(grades[i]-grades[i+1], 0.001)
+    cst = sum(N[:, sorted\_students[i]]\*exercices\_vars) &gt;= sum(N[:,sorted\_students[i+1]]\*exercices\_vars) + gap
+    model.add\_constraint(cst)
 </code></pre>
 <p>Since we cannot use the strict comparison in linear programming, we use the large one with a variable that represents the gap we want to have between two students, if their meritocratic grades were the same gap will be equal to 0, in the other case, it will be a tiny float (here 0.001).</p>
 <p>The gap variable plays another important role; it regulates the "degree of meritocracy" we require; having a gap equal to 0 means that a student that was before another in the meritocratic grading scale could now have the same mark as him.</p>
 <p>Having a gap of -1 means that we partially release the meritocratic constraint, and we authorize a student with a better mark than another to be below him but not by more than 1 point.</p>
 <p>And in the other sense, setting a gap that is at least as great as the initial gap will give us the same ranking.</p>
 <p>The following constraints ensure the other condition:</p>
-<pre><code>for i,grade in enumerate(grades):if(grade==0):continuecst = (sum(N[:,i]\*exercices\_vars)) &gt;= grademodel.add\_constraint(cst)model.add\_constraint(sum(exercices\_vars) == 20)for var in exercices\_vars:model.add\_constraint(var &gt;= 0)
+<pre><code class="language-python">for i,grade in enumerate(grades):
+    if(grade==0):
+        continue
+    cst = (sum(N[:,i]\*exercices\_vars)) &gt;= grade
+    model.add\_constraint(cst)
+model.add\_constraint(sum(exercices\_vars) == 20)
+for var in exercices\_vars:
+    model.add\_constraint(var &gt;= 0)
 </code></pre>
 <p>Now that we know how to restrain the grading scale to make him fair for everyone, let's see what objectives we could use to enforce a specific grading scale.</p>
 <h2>Utilitarian and Egalitarian</h2>
 <p>As a teacher, the first objective that comes intuitively is to maximize the overall class average; this could be done by setting the sum of new grades as a maximization objective.</p>
-<pre><code>model.maximize(sum(exercices\_vars@N)/ N.shape[1])
+<pre><code class="language-python">model.maximize(sum(exercices\_vars@N)/ N.shape[1])
 </code></pre>
 <p>In our example, the marks will change as follow:</p>
-<p><img alt="1_amDJ3U44F-0rC3X0KFwKMQ.png" src="1_amDJ3U44F-0rC3X0KFwKMQ.png" /></p>
+<table>
+<thead>
+<tr>
+<th>Before</th>
+<th>After</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0.4685</td>
+<td>0.5003</td>
+</tr>
+<tr>
+<td>0.6003</td>
+<td>0.6003</td>
+</tr>
+<tr>
+<td>0.8346</td>
+<td>1.3462</td>
+</tr>
+<tr>
+<td>0.9956</td>
+<td>1.4462</td>
+</tr>
+<tr>
+<td>1.2006</td>
+<td>2.1921</td>
+</tr>
+<tr>
+<td>1.6398</td>
+<td>2.4376</td>
+</tr>
+<tr>
+<td>2.2694</td>
+<td>2.5376</td>
+</tr>
+<tr>
+<td>2.7818</td>
+<td>4.2293</td>
+</tr>
+<tr>
+<td>2.8404</td>
+<td>4.6296</td>
+</tr>
+<tr>
+<td>2.8404</td>
+<td>4.6296</td>
+</tr>
+<tr>
+<td>3.1918</td>
+<td>4.7296</td>
+</tr>
+<tr>
+<td>3.3821</td>
+<td>4.8296</td>
+</tr>
+<tr>
+<td>3.7482</td>
+<td>4.9296</td>
+</tr>
+<tr>
+<td>4.0703</td>
+<td>6.5213</td>
+</tr>
+<tr>
+<td>4.0996</td>
+<td>6.6213</td>
+</tr>
+<tr>
+<td>5.0366</td>
+<td>6.7213</td>
+</tr>
+<tr>
+<td>5.0366</td>
+<td>7.8675</td>
+</tr>
+<tr>
+<td>5.0659</td>
+<td>7.9675</td>
+</tr>
+<tr>
+<td>6.8814</td>
+<td>9.0225</td>
+</tr>
+<tr>
+<td>7.6135</td>
+<td>10.7050</td>
+</tr>
+<tr>
+<td>8.0234</td>
+<td>10.8050</td>
+</tr>
+<tr>
+<td>8.7116</td>
+<td>14.3839</td>
+</tr>
+<tr>
+<td>9.6925</td>
+<td>14.5885</td>
+</tr>
+<tr>
+<td>14.1288</td>
+<td>15.9118</td>
+</tr>
+<tr>
+<td>15.0512</td>
+<td>16.4621</td>
+</tr>
+<tr>
+<td>15.0512</td>
+<td>16.4621</td>
+</tr>
+</tbody>
+</table>
 <p>We can see that the ranking doesn't change; the overall marks increase, and the mean becomes 6.10.</p>
 <p>This objective is called the utilitarian objective, but as we can see, the marks do not increase with the same proportion.</p>
 <p>We can instead think about maximizing the minimum non-null score to promote an egalitarian increase of the scores; this is achieved by doing:</p>
-<pre><code>model.maximize(model.min([i for i in (exercices\_vars@N) if str(i) != &quot;0&quot;]))
+<pre><code class="language-python">model.maximize(model.min([i for i in (exercices\_vars@N) if str(i) != &quot;0&quot;]))
 </code></pre>
 <p>And gives us:</p>
-<p><img alt="1_tp5H-gDkjNzd--QnYUX8aQ.png" src="1_tp5H-gDkjNzd--QnYUX8aQ.png" /></p>
+<table>
+<thead>
+<tr>
+<th>Before</th>
+<th>After</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0.4685</td>
+<td>1.1264</td>
+</tr>
+<tr>
+<td>0.6003</td>
+<td>1.2264</td>
+</tr>
+<tr>
+<td>0.8346</td>
+<td>1.3264</td>
+</tr>
+<tr>
+<td>0.9956</td>
+<td>1.4264</td>
+</tr>
+<tr>
+<td>1.2006</td>
+<td>1.5264</td>
+</tr>
+<tr>
+<td>1.6398</td>
+<td>2.1694</td>
+</tr>
+<tr>
+<td>2.2694</td>
+<td>2.2694</td>
+</tr>
+<tr>
+<td>2.7818</td>
+<td>2.7818</td>
+</tr>
+<tr>
+<td>2.8404</td>
+<td>3.6958</td>
+</tr>
+<tr>
+<td>2.8404</td>
+<td>3.6958</td>
+</tr>
+<tr>
+<td>3.1918</td>
+<td>3.7958</td>
+</tr>
+<tr>
+<td>3.3821</td>
+<td>4.9056</td>
+</tr>
+<tr>
+<td>3.7482</td>
+<td>5.2056</td>
+</tr>
+<tr>
+<td>4.0703</td>
+<td>5.3056</td>
+</tr>
+<tr>
+<td>4.0996</td>
+<td>5.4056</td>
+</tr>
+<tr>
+<td>5.0366</td>
+<td>5.5056</td>
+</tr>
+<tr>
+<td>5.0366</td>
+<td>6.6320</td>
+</tr>
+<tr>
+<td>5.0659</td>
+<td>6.7320</td>
+</tr>
+<tr>
+<td>6.8814</td>
+<td>10.3112</td>
+</tr>
+<tr>
+<td>7.6135</td>
+<td>10.4112</td>
+</tr>
+<tr>
+<td>8.0234</td>
+<td>10.6239</td>
+</tr>
+<tr>
+<td>8.7116</td>
+<td>12.4288</td>
+</tr>
+<tr>
+<td>9.6925</td>
+<td>12.8335</td>
+</tr>
+<tr>
+<td>14.1288</td>
+<td>14.2682</td>
+</tr>
+<tr>
+<td>15.0512</td>
+<td>16.7638</td>
+</tr>
+<tr>
+<td>15.0512</td>
+<td>16.7638</td>
+</tr>
+</tbody>
+</table>
 <p>The rise in grades is more evenly distributed among the students, and the mean is around 5.10.</p>
 <p>Other objectives can be imagined, one can maximize the number of admits, or assume that we want a certain average and therefore minimize the absolute value of the distance between the class average and this desired average.</p>
 <h2>Conclusion</h2>
@@ -111,6 +360,23 @@
     </div>
     <p><a href="../../index.html">← Back to home</a></p>
 </footer>
+
+<script>
+/* deck-style ease-up reveal for article blocks (degrades gracefully) */
+(function () {
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var sel = '.main-article section > h2, .main-article section > h3, .main-article section > p,' +
+        '.main-article section > pre, .main-article section > figure, .main-article section > .tablewrap,' +
+        '.main-article section > table, .main-article section > .katex-display, .main-article section > p > img';
+    var items = [].slice.call(document.querySelectorAll(sel));
+    function show(el) { el.classList.add('r-in'); }
+    if (reduce || !('IntersectionObserver' in window)) { items.forEach(show); return; }
+    var io = new IntersectionObserver(function (es) {
+        es.forEach(function (e) { if (e.isIntersecting) { show(e.target); io.unobserve(e.target); } });
+    }, { rootMargin: '0px 0px -7% 0px', threshold: 0.05 });
+    items.forEach(function (el) { io.observe(el); });
+})();
+</script>
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.24/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.24/dist/katex.min.js"></script>

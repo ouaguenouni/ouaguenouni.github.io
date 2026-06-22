@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>A comprehensive study of Mixed Integer Programming with JuMP on Julia (Part 2) - Ouaguenouni Mohamed</title>
+    <script>document.documentElement.className += ' js';</script>
     <link rel="stylesheet" type="text/css" href="../../style.css">
     <link rel="stylesheet" type="text/css" href="../../article.css">
     <meta property="og:title" content="A comprehensive study of Mixed Integer Programming with JuMP on Julia (Part 2)">
@@ -31,11 +32,10 @@
 
 <article class="main-article">
     <h1 class="article-title">A comprehensive study of Mixed Integer Programming with JuMP on Julia (Part 2)</h1>
-    <p class="article-meta">15 min read · Published on 12 April 2021</p>
+    <p class="article-subtitle">Modelling concepts with an application to the Lot sizing problem</p>
+    <p class="article-meta">14 min read · Published on 12 April 2021</p>
     <section>
-        <p>Modelling concepts with an application to the Lot sizing problem</p>
-<hr />
-<p>This post is the continuation of this <a href="https://towardsdatascience.com/a-comprehensive-study-of-mixed-integer-programming-with-jump-on-julia-part-1-8d47418324d4">one</a>; I encourage you to read the first post, especially if you don’t have any background in Mixed Integer Programming. If you did so: Welcome to serious business.</p>
+        <p>This post is the continuation of this <a href="https://towardsdatascience.com/a-comprehensive-study-of-mixed-integer-programming-with-jump-on-julia-part-1-8d47418324d4">one</a>; I encourage you to read the first post, especially if you don’t have any background in Mixed Integer Programming. If you did so: Welcome to serious business.</p>
 <p>This post's goal is to show how linear terms can model widespread constraints and optimise handy functions for real-life problems.</p>
 <p>In today's menu, we will investigate the following questions :</p>
 <ol>
@@ -54,25 +54,48 @@
 <p>Now, what are the instance-dependant variables that are constant over time? First of all, costs. So we recognize <em>f</em> as the setup cost, <em>q</em> as the production cost per unit, and as the holding cost <em>k,</em> storage capacity is also invariant.</p>
 <p>Client demands will be described by a vector of our time horizon size; each demand will be represented by <em>dₜ</em> with t an instant of our time horizon.</p>
 <p>In the following, we will consider the following instance:</p>
-<pre><code>T=10 #Time Horizonf=1000 #Setup Costq=30 #Production Costk=10 #Holding CostD=[15,10,10,25,30,5,5,50,20,80] #Demand at each stepImax=100 #Storage Capacity
+<pre><code class="language-julia">T=10 #Time Horizon
+f=1000 #Setup Cost
+q=30 #Production Cost
+k=10 #Holding Cost
+D=[15,10,10,25,30,5,5,50,20,80] #Demand at each step
+Imax=100 #Storage Capacity
 </code></pre>
 <h3>Model variables</h3>
 <p>We have two possible actions: produce for now or produce and store for later.</p>
 <p>Then, at each time step, we have to decide whether to launch the production or not, and if we launch it, we have to determine how much we produce; our choice will affect the state of the stock, so we also have to use a variable for it.</p>
 <p>These decisions have to be made at each time step, so we’ll have <em>yₜ, pₜ</em> and <em>Iₜ</em> <em>to</em> representif we launch, how much we produce and how much we have in the storage at the end of each time step.</p>
 <p>The variables can be instantiated this way :</p>
-<pre><code>@variable(prgrm, p[1:T] &gt;= 0)@variable(prgrm,I[0:T]&gt;= 0) #We index from 0 to set an initial storage@variable(prgrm, 1 &gt;= y[1:T] &gt;= 0, Int)
+<pre><code class="language-julia">@variable(prgrm, p[1:T] &gt;= 0)
+@variable(prgrm,I[0:T]&gt;= 0) #We index from 0 to set an initial storage
+@variable(prgrm, 1 &gt;= y[1:T] &gt;= 0, Int)
 </code></pre>
 <h3><strong>Model constraints</strong></h3>
 <p>One principal constraint is to produce without exceeding the storage capacity at each step; this can be formulated like this :</p>
-<p><img alt="1_eQR7NoOthqnI_8Yy17ENtA.png" src="1_eQR7NoOthqnI_8Yy17ENtA.png" /></p>
+<p>$$
+
+\forall t \in T; \; I_t \leq I_{max}
+
+$$</p>
 <p>After that, we must keep in mind that any product is either for now or later, so each time we produce, everything we produce above the client’s demand is kept in storage for the next steps; this is a “flow constraint” and can be written as follows :</p>
-<p><img alt="1_1-dkiAcLTFC2RIbGi1iyPA.png" src="1_1-dkiAcLTFC2RIbGi1iyPA.png" /></p>
-<pre><code>#We set initial storage to 0 (for example)@constraint(prgrm, I[0] == 0)for i in 1:T@constraint(prgrm,I[i-1] + p[i] == D[i] + I[i])end
+<p>$$
+
+\forall t \in T; \; p_t + I_{t-1} = d_t + I_t
+
+$$</p>
+<pre><code class="language-julia">#We set initial storage to 0 (for example)
+@constraint(prgrm, I[0] == 0)
+for i in 1:T
+    @constraint(prgrm,I[i-1] + p[i] == D[i] + I[i])
+end
 </code></pre>
 <p>There is another intrinsic constraint: if we want to produce, we must launch production; this is an implication constraint (<em>pₜ &gt; 0</em> impliesthat <em>yₜ = 1) and an</em> excellent occasion to present a Big-M and how we can use it to model an implication.</p>
 <p>A big-M of a variable is a value that the variable cannot reach, and it helps to formulate a constraint as follows:</p>
-<p><img alt="1_xQys-aLkngjsQnsqx8-62A.png" src="1_xQys-aLkngjsQnsqx8-62A.png" /></p>
+<p>$$
+
+p_t \leq M y_t
+
+$$</p>
 <p>If you look closely at this constraint, you will notice that pₜ cannot be nonnull unless yₜ is true, and if yₜ is true, the production is not limited by this constraint since M is a value greater than the maximum reachable value of pₜ.</p>
 <p>Of course, now the question is: <strong>how can we fix the Big-M?</strong></p>
 <p>We can arbitrarily fix it to an unreasonably high value like 10⁵, but it’s not recommended for two reasons :</p>
@@ -87,46 +110,98 @@
 <li>Nothing is obliging us to take the same big-M for all the pₜ variables; By applying the same reasoning as in the precedent point, we are never interested in producing more than the <strong>remaining</strong> demand.</li>
 </ul>
 <p>The second idea is contained in the third one, but we are not obliged to choose between the first idea and the third one we can put :</p>
-<p><img alt="1_BWfDBkXuIzePiY7yHwM0dQ.png" src="1_BWfDBkXuIzePiY7yHwM0dQ.png" /></p>
+<p>$$
+
+M_t = \min\left(I_{max}, \sum_{i=t}^{T} d_i\right)
+
+$$</p>
 <p>Notice that Mₜ is not a variable since we know Iₘₐₓ and all the dᵢ. Then we can compute every Mₜ while building our program; another positive side effect of this big-M is that we no more need to specify the constraints related to the fact that we can’t produce more than what we can store.</p>
 <h3>Objective function</h3>
 <p>To design the objective function, we must have a way to evaluate the quality of a solution; for this problem, it’s pretty straightforward we have to minimize the total cost, which we can calculate like this:</p>
-<p><img alt="1_zT2ixkqWX8QFcZ-JpLKaaQ.png" src="1_zT2ixkqWX8QFcZ-JpLKaaQ.png" /></p>
+<p>$$
+
+\sum_{t=1}^{T} (q p_t + f y_t + k I_t)
+
+$$</p>
 <p>To obtain this cost, we will use two convenient functionalities of Julia; the first one is the element-wise operations which well help us multiply a vector with a coefficient :</p>
-<pre><code>p .\* 10#Output : an array of size {T}
+<pre><code class="language-julia">p .\* 10
+#Output : an array of size {T}
 </code></pre>
 <p>And the second is the sum operator :</p>
-<pre><code>sum(p .\* 10)#Output: 10𝑝1+10𝑝2+10𝑝3+10𝑝4+10𝑝5+10𝑝6+10𝑝7+10𝑝8+10𝑝9+10𝑝10
+<pre><code class="language-julia">sum(p .\* 10)
+#Output: 10𝑝1+10𝑝2+10𝑝3+10𝑝4+10𝑝5+10𝑝6+10𝑝7+10𝑝8+10𝑝9+10𝑝10
 </code></pre>
 <p>And so we could get the objective function like this:</p>
-<pre><code>@objective(prgrm, Min, sum(p .\* q) + sum(y .\* f) + sum(I .\* k))
+<pre><code class="language-julia">@objective(prgrm, Min, sum(p .\* q) + sum(y .\* f) + sum(I .\* k))
 </code></pre>
 <p>And the solution we obtain is the following:</p>
 <p><img alt="1_8exKIZfZA-kewGT0oxHVFQ.png" src="1_8exKIZfZA-kewGT0oxHVFQ.png" /></p>
 <h3>A more general instances</h3>
 <p>For the sake of generalization, let’s suppose this time that the production costs and the holding costs are variable among time, so let’s consider this instance :</p>
-<pre><code>T = 10f = 1000q = [5, 10, 10, 5, 8, 2, 7, 8, 9, 10]k = [0, 10, 5, 5, 10, 5, 8, 2, 2, 2, 8]D = [80,30,50,100,5,5,25,100,200,100]Imax = 200
+<pre><code class="language-julia">T = 10
+f = 1000
+q = [5, 10, 10, 5, 8, 2, 7, 8, 9, 10]
+k = [0, 10, 5, 5, 10, 5, 8, 2, 2, 2, 8]
+D = [80,30,50,100,5,5,25,100,200,100]
+Imax = 200
 </code></pre>
 <p>Notice that it doesn't change anything in the program thanks to the element-wise product that is still valid in the objective function, so you should obtain the following allocation :</p>
 <p><img alt="1_iuWR9Aqz5tpIuDQdgPC4hQ.png" src="1_iuWR9Aqz5tpIuDQdgPC4hQ.png" /></p>
 <h2>Reducing the number of used variables</h2>
 <p>If we think of it, the stock depends on the production directly; actually, for an instant <em>t,</em> it’s the quantity we produced until <em>t</em> minus the sum of the demands until <em>t so that</em> we can <em>replace Iₜ</em> in the constraints.</p>
-<p><img alt="1_A3ABvOxn-AxZ7YZxRsN68Q.png" src="1_A3ABvOxn-AxZ7YZxRsN68Q.png" /></p>
+<p>$$
+
+I_t = \sum_{i=0}^{t} (p_i - d_i)
+
+$$</p>
 <p>And thus obtain:</p>
-<p><img alt="1_NbYTeGnbeCoMFc5Q3goh1w.png" src="1_NbYTeGnbeCoMFc5Q3goh1w.png" /></p>
+<p>$$
+
+\sum_{i=0}^{t} p_i - \sum_{i=0}^{t} d_i \geq 0
+
+$$</p>
 <p>This means that the production has to cover the demand at each step at least.</p>
 <p>Then the stock variables are useful in formulating the holding costs, but we can easily bypass this provided that we put cₜ a cost which involves the production cost and the holding cost.</p>
-<p><img alt="1_24qCG652q9laKmZBd7u9OA.png" src="1_24qCG652q9laKmZBd7u9OA.png" /></p>
+<p>$$
+
+c_t = p_t + \sum_{i=t}^{T} d_i
+
+$$</p>
 <p>So we obtain the following cost for each unit produced at a moment t.</p>
 <p>The program can be instantiated as follows.</p>
-<pre><code>prgrm = Model()set\_optimizer(prgrm, GLPK.Optimizer)@variable(prgrm, p[1:T] &gt;= 0)@variable(prgrm, 1 &gt;= y[1:T] &gt;= 0, Int)@variable(prgrm, I[0:T] &gt;= 0) #We index from 0 to set an initial storagefor i in 1:T@constraint(prgrm,sum(p[1:i]) - sum(D[1:i]) &gt;= 0)endfor i in 1:T@constraint(prgrm, sum(p[1:i]) - sum(D[1:i]) &lt;= Imax)endfor i in 1:TM = min(sum(D[i:end]), Imax)@constraint(prgrm, p[i] &lt;= M\*y[i])endc = []for t in 1:Te = q[t] + sum(k[t+1:end])append!(c,e)end@objective(prgrm, Min, sum(p .\* c) + sum(y .\* f))prgrm
+<pre><code class="language-julia">prgrm = Model()
+set\_optimizer(prgrm, GLPK.Optimizer)
+@variable(prgrm, p[1:T] &gt;= 0)
+@variable(prgrm, 1 &gt;= y[1:T] &gt;= 0, Int)
+@variable(prgrm, I[0:T] &gt;= 0) #We index from 0 to set an initial storage
+for i in 1:T
+    @constraint(prgrm,sum(p[1:i]) - sum(D[1:i]) &gt;= 0)
+end
+for i in 1:T
+    @constraint(prgrm, sum(p[1:i]) - sum(D[1:i]) &lt;= Imax)
+end
+for i in 1:T
+    M = min(sum(D[i:end]), Imax)
+    @constraint(prgrm, p[i] &lt;= M\*y[i])
+end
+c = []
+for t in 1:T
+    e = q[t] + sum(k[t+1:end])
+    append!(c,e)
+end
+@objective(prgrm, Min, sum(p .\* c) + sum(y .\* f))
+prgrm
 </code></pre>
 <p>And we obtain the following solution :</p>
 <p><img alt="1_wGo1OepnVhtHiC7sLfW7tQ.png" src="1_wGo1OepnVhtHiC7sLfW7tQ.png" /></p>
 <p>This is quite strange; we have obtained the same solution in term of decision variables but with a different objective value.</p>
-<p>In fact, I did it on purpose to explain two things,</p>
+<p>In fact, I did it on purpose to explain two things,<span class="fill"> as detailed below.</span></p>
 <p>The first one is that when defining the cost of production at a time step, we forgot to subtract the holding cost of what will go to meet client demand which represents</p>
-<p><img alt="1_J47dK0vriS6tHq0u1Ta4Dg.png" src="1_J47dK0vriS6tHq0u1Ta4Dg.png" /></p>
+<p>$$
+
+\sum_{i=1}^{n} k_i \left(\sum_{t \leq i} d_t\right)
+
+$$</p>
 <p>The second one is that this has no importance on the decision variables because, in general, optimizing <em>f or</em> optimizing <em>f + a</em> is the same thing since <em>a</em> doesn't depend on our decision (nor on anything else since it’s a constant).</p>
 <p>Although if we had to subtract it to check, we could verify that</p>
 <p><img alt="1_atmpgxTjh_9vsd11LIL6eQ.png" src="1_atmpgxTjh_9vsd11LIL6eQ.png" /></p>
@@ -134,14 +209,56 @@
 <p>In the formulation here above, the production is decided whether it’s for now or later with a single <strong>aggregated</strong> variable.</p>
 <p>Let’s see another formulation where we will think differently by separating the production at each time step to many variables wᵢₜ; each represents the production on <em>I</em> intended to satisfy the client demand on <em>t</em>.</p>
 <p>Then satisfying the demand at each time step can be naturally expressed as :</p>
-<p><img alt="1_qjEHzyzjqwYc8xNAnv5QdQ.png" src="1_qjEHzyzjqwYc8xNAnv5QdQ.png" /></p>
+<p>$$
+
+\sum_{i \leq t} w_{i,j} = d_t
+
+$$</p>
 <p>The setup constraints become</p>
-<p><img alt="1_uCy8sMauhycsFEeU5_rhyg.png" src="1_uCy8sMauhycsFEeU5_rhyg.png" /></p>
+<p>$$
+
+w_{i,t} \leq y_i d_t \quad \forall i \in T, \forall t \leq i
+
+$$</p>
 <p>Notice that I didn’t take the bound with Iₘₐₓ because it’s trivial that the demand at a special time step is less than Iₘₐₓ (we have to store it somewhere before delivering it even if it’s the same day).</p>
 <p>And we can write the capacity constraints as :</p>
-<p><img alt="1__3zDfVPl2CjQdq-GLEp7Nw.png" src="1__3zDfVPl2CjQdq-GLEp7Nw.png" /></p>
+<p>$$
+
+\sum_{t=1}^{T} w_{i,t} \leq I_{max} \quad \forall i \in T
+
+$$</p>
 <p>This piece of code can create the full program:</p>
-<pre><code>prgrm = Model()set\_optimizer(prgrm, GLPK.Optimizer)@variable(prgrm, w[1:T , 1:T] &gt;= 0)@variable(prgrm, 1 &gt;= y[1:T] &gt;= 0, Int)for t in 1:Tfor i in 1:t-1@constraint(prgrm, w[t,i] == 0)endendfor t in 1:T@constraint(prgrm,sum(w[1:t, t]) == D[t])endfor t in 1:T@constraint(prgrm, sum(w[t,:]) &lt;= Imax)endfor t in 1:Tfor i in 1:t@constraint(prgrm, w[i,t] &lt;= y[i]\*D[t])endendc = []for t in 1:Te = q[t] + sum(k[t+1:end])append!(c,e)ende = 0for i in 1:Te = e + c[i]\*sum(w[i,i:end])end@objective(prgrm, Min, e + sum(y .\* f))prgrm
+<pre><code class="language-julia">prgrm = Model()
+set\_optimizer(prgrm, GLPK.Optimizer)
+@variable(prgrm, w[1:T , 1:T] &gt;= 0)
+@variable(prgrm, 1 &gt;= y[1:T] &gt;= 0, Int)
+for t in 1:T
+    for i in 1:t-1
+        @constraint(prgrm, w[t,i] == 0)
+    end
+end
+for t in 1:T
+    @constraint(prgrm,sum(w[1:t, t]) == D[t])
+end
+for t in 1:T
+    @constraint(prgrm, sum(w[t,:]) &lt;= Imax)
+end
+for t in 1:T
+    for i in 1:t
+        @constraint(prgrm, w[i,t] &lt;= y[i]\*D[t])
+    end
+end
+c = []
+for t in 1:T
+    e = q[t] + sum(k[t+1:end])
+    append!(c,e)
+end
+e = 0
+for i in 1:T
+    e = e + c[i]\*sum(w[i,i:end])
+end
+@objective(prgrm, Min, e + sum(y .\* f))
+prgrm
 </code></pre>
 <p>This gives us the following result:</p>
 <p><img alt="1_cdyRd6_zdvuPycdTS8XF8w.png" src="1_cdyRd6_zdvuPycdTS8XF8w.png" /></p>
@@ -153,9 +270,22 @@
 <p>In general, we talk about <strong>columns</strong> and <strong>rows</strong> to refer to the program's final number of variables and constraints.</p>
 <p>Why don’t we directly use the terms variables and constraints? For two reasons,</p>
 <p>The first is that we can always write a Linear program in a <strong>matrix form</strong> like the following.</p>
-<p><img alt="1_yDJXKpJfy_1m71rYpEDkvw.png" src="1_yDJXKpJfy_1m71rYpEDkvw.png" /></p>
+<p>$$
+
+\begin{aligned}
+\min \quad & c^T x \\
+\text{s.t.} \quad & A x = b \\
+& x \succeq 0 \\
+& x \in \mathbb{R}^n
+\end{aligned}
+
+$$</p>
 <p>So, for example, the following matrixes.</p>
-<pre><code>A= [ 1 1 9 5;3 5 0 8;2 0 6 13]b = [7; 3; 5]c = [1; 3; 5; 2]
+<pre><code class="language-julia">A= [ 1 1 9 5;
+3 5 0 8;
+2 0 6 13]
+b = [7; 3; 5]
+c = [1; 3; 5; 2]
 </code></pre>
 <p>Would give this program</p>
 <p><img alt="1_KbMXQ_UFY5AyiPQxrerqww.png" src="1_KbMXQ_UFY5AyiPQxrerqww.png" /></p>
@@ -163,7 +293,36 @@
 <p>And the second is that the number of rows and columns may differ from the number of decision variables and problem constraints in the formal model, as you will see in the following.</p>
 <p>This will also give me an excellent occasion to present some <strong>Linearization</strong> techniques.</p>
 <p>Actually, you already have seen a linearization technique; previously, we linearized the logical implication, but as it’s not the only logical operator you can be interested in, here is a table that recapitulates the linear equivalents of the main logical operators supposing <em>x,y,z</em> are boolean variables.</p>
-<p><img alt="1_P6rgusZfjkjjFgCsqmQxOA.png" src="1_P6rgusZfjkjjFgCsqmQxOA.png" /></p>
+<table>
+<thead>
+<tr>
+<th>Logical Operation</th>
+<th>Constraint</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>$z = x \vee y$</td>
+<td>$x \leq z, \; y \leq z, \; z \leq x + y$</td>
+</tr>
+<tr>
+<td>$z = x \wedge y$</td>
+<td>$x \geq z, \; y \geq z, \; z + 1 \geq x + y$</td>
+</tr>
+<tr>
+<td>$z = \neg x$</td>
+<td>$z = 1 - x$</td>
+</tr>
+<tr>
+<td>$x \implies y$</td>
+<td>$x \leq y$</td>
+</tr>
+<tr>
+<td>$x \iff y$</td>
+<td>$x = y$</td>
+</tr>
+</tbody>
+</table>
 <p>Another operator I often linearize is the minimum (or maximum) operator. To use the minimum between x and y in a program, you can do like this:</p>
 <p><img alt="1_f8F9mL6GkZrANzFdHNB7Zw.png" src="1_f8F9mL6GkZrANzFdHNB7Zw.png" /></p>
 <p>(And in case you are wondering, yes, we can use Latex symbols in any Julia string)</p>
@@ -216,7 +375,14 @@ Say that x and y are the variables that designate how much we give to each broth
 <p><strong>Example of perfect formulation</strong></p>
 <p>A well-known example of a natural formulation that perfectly describes the polyhedron of feasible solutions is the formulation of the <a href="https://en.wikipedia.org/wiki/Minimum-cost_flow_problem#:~:text=The%20minimum%2Dcost%20flow%20problem,flow%20through%20a%20flow%20network.">minimum-cost flow</a> problem; it’s valid for the general case, but the uncapacitated one is easier to prove because it’s a direct application of the Pointcaré theorem.</p>
 <p>The problem consists of finding a flow through the edges from a source s to a destination t by minimizing the cost of the taken edges.</p>
-<p><img alt="1_MOe74HY_vwurw8UU1ivbqw.png" src="1_MOe74HY_vwurw8UU1ivbqw.png" /></p>
+<p>$$
+
+\begin{aligned}
+\min \quad & \sum_{a \in A} w(a) x(a) \\
+& \sum_{a \in \delta^+(u)} x(a) - \sum_{a \in \delta^-(u)} x(a) = 0 \quad \forall u \in V \setminus \{s, t\}
+\end{aligned}
+
+$$</p>
 <p>As each edge appears in two constraints (one for each of its endpoints), once with the coefficient -1 and once with the coefficient 1, the matrix is totally unimodular, and thus the formulation is perfect.</p>
 <h2>Getting back to our problem</h2>
 <p>Now that we have some background on comparing different formulations of the same problem let’s compare the extended formulation with the aggregated one of the capacitated lot-sizing problem.</p>
@@ -226,7 +392,11 @@ Say that x and y are the variables that designate how much we give to each broth
 <p>On the other hand, they have a similar number of continuous variables and constraints.</p>
 <h3>According to the tightness of the formulation</h3>
 <p>The extended formulation is tighter than the aggregated one because if we check the setup constraints, we can notice that :</p>
-<p><img alt="1_ixHs_H31bdph0dqW1jAcnw.png" src="1_ixHs_H31bdph0dqW1jAcnw.png" /></p>
+<p>$$
+
+w_{i,t} \leq d_t y_i \;\longrightarrow\; \sum_{t \geq i} w_{i,t} \leq \sum_{t \geq i} y_i \;\longrightarrow\; p_i \leq M y_i
+
+$$</p>
 <p>This says that if a solution satisfies the setup constraint of the aggregated formulation, it will satisfy the extended formulation's setup constraint; then, the setup constraint in the extended formulation is more restrictive.</p>
 <p>So the constraints defined by the setup constraints of the aggregated formulation define a polyhedron that is contained into the polyhedron defined by the extended formulation ones. Thus, the extended formulation is tighter.</p>
 <h3>Which formulation is the better?</h3>
@@ -256,6 +426,23 @@ Say that x and y are the variables that designate how much we give to each broth
     </div>
     <p><a href="../../index.html">← Back to home</a></p>
 </footer>
+
+<script>
+/* deck-style ease-up reveal for article blocks (degrades gracefully) */
+(function () {
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var sel = '.main-article section > h2, .main-article section > h3, .main-article section > p,' +
+        '.main-article section > pre, .main-article section > figure, .main-article section > .tablewrap,' +
+        '.main-article section > table, .main-article section > .katex-display, .main-article section > p > img';
+    var items = [].slice.call(document.querySelectorAll(sel));
+    function show(el) { el.classList.add('r-in'); }
+    if (reduce || !('IntersectionObserver' in window)) { items.forEach(show); return; }
+    var io = new IntersectionObserver(function (es) {
+        es.forEach(function (e) { if (e.isIntersecting) { show(e.target); io.unobserve(e.target); } });
+    }, { rootMargin: '0px 0px -7% 0px', threshold: 0.05 });
+    items.forEach(function (el) { io.observe(el); });
+})();
+</script>
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.24/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.24/dist/katex.min.js"></script>

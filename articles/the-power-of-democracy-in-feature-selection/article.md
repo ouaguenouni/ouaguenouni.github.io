@@ -2,6 +2,7 @@
 title: The power of democracy in Feature Selection
 date: 26/04/2021
 description: Using Condorcet Methods to aggregate Feature Selection rankings
+medium: https://towardsdatascience.com/the-power-of-democracy-in-feature-selection-dfb75f970b6e
 ---
 
 Using Condorcet Methods to aggregate Feature Selection rankings
@@ -175,8 +176,26 @@ In this tutorial, I will explain the implementation of the Kemeny aggregator, bu
 
 First, we have to implement a weighted majority graph builder; to do so, we’ll consider the adjacency matrix representation and use NumPy.
 
-```
-def build\_weighted\_majority\_graph(self, rankings, n\_candidates):graph = np.zeros((n\_candidates, n\_candidates))rankings = np.array(rankings)candidates = list(np.unique(rankings))for i in range(len(candidates)):for k in range(i+1,len(candidates)):r = 0for ranking in rankings:p1 = np.where(ranking == candidates[i])[0][0]p2 = np.where(ranking == candidates[k])[0][0]if (p1 < p2):r += 1else:r -= 1if(r > 0):graph[i,k] = relif(r < 0):graph[k,i] = -rreturn graph
+```python
+def build\_weighted\_majority\_graph(self, rankings, n\_candidates):
+    graph = np.zeros((n\_candidates, n\_candidates))
+    rankings = np.array(rankings)
+    candidates = list(np.unique(rankings))
+    for i in range(len(candidates)):
+        for k in range(i+1,len(candidates)):
+            r = 0
+            for ranking in rankings:
+                p1 = np.where(ranking == candidates[i])[0][0]
+                p2 = np.where(ranking == candidates[k])[0][0]
+                if (p1 < p2):
+                    r += 1
+                else:
+                    r -= 1
+            if(r > 0):
+                graph[i,k] = r
+            elif(r < 0):
+                graph[k,i] = -r
+    return graph
 ```
 
 After that, we have to think about how we could obtain the Kemeny ranking from the majority graph. To do so, we’ll use the linear programming paradigm.
@@ -195,7 +214,12 @@ If a ranking is an order of preferences, not any order of preferences is a ranki
 
 This could be represented with the following constraints:
 
-![1\_M0SVqJqE9PbwHDRPRX4OnA.png](1\_M0SVqJqE9PbwHDRPRX4OnA.png)
+$$
+\begin{aligned}
+x_{i,j} + x_{j,i} &= 1 \\
+x_{i,j} + x_{j,k} + x_{k,i} &\geq 1
+\end{aligned}
+$$
 
 The first inequality means: “We have ***i*** after ***j*** or***j*** after ***i*** in the ranking,” and the second one is violated if “we have ***i*** before ***j***, ***j***before ***k*** and not ***i*** before ***k*** in the ranking.”
 
@@ -205,8 +229,35 @@ As we said before, we have to minimize the number of disagreements, so, to have 
 
 We can do this with the following code:
 
-```
-import numpy as npimport pulp as pldef aggregate\_kemeny(graph):prob = pl.LpProblem("Kemeny Ranking Problem", pl.LpMinimize)nodes = range(graph.shape[0])x = pl.LpVariable.dicts("X", (nodes, nodes), cat='Binary')e = 0for i in range(graph.shape[0]):for j in range(graph.shape[0]):if (i == j):continueprob += (x[i][j] + x[j][i] == 1)for k in range(graph.shape[0]):if(k == j):continueprob += (x[i][j] + x[j][k] + x[k][i] >= 1)e += graph[i,j] \* x[i][j]prob += eprob.solve()rates = np.zeros(graph.shape[0])for i in nodes:for j in nodes:if(i == j):continueif(pl.value(x[i][j]) == 1):rates[j] += 1return rates.argsort()[::-1]
+```python
+import numpy as np
+import pulp as pl
+
+def aggregate\_kemeny(graph):
+    prob = pl.LpProblem("Kemeny Ranking Problem", pl.LpMinimize)
+    nodes = range(graph.shape[0])
+    x = pl.LpVariable.dicts("X", (nodes, nodes), cat='Binary')
+    e = 0
+    for i in range(graph.shape[0]):
+        for j in range(graph.shape[0]):
+            if (i == j):
+                continue
+            prob += (x[i][j] + x[j][i] == 1)
+            for k in range(graph.shape[0]):
+                if(k == j):
+                    continue
+                prob += (x[i][j] + x[j][k] + x[k][i] >= 1)
+            e += graph[i,j] \* x[i][j]
+    prob += e
+    prob.solve()
+    rates = np.zeros(graph.shape[0])
+    for i in nodes:
+        for j in nodes:
+            if(i == j):
+                continue
+            if(pl.value(x[i][j]) == 1):
+                rates[j] += 1
+    return rates.argsort()[::-1]
 ```
 
 Experimental results
@@ -235,7 +286,16 @@ The second thing I wanted to investigate is the performance of the aggregated ra
 
 To do so, I used a randomly sampled dataset, and I compared the accuracy achieved by the best subset of features for each measure and multiple aggregations of different measures.
 
-![1\_5OIScBzVo8LteFcb3Nh7SA.png](1\_5OIScBzVo8LteFcb3Nh7SA.png)
+| Method | Accuracy |
+| --- | --- |
+| A(Corre Corre Logis ) | 0.825 |
+| A(Corre Corre Logis CHI2_ ) | 0.835 |
+| A(Corre Corre Logis CHI2_ MI_Fu ) | 0.805 |
+| CHI2_Function | 0.530 |
+| CorrelationSP_Function | 0.785 |
+| Correlation_Function | 0.815 |
+| LogisticRegression_Function | 0.815 |
+| MI_Function | 0.780 |
 
 We can notice many things :
 

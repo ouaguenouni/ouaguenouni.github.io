@@ -2,6 +2,7 @@
 title: Towards building a unified framework for feature selection with ranking functions
 date: 07/04/2021
 description: One code to rule them all. One code to implement them all, and in the same framework bind them.
+medium: https://towardsdatascience.com/towards-building-a-unified-framework-for-feature-selection-with-ranking-functions-5605ef665f26
 ---
 
 One code to rule them all. One code to implement them all, and in the same framework bind them.
@@ -57,8 +58,19 @@ By doing this, we can elaborate a simple test that runs as following: for each e
 
 Of course, it’s simple provided that we have a way for inspecting the script and dynamically instantiate objects with the classes in it, and we can do this by using the inspect module.
 
-```
-from inspect import getmembers, isclassfrom sklearn.datasets import make\_classificationfrom core.Feature\_Selection import Evaluation\_Functionfrom core.Feature\_Selection.Ranking\_Function import Ranking\_SelectionX,y = make\_classification(n\_samples=1000, n\_features=10, n\_classes=2)for i, j in (getmembers(Evaluation\_Function, isclass)):if("Function" in i and not "CAT" in i):print("Testing: ",i, end=" ")EF = j()R = Ranking\_Selection(j())c = R.fit(X, y)print("✓")
+```python
+from inspect import getmembers, isclass
+from sklearn.datasets import make\_classification
+from core.Feature\_Selection import Evaluation\_Function
+from core.Feature\_Selection.Ranking\_Function import Ranking\_Selection
+X,y = make\_classification(n\_samples=1000, n\_features=10, n\_classes=2)
+for i, j in (getmembers(Evaluation\_Function, isclass)):
+    if("Function" in i and not "CAT" in i):
+        print("Testing: ",i, end=" ")
+        EF = j()
+        R = Ranking\_Selection(j())
+        c = R.fit(X, y)
+        print("✓")
 ```
 
 These few lines will create a dataset of 10 features and 1000 samples, and the get\_member method will inspect the Evaluation\_Function script, and for each class in it with “Function” in its name, we will perform a ranking selection and print a tick when it’s done.
@@ -93,24 +105,38 @@ Each test is done 10 times, and the time is measured for each evaluation functio
 
 For the first test with twenty attributes and only five informative attributes, we obtained the following results on an SVM classifier:
 
-```
-base : 0.8974500000000001 Time: 0.0CHI2\_Function : 0.52885 Time: 0.017551565170288087CorrelationSP\_Function : 0.7693999999999999 Time: 0.00019888877868652345Correlation\_Function : 0.8606 Time: 0.0020094394683837892DTClassification\_Function : 0.6241 Time: 0.09251418113708496MI\_Function : 0.89475 Time: 0.1389768123626709
+```python
+base : 0.8974500000000001 Time: 0.0
+CHI2\_Function : 0.52885 Time: 0.017551565170288087
+CorrelationSP\_Function : 0.7693999999999999 Time: 0.00019888877868652345
+Correlation\_Function : 0.8606 Time: 0.0020094394683837892
+DTClassification\_Function : 0.6241 Time: 0.09251418113708496
+MI\_Function : 0.89475 Time: 0.1389768123626709
 ```
 
 The base indicates the accuracy obtained by keeping all the attributes. We can notice that we kept almost the same performance for the mutual information by reducing the number of attributes by 80%; we also notice that the CHI2 function is almost useless, but it can be because it’s especially altered by the naive binarization I used which consists simply on dividend the range of the data to equally spaced intervals.
 
 Let’s consider another example with a full random dataset, this time we’ll take 200 features (for only 2000 samples) and 50 informative ones, we obtain these results :
 
-```
-base : 0.7943999999999999 Time: 0.0CHI2\_Function : 0.46049999999999996 Time: 0.171110200881958Correlation\_Function : 0.8112499999999998 Time: 0.019919610023498534DTClassification\_Function : 0.60955 Time: 0.9978075504302979MI\_Function : 0.8505000000000001 Time: 1.4385223627090453
+```python
+base : 0.7943999999999999 Time: 0.0
+CHI2\_Function : 0.46049999999999996 Time: 0.171110200881958
+Correlation\_Function : 0.8112499999999998 Time: 0.019919610023498534
+DTClassification\_Function : 0.60955 Time: 0.9978075504302979
+MI\_Function : 0.8505000000000001 Time: 1.4385223627090453
 ```
 
 Again, we can see that Mutual information keeps very relevant attributes, so much that it even beat the classification with all the variables.
 
 Now let’s see the second test,
 
-```
-base : 0.9086666666666667 Time: 0.0CHI2\_Function : 0.946 Time: 0.01797773838043213CorrelationSP\_Function : 0.9740000000000001 Time: 0.00014123916625976562Correlation\_Function : 0.9693333333333334 Time: 0.0030328035354614258DTClassification\_Function : 0.3539999999999999 Time: 0.020097732543945312MI\_Function : 0.9493333333333334 Time: 0.091739821434021
+```python
+base : 0.9086666666666667 Time: 0.0
+CHI2\_Function : 0.946 Time: 0.01797773838043213
+CorrelationSP\_Function : 0.9740000000000001 Time: 0.00014123916625976562
+Correlation\_Function : 0.9693333333333334 Time: 0.0030328035354614258
+DTClassification\_Function : 0.3539999999999999 Time: 0.020097732543945312
+MI\_Function : 0.9493333333333334 Time: 0.091739821434021
 ```
 
 This time, all the measures a part of the classification measure perform better than the base, which confirms that a ranking measure's efficiency is strongly related to the dataset's structure.

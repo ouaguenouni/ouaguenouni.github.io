@@ -270,3 +270,388 @@ p {
     color: #666;
     font-size: 1.1rem;
 }
+
+/* =====================================================================
+   Rework: a sober, papers-first academic homepage.
+   Reuses the ET Bembo type, the monochrome palette, and the card/footer
+   styles above; adds a reading column and publication layout.
+   ===================================================================== */
+
+body {                      /* a comfortable single reading column */
+    max-width: 940px;
+    padding: 3.5rem 2rem 2rem;
+}
+
+.block > p,
+.intro p,
+.theme p,
+.pub-gloss,
+.tool p { text-align: left; }      /* prose reads left, not justified */
+
+/* ---- masthead ---- */
+.masthead { margin-bottom: 2.6rem; }
+.masthead h1 { margin: 0 0 .35rem 0; font-size: 2.7rem; }
+.role { color: #555; font-style: italic; font-size: 1.15rem; margin: 0 0 1.1rem 0; }
+.nowrap { white-space: nowrap; }
+.topnav { display: flex; flex-wrap: wrap; gap: 1.5rem; padding-top: .75rem; border-top: 1px solid #eee; }
+.topnav a { color: #555; text-decoration: none; font-size: 1.02rem; border-bottom: 1px solid transparent; transition: color .2s, border-color .2s; }
+.topnav a:hover { color: #111; border-bottom-color: #111; }
+
+/* ---- intro + link bar ---- */
+.intro p { margin: .85rem 0; }
+.intro a { border-bottom: 1px solid #ccc; text-decoration: none; }
+.intro a:hover { border-bottom-color: #111; }
+.linkbar { margin-top: 1.3rem; display: flex; flex-wrap: wrap; gap: 1.4rem; }
+.linkbar a { text-decoration: none; border-bottom: 1px solid #ccc; padding-bottom: 1px; }
+.linkbar a:hover { border-bottom-color: #111; }
+
+/* ---- generic block ---- */
+.block { margin-top: 3.4rem; }
+.block > h2 { margin-bottom: .35rem; font-size: 1.9rem; }
+.block-note { color: #666; font-style: italic; font-size: 1.02rem; margin: .15rem 0 1.5rem; }
+.block-note a, .service a, .more a, .tool-title a { border-bottom: 1px solid #ccc; text-decoration: none; }
+.block-note a:hover, .service a:hover, .more a:hover, .tool-title a:hover { border-bottom-color: #111; }
+
+/* ---- research themes ---- */
+.themes { display: grid; grid-template-columns: 1fr 1fr; gap: 2.4rem; margin-top: .6rem; }
+.theme h3 { font-style: normal; font-size: 1.3rem; margin: .2rem 0 .4rem; }
+.theme p { font-size: 1.02rem; line-height: 1.62; color: #222; margin: 0; }
+.theme em { font-style: italic; }
+
+/* ---- publications (the centerpiece) ---- */
+.pubs { margin-top: .4rem; }
+.pub { padding: 1.4rem 0; border-bottom: 1px solid #eee; }
+.pub:last-child { border-bottom: none; }
+.pub-title { font-style: normal; font-weight: 400; font-size: 1.4rem; line-height: 1.28; margin: 0 0 .35rem; }
+.pub-authors { margin: .1rem 0; color: #333; font-size: 1.05rem; }
+.pub-authors .me { font-weight: 700; color: #111; }
+.pub-venue { margin: .1rem 0; color: #666; font-size: 1rem; }
+.pub-gloss { margin: .45rem 0 .55rem; color: #222; font-size: 1.04rem; line-height: 1.55; }
+.pub-links { margin: .35rem 0 0; display: flex; flex-wrap: wrap; gap: 1.2rem; }
+.pub-links a { font-size: .96rem; text-decoration: none; border-bottom: 1px solid #ccc; color: #111; padding-bottom: 1px; }
+.pub-links a:hover { border-bottom-color: #111; }
+.pub-links a.live { color: #9a1b1b; border-bottom-color: #dcb9b9; }   /* lone accent: the live deck */
+.pub-links a.live:hover { border-bottom-color: #9a1b1b; }
+
+/* ---- software ---- */
+.tools { display: grid; grid-template-columns: 1fr 1fr; gap: 1.8rem; margin-top: .5rem; }
+.tool-title { font-style: normal; font-size: 1.22rem; margin: 0 0 .35rem; }
+.tool p { font-size: 1.0rem; line-height: 1.55; color: #222; margin: 0; }
+
+/* ---- talks / teaching / service ---- */
+.more { margin-top: .8rem; }
+.service { color: #555; font-size: 1.0rem; }
+.block#teaching a, .intro a { color: #111; }
+
+/* ---- writing cards: tighter image in the narrower column ---- */
+#writing .articles { margin-top: 0; }
+#writing .article-item { grid-template-columns: 1fr 170px; gap: 1.6rem; margin: 1.6rem 0; padding-bottom: 1.6rem; }
+#writing .article-image { height: 118px; }
+#writing .article-title { font-size: 1.28rem; }
+#writing .article-meta { font-size: 1.0rem; font-style: normal; color: #666; }
+#writing .article-meta a { color: #666; border-bottom: 1px solid #ccc; text-decoration: none; }
+#writing .article-meta a:hover { border-bottom-color: #111; }
+#writing .article-description { color: #333; }
+
+/* ---- colophon ---- */
+.colophon { color: #999; font-size: .95rem; text-align: center; margin-top: .6rem; }
+.colophon a { color: #999; border-bottom: 1px solid #ddd; text-decoration: none; }
+.colophon a:hover { color: #555; border-bottom-color: #999; }
+
+.masthead h1 a { color: inherit; text-decoration: none; border-bottom: 0; }
+
+/* ---- talks page ---- */
+.talk.featured { display: grid; grid-template-columns: 1fr 320px; gap: 2.2rem; align-items: start;
+    margin: 1.2rem 0 1.6rem; padding-bottom: 1.8rem; border-bottom: 1px solid #eee; }
+.talk-title { font-style: normal; font-weight: 400; font-size: 1.5rem; line-height: 1.28; margin: 0 0 .35rem; }
+.talk-title a { text-decoration: none; border-bottom: 2px solid #ccc; }
+.talk-title a:hover { border-bottom-color: #111; }
+.talk-meta { color: #666; font-size: 1.0rem; margin: .1rem 0 .65rem; }
+.talk-desc { font-size: 1.04rem; line-height: 1.6; color: #222; text-align: left; margin: .3rem 0 .8rem; }
+.talk-links a.live { color: #9a1b1b; border-bottom: 1px solid #dcb9b9; text-decoration: none; font-size: 1.04rem; }
+.talk-links a.live:hover { border-bottom-color: #9a1b1b; }
+.talk-thumb { display: block; border: 1px solid #e6e6e6; overflow: hidden; transition: border-color .2s; }
+.talk-thumb:hover { border-color: #bbb; }
+.talk-thumb img { width: 100%; height: auto; display: block; }
+.sub { font-size: 1.4rem; margin-top: 2.4rem; }
+.talklist { list-style: none; margin: .7rem 0 0; }
+.talklist li { padding: .6rem 0; border-bottom: 1px solid #f0f0f0; font-size: 1.05rem; line-height: 1.45; }
+.talklist li:last-child { border-bottom: none; }
+.talklist .tv { color: #666; white-space: nowrap; }
+
+/* ---- responsive ---- */
+@media (max-width: 720px) {
+    .masthead h1 { font-size: 2.1rem; }
+    .themes, .tools { grid-template-columns: 1fr; gap: 1.4rem; }
+    .topnav { gap: 1.1rem; }
+    #writing .article-item { grid-template-columns: 1fr; }
+    #writing .article-image { order: -1; height: 140px; }
+    .talk.featured { grid-template-columns: 1fr; }
+    .talk-thumb { order: -1; }
+    .talklist .tv { white-space: normal; }
+}
+
+/* =====================================================================
+   "Alive" layer — the motion + accent vocabulary borrowed from the
+   reveal.js deck: ET Bembo (already shared), ink + a single Tufte-red
+   accent (no third colour — greys are neutrals), one ease-up curve, a
+   fil-rouge accent thread, kicker labels, and the deck's progress bar.
+   The homepage is organised as TABS: Research is shown by default and the
+   rest live in panels revealed on demand.
+
+   Everything below is either scoped to homepage / talks markup or gated
+   behind `.js` (added by the head shim). The article pages load this
+   stylesheet but NOT site.js, use different class names, and never get the
+   `.js` class — so they are deliberately untouched. Without JS, every
+   panel is simply shown (a plain stacked page).
+   ===================================================================== */
+:root {
+    --ink: #111;
+    --muted: #6b6b6b;
+    --rule: #cccccc;
+    --accent: #9a1b1b;        /* the one accent — the deck's Tufte red */
+    --accent-soft: #dcb9b9;
+    --ease: cubic-bezier(.22, .61, .36, 1);
+    --dur: .55s;
+    --rise: 12px;
+}
+
+html { scroll-behavior: smooth; scroll-padding-top: 4.5rem; }
+
+/* one calm entrance curve, reused for the load reveal and the masthead */
+@keyframes rise-in { from { opacity: 0; translate: 0 12px; } to { opacity: 1; translate: 0 0; } }
+@keyframes draw    { from { width: 0; } to { width: 2.2rem; } }
+
+/* ---- scroll progress: the deck's accent progress bar, on the page ---- */
+.scroll-progress {
+    position: fixed; top: 0; left: 0; height: 2px; width: 0;
+    background: var(--accent); z-index: 1000;
+    transition: width .12s linear; pointer-events: none;
+}
+
+/* ---- masthead: identity on the left, a compact icon cluster on the right,
+   the tab bar on its own row below — so nothing reads as two stacked navs --- */
+.masthead-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 1.5rem; flex-wrap: wrap; }
+.masthead-top .id { min-width: 0; }
+.iconbar { display: flex; align-items: center; gap: 1.05rem; flex-shrink: 0; padding-top: .55rem; }
+.iconbar a { display: inline-flex; color: var(--muted); border-bottom: 0; line-height: 0;
+    transition: color .25s var(--ease), transform .25s var(--ease); }
+.iconbar a:hover { color: var(--accent); transform: translateY(-2px); border-bottom: 0; }
+.iconbar svg { width: 21px; height: 21px; display: block; fill: currentColor; }
+.iconbar svg.dblp { width: auto; height: 20px; }
+
+/* ---- masthead: a quiet staged entrance + an accent signature stroke ---- */
+.js .masthead h1      { animation: rise-in .7s var(--ease) both; }
+.js .masthead .role   { animation: rise-in .7s var(--ease) .07s both; }
+.js .masthead .iconbar{ animation: rise-in .7s var(--ease) .14s both; }
+.js .masthead .topnav { animation: rise-in .7s var(--ease) .21s both; }
+
+.masthead h1 { position: relative; display: inline-block; }
+.masthead h1::after {
+    content: ''; position: absolute; left: 0; bottom: -.12rem; height: 2px; width: 0;
+    background: var(--accent);
+}
+.js .masthead h1::after { animation: draw .8s var(--ease) .55s both; }
+
+/* ---- the tab bar: sticky, self-locating, with a wipe-in accent underline -- */
+.masthead .topnav {
+    position: sticky; top: 0; z-index: 900;
+    background: transparent; padding-bottom: .75rem; border-bottom: 1px solid transparent;
+    transition: background .3s var(--ease), border-color .3s var(--ease);
+}
+.masthead .topnav.stuck {
+    background: rgba(255, 255, 255, .92);
+    -webkit-backdrop-filter: saturate(180%) blur(8px);
+    backdrop-filter: saturate(180%) blur(8px);
+    border-top-color: transparent; border-bottom-color: var(--rule);
+}
+.nav-sentinel { width: 1px; height: 1px; }
+
+.topnav a { position: relative; border-bottom: 0; }
+.tabs .tab { cursor: pointer; }
+.topnav a::after {
+    content: ''; position: absolute; left: 0; right: 0; bottom: -3px; height: 1.5px;
+    background: var(--accent); transform: scaleX(0); transform-origin: left;
+    transition: transform .3s var(--ease);
+}
+.topnav a:hover { color: var(--ink); border-bottom: 0; }
+.topnav a:hover::after,
+.topnav a.active::after { transform: scaleX(1); }
+.topnav a.active { color: var(--ink); }
+
+/* ---- tab panels: only the active one shows once JS is on ---- */
+.panel { margin-top: 2.3rem; }
+.js .panel { display: none; }
+.js .panel.active { display: block; }
+
+/* ---- kickers: a small uppercase tagline above each panel heading
+   (the talks page still uses the numbered variant with .kn / .krule) ---- */
+.kicker {
+    display: flex; align-items: center; gap: .7rem; margin: 0 0 .25rem;
+    font-size: .72rem; letter-spacing: .16em; text-transform: uppercase; color: var(--muted);
+}
+.kicker .kn { color: var(--accent); }
+.kicker .krule { flex: 0 0 1.7rem; height: 1px; background: var(--rule); }
+
+/* ---- the accent thread: a rule that grows on the centerpiece lists ---- */
+.pub, .talk.featured {
+    position: relative; transition: transform .35s var(--ease);
+}
+.pub::before, .talk.featured::before {
+    content: ''; position: absolute; left: -1.15rem; top: .25rem; bottom: .25rem; width: 2px;
+    background: var(--accent); transform: scaleY(0); transform-origin: top;
+    transition: transform .4s var(--ease);
+}
+.pub:hover::before, .talk.featured:hover::before { transform: scaleY(1); }
+.pub:hover, .talk.featured:hover { transform: translateX(4px); }
+
+.talklist li { position: relative; transition: padding .3s var(--ease); }
+.talklist li::before {
+    content: ''; position: absolute; left: -1.15rem; top: .85rem; width: 0; height: 1.5px;
+    background: var(--accent); transition: width .3s var(--ease);
+}
+.talklist li:hover { padding-left: .35rem; }
+.talklist li:hover::before { width: .8rem; }
+
+/* ---- publications now read like the writing cards: text + a wide image --- */
+.pub { display: grid; grid-template-columns: 1fr 190px; gap: 1.7rem; align-items: center; }
+.pub-body { min-width: 0; }
+.pub-image { height: 124px; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+.pub-image img {
+    width: 100%; height: 100%; object-fit: cover; object-position: center;
+    mask-image: linear-gradient(to right, transparent 0%, black 42%);
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 42%);
+    transition: transform .6s var(--ease);
+}
+.pub:hover .pub-image img { transform: scale(1.05); }
+
+/* ---- outreach cards: the thumbnail breathes, the title underline reddens -- */
+#panel-outreach .articles { margin-top: 0; }
+#panel-outreach .article-item { grid-template-columns: 1fr 170px; gap: 1.6rem; margin: 1.6rem 0; padding-bottom: 1.6rem; transition: transform .35s var(--ease); }
+#panel-outreach .article-image { height: 118px; }
+#panel-outreach .article-title { font-size: 1.28rem; }
+#panel-outreach .article-meta { font-size: 1.0rem; font-style: normal; color: #666; }
+#panel-outreach .article-meta a { color: #666; border-bottom: 1px solid #ccc; text-decoration: none; }
+#panel-outreach .article-meta a:hover { border-bottom-color: #111; }
+#panel-outreach .article-description { color: #333; }
+#panel-outreach .article-image img { transition: transform .6s var(--ease); }
+#panel-outreach .article-item:hover .article-image img { transform: scale(1.05); }
+#panel-outreach .article-item:hover .article-title a { border-bottom-color: var(--accent); }
+
+/* ---- outreach videos: lazy YouTube facade (thumbnail → embed on click) ---- */
+.videos { display: grid; grid-template-columns: 1fr 1fr; gap: 1.9rem; margin-top: .8rem; }
+.yt-facade {
+    position: relative; display: block; width: 100%; aspect-ratio: 16 / 9; padding: 0; margin: 0;
+    border: 1px solid #ececec; border-radius: 5px; overflow: hidden; cursor: pointer; background: #000;
+}
+.yt-facade img { width: 100%; height: 100%; object-fit: cover; display: block;
+    transition: transform .5s var(--ease), filter .4s var(--ease); }
+.yt-facade:hover img { transform: scale(1.04); filter: brightness(.9); }
+.yt-play {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    width: 58px; height: 40px; border-radius: 9px; background: rgba(154, 27, 27, .92);
+    transition: background .25s var(--ease), transform .25s var(--ease);
+}
+.yt-play::before {
+    content: ''; position: absolute; left: 52%; top: 50%; transform: translate(-50%, -50%);
+    border-style: solid; border-width: 9px 0 9px 15px;
+    border-color: transparent transparent transparent #fff;
+}
+.yt-facade:hover .yt-play { background: var(--accent); transform: translate(-50%, -50%) scale(1.07); }
+.video-iframe { width: 100%; aspect-ratio: 16 / 9; border: 0; border-radius: 5px; display: block; }
+.video-meta { margin-top: .65rem; }
+.video-title { font-style: normal; font-weight: 400; font-size: 1.18rem; margin: 0 0 .2rem; line-height: 1.3; }
+.video-title a { text-decoration: none; border-bottom: 2px solid var(--accent-soft); transition: border-color .2s; }
+.video-title a:hover { border-bottom-color: var(--accent); }
+.video-role { color: var(--muted); font-size: .95rem; margin: 0; }
+
+/* ---- teaching: exhaustive, two-column course list ---- */
+.courses { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem 2.6rem; margin: .6rem 0 1rem; }
+.course-title { font-style: normal; font-weight: 400; font-size: 1.18rem; margin: .15rem 0 .3rem; }
+.course-title .lvl {
+    font-size: .6rem; letter-spacing: .1em; text-transform: uppercase; color: var(--accent);
+    border: 1px solid var(--accent-soft); border-radius: 3px; padding: .12em .42em;
+    vertical-align: .22em; margin-left: .4rem; white-space: nowrap;
+}
+.course-meta { margin: .1rem 0 .4rem; display: flex; flex-wrap: wrap; gap: .3rem .9rem; align-items: baseline; }
+.course-univ { color: var(--muted); font-size: .95rem; }
+.course-hours { color: #9a9a9a; font-size: .72rem; letter-spacing: .02em; }   /* "very small", per request */
+.course-desc { font-size: 1.0rem; line-height: 1.55; color: #222; margin: 0; }
+.panel h3.sub { font-style: normal; font-size: 1.35rem; margin-top: 2.2rem; }
+.service { color: #555; font-size: 1.0rem; }
+.svc-list { list-style: none; margin: .6rem 0 0; padding: 0; }
+.svc-list li { position: relative; padding-left: 1.25rem; margin: .55rem 0; line-height: 1.5; }
+.svc-list li::before {
+    content: ''; position: absolute; left: .05rem; top: .62em; width: .42rem; height: .42rem;
+    background: var(--accent); border-radius: 50%;
+}
+
+/* arrow CTAs read as accent — same family as the live-deck link */
+.more a { color: var(--accent); border-bottom-color: var(--accent-soft); }
+.more a:hover { border-bottom-color: var(--accent); }
+
+/* sober accent "preview" button under the research blurb — a ghost outline
+   that quietly fills on hover (the deck's restraint, no flashy fill) */
+.preview-cta-wrap { margin: 1.6rem 0 .2rem; }
+a.preview-cta {
+    display: inline-flex; align-items: center; gap: .5em;
+    font-size: 1.0rem; color: var(--accent); text-decoration: none; line-height: 1.2;
+    border: 1px solid var(--accent-soft); border-radius: 4px; padding: .52em 1.05em;
+    background: transparent;
+    transition: background .25s var(--ease), color .25s var(--ease), border-color .25s var(--ease);
+}
+a.preview-cta:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+a.preview-cta .arr { transition: transform .25s var(--ease); }
+a.preview-cta:hover .arr { transform: translateX(3px); }
+
+/* ---- footer mark warms to the accent ---- */
+.footer-line span { transition: color .4s var(--ease); }
+.article-footer:hover .footer-line span { color: var(--accent); }
+
+/* ---- scroll/tab reveal: ease up into view (mirrors the deck's fragments).
+   `translate` (not `transform`) so it composes with the hover transforms.
+   Hidden only under `.js`; site.js removes it inline when a panel is shown
+   (homepage) or when the element scrolls into view (talks page). ---- */
+.js .kicker,
+.js .panel > h2,
+.js .block > h2,
+.js .block-note,
+.js .intro p,
+.js .theme,
+.js .pub,
+.js .course,
+.js .article-item,
+.js .talk.featured,
+.js .talklist li,
+.js h3.sub,
+.js .more,
+.js .preview-cta-wrap,
+.js .video-card,
+.js .service {
+    opacity: 0; translate: 0 var(--rise);
+    transition: opacity var(--dur) var(--ease), translate var(--dur) var(--ease);
+}
+
+/* ---- respect reduced-motion: show everything, kill the moving parts ---- */
+@media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .scroll-progress { display: none; }
+    .js .masthead h1, .js .masthead .role, .js .masthead .iconbar, .js .masthead .topnav { animation: none; }
+    .js .masthead h1::after { animation: none; width: 2.2rem; }
+    .js .kicker, .js .panel > h2, .js .block > h2, .js .block-note, .js .intro p,
+    .js .theme, .js .pub, .js .course, .js .article-item,
+    .js .talk.featured, .js .talklist li, .js h3.sub, .js .more, .js .preview-cta-wrap, .js .video-card, .js .service { opacity: 1; translate: none; }
+}
+
+/* ---- responsive: stack the two-column lists and the image cards ---- */
+@media (max-width: 720px) {
+    .pub { grid-template-columns: 1fr; gap: .2rem; }
+    .pub-image { order: -1; height: 150px; margin-bottom: .6rem; }
+    .pub-image img {
+        mask-image: linear-gradient(to top, transparent 0%, black 42%);
+        -webkit-mask-image: linear-gradient(to top, transparent 0%, black 42%);
+    }
+    .courses { grid-template-columns: 1fr; }
+    .videos { grid-template-columns: 1fr; }
+    #panel-outreach .article-item { grid-template-columns: 1fr; }
+}

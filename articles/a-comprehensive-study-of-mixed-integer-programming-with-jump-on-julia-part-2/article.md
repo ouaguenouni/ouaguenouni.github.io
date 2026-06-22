@@ -2,6 +2,7 @@
 title: A comprehensive study of Mixed Integer Programming with JuMP on Julia (Part 2)
 date: 12/04/2021
 description: Modelling concepts with an application to the Lot sizing problem
+medium: https://towardsdatascience.com/a-comprehensive-study-of-mixed-integer-programming-with-jump-on-julia-part-2-27e1cc1ed581
 ---
 
 Modelling concepts with an application to the Lot sizing problem
@@ -41,8 +42,13 @@ Client demands will be described by a vector of our time horizon size; each dema
 
 In the following, we will consider the following instance:
 
-```
-T=10 #Time Horizonf=1000 #Setup Costq=30 #Production Costk=10 #Holding CostD=[15,10,10,25,30,5,5,50,20,80] #Demand at each stepImax=100 #Storage Capacity
+```julia
+T=10 #Time Horizon
+f=1000 #Setup Cost
+q=30 #Production Cost
+k=10 #Holding Cost
+D=[15,10,10,25,30,5,5,50,20,80] #Demand at each step
+Imax=100 #Storage Capacity
 ```
 
 ### Model variables
@@ -55,28 +61,40 @@ These decisions have to be made at each time step, so we’ll have *yₜ, pₜ* 
 
 The variables can be instantiated this way :
 
-```
-@variable(prgrm, p[1:T] >= 0)@variable(prgrm,I[0:T]>= 0) #We index from 0 to set an initial storage@variable(prgrm, 1 >= y[1:T] >= 0, Int)
+```julia
+@variable(prgrm, p[1:T] >= 0)
+@variable(prgrm,I[0:T]>= 0) #We index from 0 to set an initial storage
+@variable(prgrm, 1 >= y[1:T] >= 0, Int)
 ```
 
 ### **Model constraints**
 
 One principal constraint is to produce without exceeding the storage capacity at each step; this can be formulated like this :
 
-![1\_eQR7NoOthqnI\_8Yy17ENtA.png](1\_eQR7NoOthqnI\_8Yy17ENtA.png)
+$$
+\forall t \in T; \; I_t \leq I_{max}
+$$
 
 After that, we must keep in mind that any product is either for now or later, so each time we produce, everything we produce above the client’s demand is kept in storage for the next steps; this is a “flow constraint” and can be written as follows :
 
-![1\_1-dkiAcLTFC2RIbGi1iyPA.png](1\_1-dkiAcLTFC2RIbGi1iyPA.png)
-```
-#We set initial storage to 0 (for example)@constraint(prgrm, I[0] == 0)for i in 1:T@constraint(prgrm,I[i-1] + p[i] == D[i] + I[i])end
+$$
+\forall t \in T; \; p_t + I_{t-1} = d_t + I_t
+$$
+```julia
+#We set initial storage to 0 (for example)
+@constraint(prgrm, I[0] == 0)
+for i in 1:T
+    @constraint(prgrm,I[i-1] + p[i] == D[i] + I[i])
+end
 ```
 
 There is another intrinsic constraint: if we want to produce, we must launch production; this is an implication constraint (*pₜ > 0* impliesthat *yₜ = 1) and an* excellent occasion to present a Big-M and how we can use it to model an implication.
 
 A big-M of a variable is a value that the variable cannot reach, and it helps to formulate a constraint as follows:
 
-![1\_xQys-aLkngjsQnsqx8-62A.png](1\_xQys-aLkngjsQnsqx8-62A.png)
+$$
+p_t \leq M y_t
+$$
 
 If you look closely at this constraint, you will notice that pₜ cannot be nonnull unless yₜ is true, and if yₜ is true, the production is not limited by this constraint since M is a value greater than the maximum reachable value of pₜ.
 
@@ -95,7 +113,9 @@ In general, we seek the smallest variable to use as a Big-M; for this example, w
 
 The second idea is contained in the third one, but we are not obliged to choose between the first idea and the third one we can put :
 
-![1\_BWfDBkXuIzePiY7yHwM0dQ.png](1\_BWfDBkXuIzePiY7yHwM0dQ.png)
+$$
+M_t = \min\left(I_{max}, \sum_{i=t}^{T} d_i\right)
+$$
 
 Notice that Mₜ is not a variable since we know Iₘₐₓ and all the dᵢ. Then we can compute every Mₜ while building our program; another positive side effect of this big-M is that we no more need to specify the constraints related to the fact that we can’t produce more than what we can store.
 
@@ -103,23 +123,27 @@ Notice that Mₜ is not a variable since we know Iₘₐₓ and all the dᵢ. Th
 
 To design the objective function, we must have a way to evaluate the quality of a solution; for this problem, it’s pretty straightforward we have to minimize the total cost, which we can calculate like this:
 
-![1\_zT2ixkqWX8QFcZ-JpLKaaQ.png](1\_zT2ixkqWX8QFcZ-JpLKaaQ.png)
+$$
+\sum_{t=1}^{T} (q p_t + f y_t + k I_t)
+$$
 
 To obtain this cost, we will use two convenient functionalities of Julia; the first one is the element-wise operations which well help us multiply a vector with a coefficient :
 
-```
-p .\* 10#Output : an array of size {T}
+```julia
+p .\* 10
+#Output : an array of size {T}
 ```
 
 And the second is the sum operator :
 
-```
-sum(p .\* 10)#Output: 10𝑝1+10𝑝2+10𝑝3+10𝑝4+10𝑝5+10𝑝6+10𝑝7+10𝑝8+10𝑝9+10𝑝10
+```julia
+sum(p .\* 10)
+#Output: 10𝑝1+10𝑝2+10𝑝3+10𝑝4+10𝑝5+10𝑝6+10𝑝7+10𝑝8+10𝑝9+10𝑝10
 ```
 
 And so we could get the objective function like this:
 
-```
+```julia
 @objective(prgrm, Min, sum(p .\* q) + sum(y .\* f) + sum(I .\* k))
 ```
 
@@ -131,8 +155,13 @@ And the solution we obtain is the following:
 
 For the sake of generalization, let’s suppose this time that the production costs and the holding costs are variable among time, so let’s consider this instance :
 
-```
-T = 10f = 1000q = [5, 10, 10, 5, 8, 2, 7, 8, 9, 10]k = [0, 10, 5, 5, 10, 5, 8, 2, 2, 2, 8]D = [80,30,50,100,5,5,25,100,200,100]Imax = 200
+```julia
+T = 10
+f = 1000
+q = [5, 10, 10, 5, 8, 2, 7, 8, 9, 10]
+k = [0, 10, 5, 5, 10, 5, 8, 2, 2, 2, 8]
+D = [80,30,50,100,5,5,25,100,200,100]
+Imax = 200
 ```
 
 Notice that it doesn't change anything in the program thanks to the element-wise product that is still valid in the objective function, so you should obtain the following allocation :
@@ -144,24 +173,51 @@ Reducing the number of used variables
 
 If we think of it, the stock depends on the production directly; actually, for an instant *t,* it’s the quantity we produced until *t* minus the sum of the demands until *t so that* we can *replace Iₜ* in the constraints.
 
-![1\_A3ABvOxn-AxZ7YZxRsN68Q.png](1\_A3ABvOxn-AxZ7YZxRsN68Q.png)
+$$
+I_t = \sum_{i=0}^{t} (p_i - d_i)
+$$
 
 And thus obtain:
 
-![1\_NbYTeGnbeCoMFc5Q3goh1w.png](1\_NbYTeGnbeCoMFc5Q3goh1w.png)
+$$
+\sum_{i=0}^{t} p_i - \sum_{i=0}^{t} d_i \geq 0
+$$
 
 This means that the production has to cover the demand at each step at least.
 
 Then the stock variables are useful in formulating the holding costs, but we can easily bypass this provided that we put cₜ a cost which involves the production cost and the holding cost.
 
-![1\_24qCG652q9laKmZBd7u9OA.png](1\_24qCG652q9laKmZBd7u9OA.png)
+$$
+c_t = p_t + \sum_{i=t}^{T} d_i
+$$
 
 So we obtain the following cost for each unit produced at a moment t.
 
 The program can be instantiated as follows.
 
-```
-prgrm = Model()set\_optimizer(prgrm, GLPK.Optimizer)@variable(prgrm, p[1:T] >= 0)@variable(prgrm, 1 >= y[1:T] >= 0, Int)@variable(prgrm, I[0:T] >= 0) #We index from 0 to set an initial storagefor i in 1:T@constraint(prgrm,sum(p[1:i]) - sum(D[1:i]) >= 0)endfor i in 1:T@constraint(prgrm, sum(p[1:i]) - sum(D[1:i]) <= Imax)endfor i in 1:TM = min(sum(D[i:end]), Imax)@constraint(prgrm, p[i] <= M\*y[i])endc = []for t in 1:Te = q[t] + sum(k[t+1:end])append!(c,e)end@objective(prgrm, Min, sum(p .\* c) + sum(y .\* f))prgrm
+```julia
+prgrm = Model()
+set\_optimizer(prgrm, GLPK.Optimizer)
+@variable(prgrm, p[1:T] >= 0)
+@variable(prgrm, 1 >= y[1:T] >= 0, Int)
+@variable(prgrm, I[0:T] >= 0) #We index from 0 to set an initial storage
+for i in 1:T
+    @constraint(prgrm,sum(p[1:i]) - sum(D[1:i]) >= 0)
+end
+for i in 1:T
+    @constraint(prgrm, sum(p[1:i]) - sum(D[1:i]) <= Imax)
+end
+for i in 1:T
+    M = min(sum(D[i:end]), Imax)
+    @constraint(prgrm, p[i] <= M\*y[i])
+end
+c = []
+for t in 1:T
+    e = q[t] + sum(k[t+1:end])
+    append!(c,e)
+end
+@objective(prgrm, Min, sum(p .\* c) + sum(y .\* f))
+prgrm
 ```
 
 And we obtain the following solution :
@@ -170,11 +226,13 @@ And we obtain the following solution :
 
 This is quite strange; we have obtained the same solution in term of decision variables but with a different objective value.
 
-In fact, I did it on purpose to explain two things,
+In fact, I did it on purpose to explain two things,<span class="fill"> as detailed below.</span>
 
 The first one is that when defining the cost of production at a time step, we forgot to subtract the holding cost of what will go to meet client demand which represents
 
-![1\_J47dK0vriS6tHq0u1Ta4Dg.png](1\_J47dK0vriS6tHq0u1Ta4Dg.png)
+$$
+\sum_{i=1}^{n} k_i \left(\sum_{t \leq i} d_t\right)
+$$
 
 The second one is that this has no importance on the decision variables because, in general, optimizing *f or* optimizing *f + a* is the same thing since *a* doesn't depend on our decision (nor on anything else since it’s a constant).
 
@@ -191,22 +249,58 @@ Let’s see another formulation where we will think differently by separating th
 
 Then satisfying the demand at each time step can be naturally expressed as :
 
-![1\_qjEHzyzjqwYc8xNAnv5QdQ.png](1\_qjEHzyzjqwYc8xNAnv5QdQ.png)
+$$
+\sum_{i \leq t} w_{i,j} = d_t
+$$
 
 The setup constraints become
 
-![1\_uCy8sMauhycsFEeU5\_rhyg.png](1\_uCy8sMauhycsFEeU5\_rhyg.png)
+$$
+w_{i,t} \leq y_i d_t \quad \forall i \in T, \forall t \leq i
+$$
 
 Notice that I didn’t take the bound with Iₘₐₓ because it’s trivial that the demand at a special time step is less than Iₘₐₓ (we have to store it somewhere before delivering it even if it’s the same day).
 
 And we can write the capacity constraints as :
 
-![1\_\_3zDfVPl2CjQdq-GLEp7Nw.png](1\_\_3zDfVPl2CjQdq-GLEp7Nw.png)
+$$
+\sum_{t=1}^{T} w_{i,t} \leq I_{max} \quad \forall i \in T
+$$
 
 This piece of code can create the full program:
 
-```
-prgrm = Model()set\_optimizer(prgrm, GLPK.Optimizer)@variable(prgrm, w[1:T , 1:T] >= 0)@variable(prgrm, 1 >= y[1:T] >= 0, Int)for t in 1:Tfor i in 1:t-1@constraint(prgrm, w[t,i] == 0)endendfor t in 1:T@constraint(prgrm,sum(w[1:t, t]) == D[t])endfor t in 1:T@constraint(prgrm, sum(w[t,:]) <= Imax)endfor t in 1:Tfor i in 1:t@constraint(prgrm, w[i,t] <= y[i]\*D[t])endendc = []for t in 1:Te = q[t] + sum(k[t+1:end])append!(c,e)ende = 0for i in 1:Te = e + c[i]\*sum(w[i,i:end])end@objective(prgrm, Min, e + sum(y .\* f))prgrm
+```julia
+prgrm = Model()
+set\_optimizer(prgrm, GLPK.Optimizer)
+@variable(prgrm, w[1:T , 1:T] >= 0)
+@variable(prgrm, 1 >= y[1:T] >= 0, Int)
+for t in 1:T
+    for i in 1:t-1
+        @constraint(prgrm, w[t,i] == 0)
+    end
+end
+for t in 1:T
+    @constraint(prgrm,sum(w[1:t, t]) == D[t])
+end
+for t in 1:T
+    @constraint(prgrm, sum(w[t,:]) <= Imax)
+end
+for t in 1:T
+    for i in 1:t
+        @constraint(prgrm, w[i,t] <= y[i]\*D[t])
+    end
+end
+c = []
+for t in 1:T
+    e = q[t] + sum(k[t+1:end])
+    append!(c,e)
+end
+e = 0
+for i in 1:T
+    e = e + c[i]\*sum(w[i,i:end])
+end
+@objective(prgrm, Min, e + sum(y .\* f))
+prgrm
 ```
 
 This gives us the following result:
@@ -230,12 +324,23 @@ Why don’t we directly use the terms variables and constraints? For two reasons
 
 The first is that we can always write a Linear program in a **matrix form** like the following.
 
-![1\_yDJXKpJfy\_1m71rYpEDkvw.png](1\_yDJXKpJfy\_1m71rYpEDkvw.png)
+$$
+\begin{aligned}
+\min \quad & c^T x \\
+\text{s.t.} \quad & A x = b \\
+& x \succeq 0 \\
+& x \in \mathbb{R}^n
+\end{aligned}
+$$
 
 So, for example, the following matrixes.
 
-```
-A= [ 1 1 9 5;3 5 0 8;2 0 6 13]b = [7; 3; 5]c = [1; 3; 5; 2]
+```julia
+A= [ 1 1 9 5;
+3 5 0 8;
+2 0 6 13]
+b = [7; 3; 5]
+c = [1; 3; 5; 2]
 ```
 
 Would give this program
@@ -250,7 +355,13 @@ This will also give me an excellent occasion to present some **Linearization** t
 
 Actually, you already have seen a linearization technique; previously, we linearized the logical implication, but as it’s not the only logical operator you can be interested in, here is a table that recapitulates the linear equivalents of the main logical operators supposing *x,y,z* are boolean variables.
 
-![1\_P6rgusZfjkjjFgCsqmQxOA.png](1\_P6rgusZfjkjjFgCsqmQxOA.png)
+| Logical Operation | Constraint |
+| --- | --- |
+| $z = x \vee y$ | $x \leq z, \; y \leq z, \; z \leq x + y$ |
+| $z = x \wedge y$ | $x \geq z, \; y \geq z, \; z + 1 \geq x + y$ |
+| $z = \neg x$ | $z = 1 - x$ |
+| $x \implies y$ | $x \leq y$ |
+| $x \iff y$ | $x = y$ |
 
 Another operator I often linearize is the minimum (or maximum) operator. To use the minimum between x and y in a program, you can do like this:
 
@@ -339,7 +450,12 @@ A well-known example of a natural formulation that perfectly describes the polyh
 
 The problem consists of finding a flow through the edges from a source s to a destination t by minimizing the cost of the taken edges.
 
-![1\_MOe74HY\_vwurw8UU1ivbqw.png](1\_MOe74HY\_vwurw8UU1ivbqw.png)
+$$
+\begin{aligned}
+\min \quad & \sum_{a \in A} w(a) x(a) \\
+& \sum_{a \in \delta^+(u)} x(a) - \sum_{a \in \delta^-(u)} x(a) = 0 \quad \forall u \in V \setminus \{s, t\}
+\end{aligned}
+$$
 
 As each edge appears in two constraints (one for each of its endpoints), once with the coefficient -1 and once with the coefficient 1, the matrix is totally unimodular, and thus the formulation is perfect.
 
@@ -360,7 +476,9 @@ On the other hand, they have a similar number of continuous variables and constr
 
 The extended formulation is tighter than the aggregated one because if we check the setup constraints, we can notice that :
 
-![1\_ixHs\_H31bdph0dqW1jAcnw.png](1\_ixHs\_H31bdph0dqW1jAcnw.png)
+$$
+w_{i,t} \leq d_t y_i \;\longrightarrow\; \sum_{t \geq i} w_{i,t} \leq \sum_{t \geq i} y_i \;\longrightarrow\; p_i \leq M y_i
+$$
 
 This says that if a solution satisfies the setup constraint of the aggregated formulation, it will satisfy the extended formulation's setup constraint; then, the setup constraint in the extended formulation is more restrictive.
 

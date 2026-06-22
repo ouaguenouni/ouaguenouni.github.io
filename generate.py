@@ -109,6 +109,7 @@ def convert_md_to_html(md_file, output_file=None, template_file='article_templat
     date = "No date"
     description = ""
     thumbnail = None
+    medium = None
 
     if frontmatter_match:
         frontmatter = frontmatter_match.group(1)
@@ -130,10 +131,32 @@ def convert_md_to_html(md_file, output_file=None, template_file='article_templat
         if thumbnail_match:
             thumbnail = thumbnail_match.group(1).strip()
 
+        # Canonical Medium / Towards Data Science URL: when present, the homepage
+        # card links out to Medium instead of the local mirror.
+        medium_match = re.search(r'medium:\s*(.+)', frontmatter)
+        if medium_match:
+            medium = medium_match.group(1).strip()
+
         is_draft = False
         draft_match = re.search(r'draft:\s*(true|false)', frontmatter, re.IGNORECASE)
         if draft_match:
             is_draft = draft_match.group(1).lower() == 'true'
+
+    # The Medium export repeats the subtitle as the first body line, followed by
+    # a '---' divider. We surface it as a real subtitle ({{SUBTITLE}}), so strip
+    # that duplicate line (and its divider) from the body when it matches.
+    if description:
+        _lines = content.lstrip('\n').split('\n')
+        _j = 0
+        while _j < len(_lines) and not _lines[_j].strip():
+            _j += 1
+        if _j < len(_lines) and _lines[_j].strip() == description.strip():
+            _k = _j + 1
+            while _k < len(_lines) and not _lines[_k].strip():
+                _k += 1
+            if _k < len(_lines) and _lines[_k].strip() in ('---', '***', '___'):
+                _k += 1
+            content = '\n'.join(_lines[_k:])
 
     html_embed_store = []
 
@@ -218,6 +241,7 @@ def convert_md_to_html(md_file, output_file=None, template_file='article_templat
         generate_og_thumbnail(og_path, title, background_path=bg_path)
 
     html_output = html_output.replace('{{DESCRIPTION}}', description)
+    html_output = html_output.replace('{{SUBTITLE}}', description)
 
     article_folder = Path(md_file).parent.name
     og_url = f"/articles/{article_folder}/og.png"
@@ -240,6 +264,7 @@ def convert_md_to_html(md_file, output_file=None, template_file='article_templat
         'description': description,
         'link': link_path,
         'thumbnail': thumbnail,
+        'medium': medium,
         'draft': is_draft,
         'read_time': str(time_read)
     }
@@ -404,15 +429,26 @@ def generate_all_articles(articles_dir='articles', article_template='article_tem
 
     articles_html = ""
     for art in sorted(articles_info, key=lambda x: parse_date(x['date']), reverse=True):
-        thumbnail_html = f'<img src="{art["thumbnail"]}" alt="Article image">' if art["thumbnail"] else ""
         date_formatted = format_date_display(art['date'])
-        
+        # Articles published on Medium link out to Medium; the byline credits
+        # Towards Data Science. Local mirrors stay as a fallback target.
+        href = art['medium'] or art['link']
+        ext = ' target="_blank" rel="noopener"' if art['medium'] else ''
+        if art['medium']:
+            byline = (f'Published on <a href="{art["medium"]}" target="_blank" '
+                      f'rel="noopener">Towards&nbsp;Data&nbsp;Science</a> · {date_formatted}')
+        else:
+            byline = date_formatted
+        thumbnail_html = (
+            f'<a href="{href}"{ext} tabindex="-1"><img src="{art["thumbnail"]}" '
+            f'alt="{art["title"]}"></a>' if art["thumbnail"] else "")
+
         articles_html += f"""
         <article class="article-item">
             <div class="article-content">
-                <h3 class="article-title"><a href="{art['link']}">{art['title']}</a></h3>
+                <h3 class="article-title"><a href="{href}"{ext}>{art['title']}</a></h3>
                 <p class="article-description">{art['description']}</p>
-                <p class="article-meta">{date_formatted} · {art['read_time']}</p>
+                <p class="article-meta">{byline}</p>
             </div>
             <div class="article-image">
                 {thumbnail_html}
