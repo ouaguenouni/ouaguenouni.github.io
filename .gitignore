@@ -5,3 +5,6 @@ __pycache__/
 
 # Private source (CV / qualification dossier) — never publish to GitHub Pages
 personal content/
+
+# LaTeX sources (paper / figure / talk source text) — keep local, don't publish
+*.tex
