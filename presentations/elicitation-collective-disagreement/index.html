@@ -305,6 +305,15 @@
   .reveal .kcount .vs { color:var(--green); }
   /* a lowercase italic k kept inside the otherwise-uppercase slide titles */
   .reveal .kicker .kv { text-transform:none; font-style:italic; }
+  /* closing slide — thank-you text on the left, a QR card on the right */
+  .reveal .closing-grid { display:flex; align-items:center; justify-content:space-between; gap:3em; max-width:960px; margin:0 auto; text-align:left; }
+  .reveal .closing-text { flex:1 1 auto; }
+  .reveal .closing-text h1 { margin-bottom:.35em; }
+  .reveal .qr-card { flex:0 0 auto; text-align:center; padding:1.3em 1.4em 1.1em; border:1px solid var(--rule); border-radius:12px; background:#fbfafa; box-shadow:0 3px 18px rgba(0,0,0,.06); }
+  .reveal .qr-card .qr-title { font-size:.66em; text-transform:uppercase; letter-spacing:.16em; color:var(--accent); margin:0 0 .85em; }
+  .reveal .qr-card img { width:168px; height:168px; display:block; margin:0 auto; }
+  .reveal .qr-card .qr-cap { font-size:.58em; letter-spacing:.06em; color:var(--muted); margin:.75em 0 0; }
+  .reveal .qr-card .qr-cap a { color:var(--muted); border:0; }
   /* "which probe?" slide — two knobs, the k≥ℓ condition, a boxed proposition */
   .reveal .degree-slide .dgrid { max-width:840px; margin:.6em auto 0; text-align:left; }
   .reveal .degree-slide .dparam { font-size:.92em; line-height:1.4; margin:.55em 0; }
@@ -1130,11 +1139,20 @@
 </section>
 
 <!-- LAST. CLOSING -->
-<section>
-  <h1>Thank you</h1>
-  <p class="muted">Questions welcome.</p>
-  <p class="small"><a href="mailto:ouaguenouni.hachemi@gmail.com">ouaguenouni.hachemi@gmail.com</a></p>
-  <aside class="notes">To export this deck to PDF, open it with ?print-pdf and print to PDF from Chrome.</aside>
+<section class="closing">
+  <div class="closing-grid">
+    <div class="closing-text">
+      <h1>Thank you</h1>
+      <p class="muted">Questions welcome.</p>
+      <p class="small"><a href="mailto:ouaguenouni.hachemi@gmail.com">ouaguenouni.hachemi@gmail.com</a></p>
+    </div>
+    <div class="qr-card">
+      <p class="qr-title">Visit my website</p>
+      <img src="figs/qr.png" alt="QR code linking to ouaguenouni.com">
+      <p class="qr-cap"><a href="https://ouaguenouni.com">ouaguenouni.com</a></p>
+    </div>
+  </div>
+  <aside class="notes">To export this deck to PDF, open it with ?print-pdf and print to PDF from Chrome. The QR code links to ouaguenouni.com.</aside>
 </section>
 
 </div>
