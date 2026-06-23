@@ -99,11 +99,14 @@
   .reveal .scene.s1 .w-bc { left:14px; top:230px; }
 
   /* histogram stage on the right */
-  .reveal .scene .many { position:absolute; left:280px; top:2px; width:610px; font-size:.74em; }
-  .reveal .scene .many p { margin:.5em 0; opacity:0; transition:opacity .55s ease; }
+  .reveal .scene .many { position:absolute; left:280px; top:0; width:610px; font-size:.72em; }
+  .reveal .scene .many p { margin:.45em 0; opacity:0; transition:opacity .55s ease; }
   .reveal .scene.s2 .many .ln1 { opacity:1; }
   .reveal .scene.s3 .many .ln2 { opacity:1; }
-  .reveal .scene .hstage { position:absolute; left:280px; top:162px; width:610px; height:200px; }
+  .reveal .scene.s6 .many .ln3 { opacity:1; }
+  .reveal .tournament .kicker { margin-bottom:.2em; }
+  .reveal .tournament .scene .toptext { top:6px; }
+  .reveal .scene .hstage { position:absolute; left:280px; top:182px; width:610px; height:200px; }
   .reveal .scene .hfig { position:absolute; left:50%; top:0; transform:translateX(-50%); opacity:0; text-align:center;
                          transition:transform .85s ease, opacity .55s ease; }
   .reveal .scene.s4 .histU { opacity:1; }
@@ -136,26 +139,73 @@
   .reveal .measures h2 { margin-bottom:.35em; }
   .reveal .mlist { width:max-content; max-width:100%; margin:.4em auto .35em; }
   .reveal .mlist .m { opacity:0; transition:opacity .5s ease; margin:.45em 0; font-size:.72em; }
-  .reveal .scene.s1 .m1 { opacity:1; }
-  .reveal .scene.s2 .m2 { opacity:1; }
-  .reveal .scene.s3 .m3 { opacity:1; }
-  /* The empty framed table (lines + histogram headers + row labels) appears at s4; values fill after. */
+  /* Step order: (s1) the table frame + uniform column header; (s2-s4) each measure —
+     its formula, its row, and its uniform value — IN THE TABLE'S ORDER; (s5) a sentence
+     on the antagonistic profile; (s6) its column is added; (s7) its profile is created
+     (histogram grows); (s8) its values fill; (s9) the agreement index is highlighted
+     — equal on both, it cannot tell them apart. */
   .reveal .evaltab { margin:.4em auto; border-collapse:collapse; opacity:0; transition:opacity .55s ease, color .45s ease; }
-  .reveal .scene.s4 .evaltab { opacity:1; }
+  .reveal .scene.s1 .evaltab { opacity:1; }
   .reveal .evaltab th, .reveal .evaltab td { padding:.34em 1.4em; text-align:center; }
   .reveal .evaltab thead th { vertical-align:bottom; border-bottom:1.5px solid var(--rule); padding-bottom:.4em; }
   .reveal .evaltab thead th:first-child { border-right:1.5px solid var(--rule); }
   .reveal .evaltab tbody th { font-weight:400; text-align:right; border-right:1.5px solid var(--rule); }
   .reveal .evaltab tbody td, .reveal .evaltab tbody th { border-bottom:1px solid #ededed; }
   .reveal .evaltab tbody tr:last-child td, .reveal .evaltab tbody tr:last-child th { border-bottom:none; }
-  .reveal .evaltab td .val { opacity:0; transition:opacity .5s ease; }
-  .reveal .scene.s5 .evaltab .vd .val { opacity:1; }
-  .reveal .scene.s6 .evaltab .vv .val { opacity:1; }
-  .reveal .scene.s7 .evaltab .va .val { opacity:1; }
-  .reveal .scene.s8 .evaltab .va { color:var(--accent); }
+  /* the row name + its uniform value appear together with the measure (reserved space,
+     so the grid frame is shown from s1 and never jumps) */
+  .reveal .evaltab .lbl, .reveal .evaltab td.u .val { opacity:0; transition:opacity .5s ease; }
+  .reveal .evaltab td.an .val { opacity:0; transition:opacity .5s ease; }
+  .reveal .scene.s2 .m1 { opacity:1; }  .reveal .scene.s2 .vd .lbl, .reveal .scene.s2 .vd td.u .val { opacity:1; }
+  .reveal .scene.s3 .m2 { opacity:1; }  .reveal .scene.s3 .vv .lbl, .reveal .scene.s3 .vv td.u .val { opacity:1; }
+  .reveal .scene.s4 .m3 { opacity:1; }  .reveal .scene.s4 .va .lbl, .reveal .scene.s4 .va td.u .val { opacity:1; }
+  .reveal .measures .anline { opacity:0; transition:opacity .55s ease; max-width:760px; margin:.55em auto 0; font-size:.82em; text-align:left; }
+  .reveal .scene.s5 .anline { opacity:1; }
+  /* the antagonistic column GROWS IN at s6 — the same idea as the degree-3 row on the
+     plurality-matrix slide (slide 9): a collapsed cell whose padding and clipped content
+     expand smoothly (here horizontally), so the column extends with no pop and no jump */
+  /* generic "grow a table cell/column in horizontally" motif (reused by several tables) */
+  .reveal .gcol { padding-left:0; padding-right:0; transition:padding .55s ease; }
+  .reveal th .cw, .reveal td .cw {
+    display:inline-block; overflow:hidden; max-width:0; opacity:0; vertical-align:bottom;
+    transition:max-width .55s ease, opacity .5s ease; }
+  .reveal .scene.s6 .evaltab .gcol { padding-left:1.4em; padding-right:1.4em; }
+  .reveal .scene.s6 .evaltab .gcol .cw { max-width:220px; opacity:1; }
+  /* setting (the first table): the π column grows in when its fragment is revealed —
+     the cell stays in place (no rise/fade), only the wrapped content expands */
+  .reveal .slides section .profile .gcol.fragment { transform:none !important; opacity:1 !important; visibility:visible !important; }
+  .reveal .profile .gcol.visible { padding-left:1.3em; padding-right:1.3em; }
+  .reveal .profile .gcol.visible .cw { max-width:130px; opacity:1; }
+  .reveal .anhist rect.grow { transform-box:fill-box; transform-origin:center bottom; transform:scaleY(0); transition:transform .7s ease; }
+  .reveal .scene.s7 .anhist rect.grow { transform:scaleY(1); }
+  .reveal .scene.s8 .evaltab .an .val { opacity:1; }
+  .reveal .scene.s9 .evaltab .va { color:var(--accent); }
   .reveal .evaltab .collab { font-size:.66em; color:var(--muted); margin-top:.4em; }
-  .reveal .qline { opacity:0; transition:opacity .55s ease; text-align:center; margin-top:.5em; font-size:.92em; }
-  .reveal .scene.s9 .qline { opacity:1; }
+
+  /* ----- Slide 4a: pairwise QUERIES transform into population PROPORTIONS ----- */
+  .reveal .dquery-slide .dq-lead { font-size:.88em; max-width:900px; margin:.1em auto .7em; line-height:1.45; }
+  .reveal .dq-cols { display:flex; align-items:flex-start; justify-content:center; max-width:900px; margin:0 auto; min-height:122px; }
+  .reveal .dq-q { width:360px; opacity:0; transition:opacity .45s ease; }
+  .reveal .dq-p { width:240px; opacity:0; transform:translateX(-46px); transition:opacity .5s ease, transform .55s var(--ease); }
+  .reveal .dq-divider { width:1.5px; align-self:stretch; background:var(--rule); margin:1.95em 1.4em .3em; transform:scaleY(0); transform-origin:top; transition:transform .55s ease; }
+  .reveal .dq-h { font-size:.58em; text-transform:uppercase; letter-spacing:.14em; color:var(--muted); margin:0 0 .85em; text-align:left; white-space:nowrap; height:1.1em; }
+  .reveal .dq-h .dq-sub { font-style:italic; text-transform:none; letter-spacing:0; opacity:.8; }
+  .reveal .dq-p .dq-h { color:var(--accent); }
+  .reveal .dq-row, .reveal .dq-prow { display:flex; align-items:center; gap:.7em; margin:0; height:2em; font-size:.83em; text-align:left; }
+  .reveal .dq-v { color:var(--muted); font-variant:small-caps; letter-spacing:.02em; white-space:nowrap; min-width:4.1em; }
+  .reveal .dq-ans { color:var(--ink); }
+  .reveal .dq-more .dq-ans { color:var(--muted); }
+  .reveal .dq-bar { display:inline-block; width:74px; height:7px; background:#ececec; border-radius:4px; position:relative; }
+  .reveal .dq-bar i { position:absolute; left:0; top:0; bottom:0; background:var(--accent); border-radius:4px; }
+  .reveal .scene.s1 .dq-q { opacity:1; }
+  .reveal .scene.s2 .dq-divider { transform:scaleY(1); }
+  .reveal .scene.s2 .dq-p { opacity:1; transform:translateX(0); }
+  .reveal .dq-diff, .reveal .dq-joint, .reveal .dq-incl { opacity:0; transition:opacity .45s ease; max-width:880px; margin-left:auto; margin-right:auto; }
+  .reveal .dq-diff { font-style:italic; color:var(--accent); font-size:.96em; text-align:center; margin-top:.65em; }
+  .reveal .dq-joint { font-size:.84em; margin-top:.35em; line-height:1.4; }
+  .reveal .dq-incl { font-size:.84em; margin-top:.5em; line-height:1.4; padding-top:.4em; border-top:1px solid #ececec; }
+  .reveal .scene.s3 .dq-diff, .reveal .scene.s3 .dq-joint { opacity:1; }
+  .reveal .scene.s4 .dq-incl { opacity:1; }
 
   /* ----- Recurring "fil rouge" question thread: nested Socratic chain, grows over the talk ----- */
   /* pin the fil-rouge slides to a constant top so the title doesn't hop as the thread grows */
@@ -175,20 +225,20 @@
   .reveal .thr .folded .foldtri { position:absolute; left:3px; top:0; color:var(--accent); opacity:.55; }
   .reveal .thr .folded .foldmark { font-style:italic; font-size:.8em; margin-left:.5em; }
   /* animated fold: an active root smoothly collapses into the grey "explored" style */
-  .reveal .thr .root.folding { transition:color .55s ease, font-size .55s ease; }
-  .reveal .thr .root.folding .ft2 { position:absolute; left:2px; top:.05em; color:var(--accent); opacity:0; transition:opacity .45s ease; }
-  .reveal .thr .root.folding .fm2 { font-style:italic; font-size:.8em; margin-left:.5em; color:var(--muted); opacity:0; transition:opacity .45s ease; }
+  .reveal .thr .root.folding { transition:color .55s ease .2s, font-size .55s ease .2s; }
+  .reveal .thr .root.folding .ft2 { position:absolute; left:2px; top:.05em; color:var(--accent); opacity:0; transition:opacity .45s ease .2s; }
   .reveal .thr .root.folding .node { transition:opacity .45s ease; }
-  .reveal .thr .nest.foldnest { max-height:420px; opacity:1; overflow:hidden; transition:max-height .65s ease, opacity .5s ease, margin .5s ease; }
-  .reveal .thr .root.newroot { opacity:0; transition:opacity .6s ease; }
-  .reveal .scene.s1 .root.folding { color:var(--muted); font-size:.92em; }
-  .reveal .scene.s1 .root.folding .node { opacity:0; }
-  .reveal .scene.s1 .root.folding .ft2 { opacity:.55; }
-  .reveal .scene.s1 .root.folding .fm2 { opacity:1; }
-  .reveal .scene.s1 .nest.foldnest { max-height:0; opacity:0; margin-top:0; }
-  .reveal .scene.s2 .root.newroot { opacity:1; }
+  /* the answers were shown on the previous slide; here we don't re-show and retract
+     them, so there is NO space-retraction animation — the nest is simply gone */
+  .reveal .thr .nest.foldnest { display:none; }
+  .reveal .thr .root.newroot { opacity:0; transition:opacity .6s var(--ease); }
+  /* the fold and the new root play automatically ON ARRIVING at the slide */
+  .reveal .thread-slide.present .root.folding { color:var(--muted); font-size:.92em; }
+  .reveal .thread-slide.present .root.folding .node { opacity:0; }
+  .reveal .thread-slide.present .root.folding .ft2 { opacity:.55; }
+  .reveal .thread-slide.present .root.newroot { opacity:1; transition-delay:.55s; }
   .reveal .thr .root.newroot .tlink { opacity:0; transition:opacity .45s var(--ease); }
-  .reveal .scene.s2 .root.newroot .tlink { opacity:1; transition-delay:.35s; }
+  .reveal .thread-slide.present .root.newroot .tlink { opacity:1; transition-delay:.95s; }
 
   /* ----- Moments of the rank distribution slide ----- */
   .reveal .moments .mdef { max-width:880px; margin:.45em auto; line-height:1.42; }
@@ -197,34 +247,87 @@
   .reveal .moments .mline .imp { color:var(--accent); margin:0 .2em; }
   .reveal .moments .mprop { max-width:880px; margin:.45em auto; line-height:1.42; }
   .reveal .moments .mprop .lbl { color:var(--accent); font-style:italic; font-weight:700; margin-right:.25em; }
-  .reveal .moments .mfoot { text-align:center; margin-top:.45em; font-size:.9em; }
+  .reveal .moments .mfoot { text-align:left; max-width:880px; margin:.45em auto 0; font-size:.9em; }
   .reveal .moments .mfoot .imp { color:var(--accent); margin:0 .2em; }
   .reveal .moments .katex-display { margin:.4em 0; }
 
-  /* ----- Elicitation slides ----- */
+  /* ----- Elicitation slides: two principles, shown as a clear hierarchy ----- */
   .reveal .elicit .kicker { margin:0 auto .5em; max-width:900px; }
-  .reveal .elicit p { max-width:900px; margin:.38em auto; line-height:1.4; font-size:.86em; }
-  .reveal .elicit .el-lead { font-size:.95em; }
-  .reveal .elicit .el-why { font-style:italic; color:var(--muted); }
-  .reveal .elicit .el-def { margin-left:1.1em; text-indent:-1.1em; }
-  .reveal .elicit .el-tie { margin-top:.35em; }
-  .reveal .elicit .two { max-width:900px; margin:.4em auto; }
-  .reveal .elicit .two .f { display:inline-block; }
+  .reveal .elicit .el-lead { max-width:880px; margin:.1em auto 1.1em; font-size:.86em; color:var(--muted); text-align:left; line-height:1.4; }
+  .reveal .elicit .prin { max-width:880px; margin:.85em auto; text-align:left; padding-left:1em; border-left:2px solid var(--accent-soft); }
+  .reveal .elicit .peyebrow { font-size:.6em; text-transform:uppercase; letter-spacing:.2em; color:var(--accent); margin:0 0 .3em; }
+  .reveal .elicit .ptitle { font-size:.92em; line-height:1.4; margin:0; }
+  .reveal .elicit .ptitle .pbody { font-weight:400; }
+  .reveal .elicit .psub { font-size:.88em; line-height:1.4; margin:.34em 0 0 1.5em; position:relative; }
+  .reveal .elicit .psub::before { content:"\25B8"; position:absolute; left:-1.25em; top:0; color:var(--accent); font-size:.82em; }
+  .reveal .elicit .psub .sterm { font-style:italic; font-weight:700; color:var(--ink); }
+  .reveal .elicit .plink { font-size:.88em; line-height:1.4; margin:.5em 0 0; padding-top:.45em; border-top:1px solid #ececec; }
 
-  /* two primitives (slide 2) — comparison table: metric rows align across both columns */
-  .reveal .prims-slide .kicker { margin-bottom:.7em; text-align:center; }
-  .reveal .primtab { display:grid; grid-template-columns:0.74fr 1fr 1fr; max-width:1040px; margin:.6em auto 0;
-    border-top:2px solid var(--ink); border-bottom:2px solid var(--ink); align-items:start; }
-  .reveal .primtab > div { padding:.5em 26px; box-sizing:border-box; }
-  .reveal .primtab .ph { font-size:1.1em; color:var(--accent); font-style:italic; }
-  .reveal .primtab .dsc { font-size:.8em; line-height:1.42; }
-  .reveal .primtab .v { font-size:.86em; line-height:1.42; }
-  .reveal .primtab .rl { text-align:right; line-height:1.3; }
-  .reveal .primtab .rl .rh { display:block; color:var(--ink); font-style:italic; font-size:.86em; }
-  .reveal .primtab .rl .rs { display:block; color:var(--muted); font-size:.66em; letter-spacing:.05em; text-transform:uppercase; margin-top:.12em; }
-  .reveal .primtab .r1 { border-top:1px solid var(--ink); padding-top:.55em; }
-  .reveal .primtab .r2 { border-top:1px solid #e6e6e6; padding-top:.55em; }
-  .reveal .ptrade { max-width:920px; margin:1em auto 0; text-align:center; font-size:.92em; }
+  /* two elicitation primitives — a slide each (ranking / chain): steps on the left,
+     a hand-built JS animation on the right (letters reorder, highlight, grey out),
+     the extracted samples listed (KaTeX) as they accumulate; then a comparison table. */
+  /* balanced two columns — a wider steps column, the pair centred on the slide */
+  .reveal .ksplit { display:flex; align-items:center; justify-content:center; gap:2.4em; max-width:900px; margin:.4em auto 0; }
+  .reveal .ksteps { flex:0 0 348px; margin:0; padding-left:1.2em; font-size:.8em; line-height:1.5; }
+  .reveal .ksteps li { opacity:0; transition:opacity .5s ease; margin:.7em 0; }
+  .reveal .scene.s1 .kstep1 { opacity:1; }
+  .reveal .scene.s2 .kstep2 { opacity:1; }
+  .reveal .scene.s3 .kstep3 { opacity:1; }
+  .reveal .ksteps b { color:var(--accent); }
+  .reveal .kanim { flex:0 0 404px; }
+  .reveal .kseq { position:relative; width:320px; height:64px; margin:0 auto; }
+  .reveal .lt { position:absolute; left:0; top:0; width:38px; height:38px; line-height:35px; text-align:center;
+    font-style:italic; font-size:1.05em; border:1.5px solid var(--ink); border-radius:50%; background:#fff; color:var(--ink);
+    opacity:0; box-sizing:border-box;
+    transition:transform .55s var(--ease), color .3s ease, background .3s ease, border-color .3s ease, opacity .35s ease; }
+  .reveal .lt.on { opacity:1; }
+  .reveal .lt.dim { color:#d0d0d0; border-color:#e6e6e6; }
+  .reveal .lt.hl { color:#fff; background:var(--accent); border-color:var(--accent); }
+  .reveal .lt.hlg { color:#fff; background:var(--green); border-color:var(--green); }
+  .reveal .kconn { position:absolute; height:38px; line-height:38px; text-align:center; color:#bbb; font-size:1.05em; opacity:0; transform:translateX(-50%); transition:opacity .4s ease; }
+  /* sample cells: a flat wrap while the cycle runs, then they SHIFT (FLIP) into
+     three degree columns that read as a classification table */
+  .reveal .ksamps { display:flex; flex-wrap:wrap; justify-content:center; align-items:flex-start; align-content:flex-start;
+    gap:.25em .7em; min-height:96px; max-width:404px; margin:.3em auto 0; }
+  .reveal .dgrp { display:contents; }
+  .reveal .smp { opacity:0; transition:opacity .35s ease; font-size:.6em; color:var(--accent); }
+  .reveal .kchain-slide .smp { color:var(--green); }
+  .reveal .smp.show { opacity:1; }
+  .reveal .dlab, .reveal .dcnt { display:none; }
+  .reveal .ksamps.classified { flex-wrap:nowrap; align-items:stretch; gap:1.5em; max-width:none; }
+  .reveal .ksamps.classified .dgrp { display:flex; flex-direction:column; align-items:center; gap:.3em; }
+  .reveal .ksamps.classified .dlab { display:block; font-size:.66em; font-style:italic; color:var(--muted); margin-bottom:.1em; }
+  .reveal .ksamps.classified .dcnt { display:block; margin-top:auto; padding-top:.3em; min-width:1.7em; text-align:center;
+    font-size:.72em; font-weight:700; color:var(--accent); border-top:1.5px solid var(--ink); }
+  .reveal .kchain-slide .ksamps.classified .dcnt { color:var(--green); }
+  .reveal .kcount { text-align:center; font-size:.86em; color:var(--muted); margin:.15em auto 0; max-width:430px; min-height:1.3em; }
+  .reveal .kcount b { color:var(--ink); font-size:1.1em; }
+  .reveal .kcount .vs { color:var(--green); }
+  /* a lowercase italic k kept inside the otherwise-uppercase slide titles */
+  .reveal .kicker .kv { text-transform:none; font-style:italic; }
+  /* "which probe?" slide — two knobs, the k≥ℓ condition, a boxed proposition */
+  .reveal .degree-slide .dgrid { max-width:840px; margin:.6em auto 0; text-align:left; }
+  .reveal .degree-slide .dparam { font-size:.92em; line-height:1.4; margin:.55em 0; }
+  .reveal .degree-slide .dparam .sterm { font-style:italic; font-weight:700; color:var(--accent); margin-right:.15em; }
+  .reveal .degree-slide .dcond { font-size:.9em; line-height:1.4; margin:.8em 0 0; }
+  .reveal .degree-slide .dprop { margin:1.05em 0 0; padding:.65em .95em; border:1px solid var(--accent-soft);
+    border-left:3px solid var(--accent); background:#faf6f6; border-radius:3px; }
+  .reveal .degree-slide .dprop-h { font-size:.58em; text-transform:uppercase; letter-spacing:.2em; color:var(--accent); margin:0 0 .3em; }
+  .reveal .degree-slide .dprop-b { font-size:.92em; line-height:1.45; margin:0; }
+  /* the comparison table (third slide) — rows grow in like the plurality-matrix row */
+  .reveal .ptab { border-collapse:collapse; margin:.7em auto 0; border-top:2px solid var(--ink); border-bottom:2px solid var(--ink); }
+  .reveal .ptab th, .reveal .ptab td { padding:.42em 1.8em; text-align:center; }
+  .reveal .ptab thead th { font-style:italic; color:var(--accent); border-bottom:1.5px solid var(--rule); padding-bottom:.45em; }
+  .reveal .ptab thead th:first-child { border-right:1.5px solid var(--rule); }
+  .reveal .ptab tbody th { text-align:right; font-weight:400; border-right:1.5px solid var(--rule); }
+  .reveal .ptab .rh { display:block; font-style:italic; font-size:.92em; }
+  .reveal .ptab .rs { display:block; font-size:.62em; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; margin-top:.1em; }
+  .reveal .ptab td { font-size:.94em; }
+  .reveal .ptab .trow td, .reveal .ptab .trow th {
+    opacity:0; padding-top:0; padding-bottom:0; line-height:0; border-top:1px solid transparent;
+    transition:opacity .5s ease, padding .45s ease, line-height .45s ease, border-top-color .45s ease; }
+  .reveal .scene.s1 .ptab .tcost td, .reveal .scene.s1 .ptab .tcost th { opacity:1; padding-top:.42em; padding-bottom:.42em; line-height:1.3; border-top-color:#e6e6e6; }
+  .reveal .scene.s2 .ptab .tsamp td, .reveal .scene.s2 .ptab .tsamp th { opacity:1; padding-top:.42em; padding-bottom:.42em; line-height:1.3; border-top-color:#e6e6e6; }
 
   /* theorem block (slide 3) */
   .reveal .thm-slide .kicker { margin:0 auto .6em; max-width:900px; }
@@ -236,6 +339,21 @@
   .reveal .thmbox ul { margin:.35em 0 .35em 1.2em; }
   .reveal .thmbox li { font-size:.9em; margin:.3em 0; line-height:1.45; }
   .reveal .thm-take { max-width:900px; margin:1em auto 0; text-align:center; font-size:.95em; }
+  .reveal .thm-down { text-align:center; margin:.7em auto 0; font-size:.7em; letter-spacing:.06em; }
+  /* proof-sketch vertical sub-slide: Hoeffding, the bridge, a worked table */
+  .reveal .thm-proof .kicker { margin-bottom:.5em; }
+  .reveal .thm-proof .lbl { color:var(--accent); font-style:italic; font-weight:700; }
+  .reveal .thm-proof .ph-line { max-width:940px; margin:.3em auto; text-align:left; font-size:.76em; line-height:1.4; }
+  .reveal .thm-proof .ph-line .katex-display { margin:.28em 0; font-size:.88em; }
+  .reveal .thm-proof .ph-take { max-width:940px; margin:.4em auto 0; text-align:left; font-size:.74em; line-height:1.4; }
+  .reveal table.vtab { border-collapse:collapse; margin:.4em auto; font-size:.72em;
+    border-top:2px solid var(--ink); border-bottom:2px solid var(--ink); }
+  .reveal .vtab th, .reveal .vtab td { padding:.18em 1.1em; text-align:center; }
+  .reveal .vtab thead th { font-style:italic; color:var(--accent); border-bottom:1px solid var(--ink); }
+  .reveal .vtab tbody th { text-align:left; font-weight:400; font-style:italic; }
+  .reveal .vtab .rsep th, .reveal .vtab .rsep td { border-top:1px solid var(--rule); }
+  .reveal .vtab .best th, .reveal .vtab .best td { background:#f7efef; font-weight:700; }
+  .reveal .vtab .best th { color:var(--accent); }
 
   /* ----- Interactive moment-plane slides ----- */
   .reveal .mp-play .kicker, .reveal .mp-explain .kicker, .reveal .mp-real .kicker, .reveal .mp-pareto .kicker { margin-bottom:.3em; }
@@ -259,8 +377,10 @@
   .reveal .scene.s2 .cxtab .symlab { opacity:1; }
   .reveal .symhist rect.grow { transform-box:fill-box; transform-origin:center bottom; transform:scaleY(0); transition:transform .7s ease; }
   .reveal .scene.s2 .symhist rect.grow { transform:scaleY(1); }
-  .reveal .cxtab .symval { opacity:0; transition:opacity .5s ease, color .4s ease; }
-  .reveal .scene.s3 .cxtab .symval { opacity:1; }
+  .reveal .cxtab .symval { transition:color .4s ease; }
+  /* the π_sym column GROWS IN at s2 — its histogram and values created together */
+  .reveal .scene.s2 .cxtab .gcol { padding-left:1.4em; padding-right:1.4em; }
+  .reveal .scene.s2 .cxtab .gcol .cw { max-width:200px; opacity:1; }
   .reveal .scene.s3 .cxtab .icval, .reveal .scene.s3 .cxtab .symval { color:var(--accent); }
   .reveal .cxnote { opacity:0; transition:opacity .5s ease; text-align:center; font-size:.78em; color:var(--muted); margin-top:.5em; }
   .reveal .scene.s3 .cxnote { opacity:1; }
@@ -347,6 +467,18 @@
   /* Title heading gets one calm entrance to match the incremental feel elsewhere. */
   @keyframes titlefade { from { opacity:0; transform:translateY(7px); } to { opacity:1; transform:none; } }
   .reveal section.present.titleslide h1 { animation: titlefade .7s var(--ease) both; }
+
+  /* ---- Uniform slide titles: every slide title is left-aligned and the same size
+     as the section headings (the h2 size) — comfortably bigger than the body text.
+     This converts the former small uppercase "kicker" eyebrows and the thread-slide
+     titles into proper, consistent headings. ---- */
+  .reveal h2, .reveal .kicker, .reveal .tslide-title {
+    font-size:1.0em; font-weight:400; letter-spacing:.15em; text-transform:uppercase;
+    color:var(--muted); text-align:left; line-height:1.3; margin:0 0 .85em; max-width:none;
+  }
+  .reveal .thread-slide .tslide-title { font-size:1.0em; margin-bottom:.4em; }
+  .reveal .counterex .kicker, .reveal .prims-slide .kicker, .reveal .pmslide .kicker { text-align:left; }
+  .reveal .elicit .kicker, .reveal .thm-slide .kicker, .reveal .pmslide .kicker { margin-left:0; margin-right:0; max-width:none; }
 </style>
 </head>
 <body>
@@ -381,16 +513,16 @@
     <thead>
       <tr>
         <th class="fragment" data-fragment-index="1">order</th>
-        <th class="fragment" data-fragment-index="2">\(\pi\)</th>
+        <th class="fragment gcol" data-fragment-index="2"><div class="cw">\(\pi\)</div></th>
       </tr>
     </thead>
     <tbody>
-      <tr><td class="fragment" data-fragment-index="1">\(a \succ b \succ c\)</td><td class="pi fragment" data-fragment-index="2">0.22</td></tr>
-      <tr><td class="fragment" data-fragment-index="1">\(a \succ c \succ b\)</td><td class="pi fragment" data-fragment-index="2">0.08</td></tr>
-      <tr><td class="fragment" data-fragment-index="1">\(b \succ a \succ c\)</td><td class="pi fragment" data-fragment-index="2">0.15</td></tr>
-      <tr><td class="fragment" data-fragment-index="1">\(b \succ c \succ a\)</td><td class="pi fragment" data-fragment-index="2">0.30</td></tr>
-      <tr><td class="fragment" data-fragment-index="1">\(c \succ a \succ b\)</td><td class="pi fragment" data-fragment-index="2">0.05</td></tr>
-      <tr><td class="fragment" data-fragment-index="1">\(c \succ b \succ a\)</td><td class="pi fragment" data-fragment-index="2">0.20</td></tr>
+      <tr><td class="fragment" data-fragment-index="1">\(a \succ b \succ c\)</td><td class="pi fragment gcol" data-fragment-index="2"><div class="cw">0.22</div></td></tr>
+      <tr><td class="fragment" data-fragment-index="1">\(a \succ c \succ b\)</td><td class="pi fragment gcol" data-fragment-index="2"><div class="cw">0.08</div></td></tr>
+      <tr><td class="fragment" data-fragment-index="1">\(b \succ a \succ c\)</td><td class="pi fragment gcol" data-fragment-index="2"><div class="cw">0.15</div></td></tr>
+      <tr><td class="fragment" data-fragment-index="1">\(b \succ c \succ a\)</td><td class="pi fragment gcol" data-fragment-index="2"><div class="cw">0.30</div></td></tr>
+      <tr><td class="fragment" data-fragment-index="1">\(c \succ a \succ b\)</td><td class="pi fragment gcol" data-fragment-index="2"><div class="cw">0.05</div></td></tr>
+      <tr><td class="fragment" data-fragment-index="1">\(c \succ b \succ a\)</td><td class="pi fragment gcol" data-fragment-index="2"><div class="cw">0.20</div></td></tr>
     </tbody>
   </table>
 
@@ -407,10 +539,39 @@
   <aside class="notes">Aggregation finds the consensus; we ask how the population splits, because the split is what a deliberation has to resolve.</aside>
 </section>
 
-<!-- 4. TOURNAMENT — one slide, continuous (Manim-style) animation driven by .step fragments -->
-<section class="tournament">
+<!-- 4a. DIGITAL DEMOCRACY — pairwise queries become population proportions -->
+<section class="dquery-slide">
+  <p class="kicker">Voting in a digital democracy</p>
   <div class="scene">
-    <div class="toptext">The most common way of representing a population.</div>
+    <p class="dq-lead">People answer <strong>pairwise comparisons</strong>; across a population we observe only the <strong>proportions</strong>.</p>
+    <div class="dq-cols">
+      <div class="dq-q">
+        <p class="dq-h">Pairwise answers</p>
+        <div class="dq-row"><span class="dq-v">Voter 1</span><span class="dq-ans">\(a\succ b,\ \ a\succ c\)</span></div>
+        <div class="dq-row"><span class="dq-v">Voter 2</span><span class="dq-ans">\(b\succ c,\ \ b\succ a\)</span></div>
+        <div class="dq-row"><span class="dq-v">Voter 3</span><span class="dq-ans">\(a\succ b,\ \ b\succ c\)</span></div>
+        <div class="dq-row dq-more"><span class="dq-v"></span><span class="dq-ans">\(\vdots\)</span></div>
+      </div>
+      <div class="dq-divider"></div>
+      <div class="dq-p">
+        <p class="dq-h">Pairwise proportions</p>
+        <div class="dq-prow">\(p_{ab}=0.6\)<span class="dq-bar"><i style="width:60%"></i></span></div>
+        <div class="dq-prow">\(p_{ac}=0.5\)<span class="dq-bar"><i style="width:50%"></i></span></div>
+        <div class="dq-prow">\(p_{bc}=0.7\)<span class="dq-bar"><i style="width:70%"></i></span></div>
+      </div>
+    </div>
+    <p class="dq-diff">What's the difference?</p>
+    <p class="dq-joint">\(p_{ab}\) and \(p_{ac}\) are <em>marginals</em> — they don't reveal the <strong>joint</strong>: the fraction of voters who prefer \(a\) to <em>both</em> \(b\) and \(c\) at once.</p>
+  </div>
+  <span class="fragment step"></span><span class="fragment step"></span><span class="fragment step"></span>
+  <aside class="notes">Digital-democracy framing. People answer pairwise comparisons; over a population we observe only the pairwise proportions p_ab (the fraction preferring a to b) — the queries on the left transform into the proportions on the right. What's the difference? The proportions are marginals: from p_ab and p_ac we cannot recover the joint — who prefers a to BOTH b and c. The upside: each answer is an independent sample from an anonymous voter, far more inclusive and far lighter than eliciting a full ranking. This is why we work with pairwise proportions — and why reading the structure of disagreement out of them is subtle.</aside>
+</section>
+
+<!-- 4b. TOURNAMENT — one slide, continuous (Manim-style) animation driven by .step fragments -->
+<section class="tournament">
+  <p class="kicker">Why disagreement is harder to measure</p>
+  <div class="scene">
+    <div class="toptext">Pairwise proportions power most voting rules — a <strong>tournament</strong>.</div>
 
     <svg class="graph tour" viewBox="0 0 900 430" aria-label="tournament graph on a, b, c with every pairwise proportion one half">
       <line x1="430" y1="86" x2="340" y2="252"/>
@@ -429,8 +590,9 @@
     <div class="weight w-bc">\(p_{bc} = \tfrac12\)</div>
 
     <div class="many">
-      <p class="ln1">These proportions could correspond to many profiles.</p>
-      <p class="ln2"><span class="dterm">Rank distribution.</span> For an alternative \(a\), \(\Pr[r_a = i]\) is the fraction of voters ranking \(a\) in position \(i\) &nbsp;(\(i = 1,\dots,m\)).</p>
+      <p class="ln1">But the <strong>structure</strong> is harder — many populations share these proportions.</p>
+      <p class="ln2"><span class="dterm">Rank distribution.</span> \(\Pr[r_a{=}i]\): voters ranking \(a\) at position \(i\).</p>
+      <p class="ln3"><span class="dterm">Antagonistic profile.</span> two camps — half rank \(a\) first, half last.</p>
     </div>
 
     <div class="hstage">
@@ -462,9 +624,9 @@
     <h2>Three measures from the literature</h2>
 
     <div class="mlist">
-      <div class="m m1"><strong>Agreement index.</strong> &nbsp;\(A(\pi) = \dfrac{1}{\binom{m}{2}} \sum_{\{x,y\}} \big|\, 2\,p_{xy} - 1 \,\big|\)</div>
+      <div class="m m1"><strong>Divisiveness.</strong> &nbsp;\(\mathrm{Div}(a) = \dfrac{1}{m-1} \sum_{b\neq a} \big|\, \mathrm{Bor}(a;\mathcal{N}^{a\succ b}) - \mathrm{Bor}(a;\mathcal{N}^{b\succ a}) \,\big|\)</div>
       <div class="m m2"><strong>Rank variance.</strong> &nbsp;\(\mathrm{Var}(a) = \mathbb{E}\big[(r_a - \mathbb{E}[r_a])^2\big]\)</div>
-      <div class="m m3"><strong>Divisiveness.</strong> &nbsp;\(\mathrm{Div}(a) = \dfrac{1}{m-1} \sum_{b\neq a} \big|\, \mathrm{Bor}(a;\mathcal{N}^{a\succ b}) - \mathrm{Bor}(a;\mathcal{N}^{b\succ a}) \,\big|\)</div>
+      <div class="m m3"><strong>Agreement index.</strong> &nbsp;\(A(\pi) = \dfrac{1}{\binom{m}{2}} \sum_{\{x,y\}} \big|\, 2\,p_{xy} - 1 \,\big|\)</div>
     </div>
 
     <table class="evaltab">
@@ -492,29 +654,29 @@
             </svg>
             <div class="collab">\(\pi_{\mathrm{IC}}\) &nbsp;(uniform)</div>
           </th>
-          <th>
-            <svg viewBox="0 0 230 100" width="184" aria-label="antagonistic rank distribution of a">
+          <th class="anhead gcol"><div class="cw">
+            <svg class="anhist" viewBox="0 0 230 100" width="184" aria-label="antagonistic rank distribution of a">
               <line x1="8" y1="86" x2="222" y2="86" stroke="#cccccc" stroke-width="1.2"/>
-              <rect x="12" y="14" width="10" height="72" fill="#9a1b1b"/>
-              <rect x="208" y="14" width="10" height="72" fill="#9a1b1b"/>
+              <rect class="grow" x="12" y="14" width="10" height="72" fill="#9a1b1b"/>
+              <rect class="grow" x="208" y="14" width="10" height="72" fill="#9a1b1b"/>
             </svg>
             <div class="collab">\(\pi_{\mathrm{AN}}\) &nbsp;(antagonism)</div>
-          </th>
+          </div></th>
         </tr>
       </thead>
       <tbody>
-        <tr class="vd"><th>\(\mathrm{Div}(a)\)</th><td><span class="val">\(5.\overline{3}\)</span></td><td><span class="val">\(14\)</span></td></tr>
-        <tr class="vv"><th>\(\mathrm{Var}(a)\)</th><td><span class="val">\(18.\overline{6}\)</span></td><td><span class="val">\(49\)</span></td></tr>
-        <tr class="va"><th>\(A(\pi)\)</th><td><span class="val">\(0\)</span></td><td><span class="val">\(0\)</span></td></tr>
+        <tr class="vd"><th><span class="lbl">\(\mathrm{Div}(a)\)</span></th><td class="u"><span class="val">\(5.\overline{3}\)</span></td><td class="an gcol"><div class="cw"><span class="val">\(14\)</span></div></td></tr>
+        <tr class="vv"><th><span class="lbl">\(\mathrm{Var}(a)\)</span></th><td class="u"><span class="val">\(18.\overline{6}\)</span></td><td class="an gcol"><div class="cw"><span class="val">\(49\)</span></div></td></tr>
+        <tr class="va"><th><span class="lbl">\(A(\pi)\)</span></th><td class="u"><span class="val">\(0\)</span></td><td class="an gcol"><div class="cw"><span class="val">\(0\)</span></div></td></tr>
       </tbody>
     </table>
 
-    <p class="qline">Why can divisiveness and rank variance distinguish the uniform from the antagonistic profile, but not the agreement index?</p>
+    <p class="anline">Now test them on the <strong>antagonistic</strong> profile \(\pi_{\mathrm{AN}}\) — the two opposed camps from before.</p>
   </div>
 
   <span class="fragment step"></span><span class="fragment step"></span><span class="fragment step"></span><span class="fragment step"></span><span class="fragment step"></span><span class="fragment step"></span><span class="fragment step"></span><span class="fragment step"></span><span class="fragment step"></span>
 
-  <aside class="notes">Steps: introduce the agreement index, rank variance, divisiveness (each with its paper formula); show the two rank distributions of a; fill the divisiveness values, then rank variance, then the agreement index; highlight the agreement index in red (equal on both); then the question that motivates the hierarchy.</aside>
+  <aside class="notes">Steps: (1) the table with the uniform column; (2-4) each measure with its evaluation on the uniform profile; (5) a sentence introducing the antagonistic profile (two opposed camps); (6) its column is added; (7) its histogram is created (the two extreme spikes grow); (8) its values fill; (9) highlight the agreement index — 0 on both, so it cannot tell the profiles apart, while divisiveness and rank variance can.</aside>
 </section>
 
 <!-- 6. FIL ROUGE — recurring question thread (first appearance: the opening question) -->
@@ -559,7 +721,7 @@
             </svg>
             <div class="collab">\(\pi_{\mathrm{AN}}\)</div>
           </th>
-          <th>
+          <th class="symhead gcol"><div class="cw">
             <svg class="symhist" viewBox="0 0 230 96" width="168" aria-label="symmetric distribution being created">
               <line x1="8" y1="84" x2="222" y2="84" stroke="#cccccc" stroke-width="1.2"/>
               <rect class="grow" x="12" y="60" width="10" height="24" fill="#9a1b1b"/>
@@ -567,12 +729,12 @@
               <rect class="grow" x="208" y="60" width="10" height="24" fill="#9a1b1b"/>
             </svg>
             <div class="collab symlab">\(\pi_{\mathrm{sym}}\)</div>
-          </th>
+          </div></th>
         </tr>
       </thead>
       <tbody>
-        <tr><th>\(\mathrm{Div}(a)\)</th><td class="icval">\(5.\overline{3}\)</td><td>\(14\)</td><td class="symval">\(5.\overline{3}\)</td></tr>
-        <tr><th>\(\mathrm{Var}(a)\)</th><td class="icval">\(18.\overline{6}\)</td><td>\(49\)</td><td class="symval">\(18.\overline{6}\)</td></tr>
+        <tr><th>\(\mathrm{Div}(a)\)</th><td class="icval">\(5.\overline{3}\)</td><td>\(14\)</td><td class="symval gcol"><div class="cw">\(5.\overline{3}\)</div></td></tr>
+        <tr><th>\(\mathrm{Var}(a)\)</th><td class="icval">\(18.\overline{6}\)</td><td>\(49\)</td><td class="symval gcol"><div class="cw">\(18.\overline{6}\)</div></td></tr>
       </tbody>
     </table>
     <p class="cxnote">\(\pi_{\mathrm{sym}}\) is visibly different, yet its divisiveness and rank variance match the uniform profile.</p>
@@ -591,9 +753,7 @@
   <hr class="trule">
   <div class="thr">
     <div class="ti root folded">
-      <span class="foldtri">&#9656;</span>Why is the agreement index unable to distinguish the disagreement structure in \(\pi_{\mathrm{AN}}\)?
-      <span class="foldmark">explored</span>
-    </div>
+      <span class="foldtri">&#9656;</span>Why is the agreement index unable to distinguish the disagreement structure in \(\pi_{\mathrm{AN}}\)?    </div>
     <div class="ti root q fragment">
       <span class="node"></span>How to characterize the level of information used by a measure?
       <a class="tlink" href="#/8">see &rarr;</a>
@@ -689,9 +849,7 @@
   <hr class="trule">
   <div class="thr">
     <div class="ti root folded">
-      <span class="foldtri">&#9656;</span>Why is the agreement index unable to distinguish the disagreement structure in \(\pi_{\mathrm{AN}}\)?
-      <span class="foldmark">explored</span>
-    </div>
+      <span class="foldtri">&#9656;</span>Why is the agreement index unable to distinguish the disagreement structure in \(\pi_{\mathrm{AN}}\)?    </div>
     <div class="ti root q">
       <span class="node"></span>How to characterize the level of information used by a measure?
     </div>
@@ -713,11 +871,9 @@
     <div class="thr">
       <div class="ti root folded">
         <span class="foldtri">&#9656;</span>Why is the agreement index unable to distinguish the disagreement structure in \(\pi_{\mathrm{AN}}\)?
-        <span class="foldmark">explored</span>
       </div>
       <div class="ti root q folding">
         <span class="node"></span><span class="ft2">&#9656;</span>How to characterize the level of information used by a measure?
-        <span class="fm2">explored</span>
       </div>
       <div class="nest foldnest">
         <div class="ti a"><span class="arrow">&#8658;</span>Its <strong>level</strong>: the smallest degree of the plurality matrix it needs.</div>
@@ -730,9 +886,8 @@
         <a class="tlink" href="#/11">see &rarr;</a>
       </div>
     </div>
-    <span class="step fragment"></span><span class="step fragment"></span>
   </div>
-  <aside class="notes">The second root folds: its four conclusions collapse and it greys out as "explored". Then a new root opens — can any measure exceed level 3? It links to the moments slide.</aside>
+  <aside class="notes">On arrival the second root folds (greys out) and a new root opens automatically — can any measure exceed level 3? It links to the moments slide. (No clicks needed here.)</aside>
 </section>
 
 <!-- 12. MOMENTS OF THE RANK DISTRIBUTION -->
@@ -750,7 +905,7 @@
   <div class="mprop fragment">
     <span class="lbl">Proposition.</span> The \(k\)-th central moment is a measure of <strong>level \(k+1\)</strong>:
     \[ M_k(a) = (-1)^k \sum_{s=0}^{k} c_s(a) \!\!\sum_{\substack{S\subseteq\mathcal{A}\setminus\{a\}\\ |S|=s}}\!\! p_{S\cup\{a\}}(a), \]
-    <p class="small muted" style="text-align:center; margin:.1em 0 0;">where \(\;c_s(a) = \sum_{j=0}^{s} (-1)^{s-j}\binom{s}{j}\big(j - \mathrm{Bor}(a)\big)^{k}.\)</p>
+    <p class="small muted" style="text-align:left; margin:.35em 0 0;">where \(\;c_s(a) = \sum_{j=0}^{s} (-1)^{s-j}\binom{s}{j}\big(j - \mathrm{Bor}(a)\big)^{k}.\)</p>
   </div>
   <div class="mfoot fragment"><span class="imp">&#8658;</span>skewness is <strong>level 4</strong>, &nbsp; excess kurtosis is <strong>level 5</strong>.</div>
   <aside class="notes">Define the central moments of the rank distribution. The first moment is the mean rank m minus the Borda score (degree-2, level 2). The second central moment is the rank variance (level 3). The general proposition: the k-th central moment has a closed form in plurality entries of degree up to k+1, and its level is exactly k+1 — so the hierarchy never stops; skewness is level 4 and excess kurtosis is level 5.</aside>
@@ -762,13 +917,9 @@
   <hr class="trule">
   <div class="thr">
     <div class="ti root folded">
-      <span class="foldtri">&#9656;</span>Why is the agreement index unable to distinguish the disagreement structure in \(\pi_{\mathrm{AN}}\)?
-      <span class="foldmark">explored</span>
-    </div>
+      <span class="foldtri">&#9656;</span>Why is the agreement index unable to distinguish the disagreement structure in \(\pi_{\mathrm{AN}}\)?    </div>
     <div class="ti root folded">
-      <span class="foldtri">&#9656;</span>How to characterize the level of information used by a measure?
-      <span class="foldmark">explored</span>
-    </div>
+      <span class="foldtri">&#9656;</span>How to characterize the level of information used by a measure?    </div>
     <div class="ti root q">
       <span class="node"></span>Can we find measures with a level higher than 3?
     </div>
@@ -796,54 +947,141 @@
     <p class="mphint small muted">Synthetic models <em>and</em> real elections. &nbsp;<a class="tlink" href="#/13/0">&larr; back to the guided view</a></p>
     <aside class="notes">Free sandbox: toggle model families in the legend, click any alternative (cloud or reference) to read its exact rank distribution.</aside>
   </section>
-</section>
-
-<!-- 15. THE SAME PLANE ON REAL ELECTION DATA -->
-<section class="mp-real">
-  <p class="kicker">The same plane &mdash; real elections</p>
-  <iframe class="mpframe" data-src="moment_plane.html?mode=realguided" loading="lazy" title="Real-data moment plane"></iframe>
-  <p class="mphint small muted">Real ballots — Glasgow STV &middot; NSW LA &middot; French presidential. &nbsp;<a class="tlink" href="#/13/1">open the interactive version &rarr;</a></p>
-  <aside class="notes">On real preferential data the candidates populate the whole moment plane — the point is just the spread. The four reference candidates Q1–Q4 on the right show the range of shapes; Le&nbsp;Pen (Q3) and Mélenchon (Q4) land in the skewed, high-kurtosis corners (consensus rejection / consensus winner, each with a committed minority). Caveat: only complete-ranking voters are included (over-represents engaged voters, sharpest for Le&nbsp;Pen). The interactive figure — synthetic models + real elections, toggleable by subsection — is the dedicated view (link).</aside>
+  <!-- 15. THE SAME PLANE ON REAL ELECTION DATA (v2 — folded into the moment-plane stack) -->
+  <section class="mp-real">
+    <p class="kicker">The same plane &mdash; real elections</p>
+    <iframe class="mpframe" data-src="moment_plane.html?mode=realguided" loading="lazy" title="Real-data moment plane"></iframe>
+    <p class="mphint small muted">Real ballots — Glasgow STV &middot; NSW LA &middot; French presidential. &nbsp;<a class="tlink" href="#/13/1">open the interactive version &rarr;</a></p>
+    <aside class="notes">On real preferential data the candidates populate the whole moment plane — the point is just the spread. The four reference candidates Q1–Q4 on the right show the range of shapes; Le&nbsp;Pen (Q3) and Mélenchon (Q4) land in the skewed, high-kurtosis corners (consensus rejection / consensus winner, each with a committed minority). Caveat: only complete-ranking voters are included (over-represents engaged voters, sharpest for Le&nbsp;Pen). The interactive figure — synthetic models + real elections, toggleable by subsection — is the dedicated view (link).</aside>
+  </section>
 </section>
 
 <!-- 16. ELICITATION — principles + cost definitions -->
 <section class="elicit">
   <p class="kicker">Eliciting the plurality matrix</p>
-  <p class="el-lead fragment">In practice we estimate the matrix by <strong>querying sampled voters</strong>. In a digital-democracy setting, the protocol must respect two principles.</p>
-  <p class="el-def fragment"><span class="dterm">Anonymous sampling.</span> every query draws a voter — a single preference order — from the population according to the profile \(\pi\); the voter <em>is</em> their preferences, never identified.</p>
-  <p class="el-line fragment">We then judge a protocol by two costs: the <strong>observed population</strong> \(N\) — how many voters we may query — and the <strong>cognitive load</strong> we place on each.</p>
-  <p class="el-why fragment">It is easier to find 10&thinsp;000 people who each answer 3 questions than 100 who answer 20.</p>
-  <p class="el-def fragment"><span class="dterm">Maximum cognitive load.</span> the heaviest single query: \(\;\mathrm{MCL} := \max_{j} c_j\), where \(c_j\) is the number of pairwise comparisons asked of voter \(j\).</p>
-  <p class="el-def fragment"><span class="dterm">Budget.</span> the total work over the \(N\) queried voters: \(\;B := \sum_{j} c_j\).</p>
-  <p class="el-tie fragment">Tied by the population — at equal load per voter, \(\;B = N\cdot\mathrm{MCL}\). <strong>For a fixed budget, fewer questions per voter \(\iff\) more voters.</strong></p>
-  <aside class="notes">Frame elicitation: we estimate the plurality matrix by querying sampled voters. Two principles for a digital democracy. (1) Anonymous sampling — a voter is a preference order drawn from the population per the profile π; we don't track who. (2) Two costs: the observed population N and the cognitive load per voter — which we want low. Motivation: 10 000 people answering 3 questions each is more realistic than 100 answering 20. Definitions: maximum cognitive load MCL = the heaviest single query (max comparisons asked of any voter); budget B = total comparisons; with equal per-voter load they tie via B = N·MCL, so at a fixed budget reducing the load per voter buys more voters.</aside>
+  <p class="el-lead fragment">We estimate the matrix by querying sampled voters — under two principles.</p>
+
+  <div class="prin fragment">
+    <p class="peyebrow">First principle</p>
+    <p class="ptitle"><span class="dterm">Anonymity.</span> <span class="pbody">a query draws a voter — one preference order — from \(\pi\); the voter <em>is</em> their preferences, never identified.</span></p>
+  </div>
+
+  <div class="prin fragment">
+    <p class="peyebrow">Second principle</p>
+    <p class="ptitle"><span class="dterm">Minimal cost.</span> <span class="pbody">keep two quantities small —</span></p>
+    <p class="psub fragment"><span class="sterm">MCL</span> \(=\max_j c_j\): the heaviest single query.</p>
+    <p class="psub fragment"><span class="sterm">Population</span> \(N\): the voters we must query.</p>
+    <p class="plink fragment">tied by the <span class="dterm">budget</span> \(\,B=\sum_j c_j = N\cdot\mathrm{MCL}\,\): at fixed \(B\), <strong>fewer questions per voter \(\iff\) more voters.</strong></p>
+  </div>
+  <aside class="notes">Two principles for the protocol. First — anonymity: a query draws a voter (a single preference order) from the profile π, and the voter is their preferences, never identified. Second — minimal cost: keep two quantities small, the maximum cognitive load MCL (the heaviest single query, max_j c_j) and the population N (the voters we query). The two are tied by the budget B = Σ_j c_j = N·MCL, so at a fixed budget fewer questions per voter means more voters.</aside>
 </section>
 
 <!-- 17. TWO PRIMITIVES -->
-<section class="prims-slide">
-  <p class="kicker">Two elicitation primitives</p>
-  <div class="primtab">
-    <div></div>
-    <div class="ph fragment" data-fragment-index="1">\(k\)-Chain</div>
-    <div class="ph fragment" data-fragment-index="1">\(k\)-Ranking</div>
-
-    <div></div>
-    <div class="dsc fragment" data-fragment-index="1">\(k-1\) sequential pairwise comparisons: compare \(a_1, a_2\), then the running winner against \(a_3,\dots,a_k\).</div>
-    <div class="dsc fragment" data-fragment-index="1">a full ranking of the \(k\) alternatives, elicited by pairwise comparisons.</div>
-
-    <div class="rl r1 fragment" data-fragment-index="2"><span class="rh">Cognitive load</span><span class="rs">per voter</span></div>
-    <div class="v r1 fragment" data-fragment-index="2">\(k-1\) comparisons</div>
-    <div class="v r1 fragment" data-fragment-index="2">\(\lceil\log_2 k!\rceil \approx k\log k\) comparisons</div>
-
-    <div class="rl r2 fragment" data-fragment-index="3"><span class="rh">Independent samples</span><span class="rs">at degree \(\ell\)</span></div>
-    <div class="v r2 fragment" data-fragment-index="3">\(1\) — the winner of the size-\(\ell\) prefix</div>
-    <div class="v r2 fragment" data-fragment-index="3">\(\binom{k}{\ell}\) — every \(\ell\)-subset's winner, by transitivity</div>
+<section class="krank-slide">
+  <p class="kicker">Elicitation by <span class="kv">k</span>-rankings</p>
+  <div class="scene">
+    <div class="ksplit">
+      <ol class="ksteps">
+        <li class="kstep1">Sample a voter and a \(k\)-subset \(S=\{a,b,c,d\}\), \(k=|S|\).</li>
+        <li class="kstep2">Ask them to <b>rank</b> it.</li>
+        <li class="kstep3">By transitivity, read the winner of <b>every</b> subset — one independent sample each, \(\binom{k}{\ell}\) at degree \(\ell\).</li>
+      </ol>
+      <div class="kanim ranim">
+        <div class="kseq">
+          <div class="lt" data-n="a">a</div><div class="lt" data-n="b">b</div><div class="lt" data-n="c">c</div><div class="lt" data-n="d">d</div>
+          <div class="kconn k0">&#8827;</div><div class="kconn k1">&#8827;</div><div class="kconn k2">&#8827;</div>
+        </div>
+        <div class="ksamps">
+          <div class="dgrp">
+            <span class="dlab">\(\ell=2\)</span>
+            <span class="smp" data-s="ab">\(p_{\{a,b\}}(a)\)</span>
+            <span class="smp" data-s="ac">\(p_{\{a,c\}}(c)\)</span>
+            <span class="smp" data-s="ad">\(p_{\{a,d\}}(a)\)</span>
+            <span class="smp" data-s="bc">\(p_{\{b,c\}}(c)\)</span>
+            <span class="smp" data-s="bd">\(p_{\{b,d\}}(d)\)</span>
+            <span class="smp" data-s="cd">\(p_{\{c,d\}}(c)\)</span>
+            <span class="dcnt">6</span>
+          </div>
+          <div class="dgrp">
+            <span class="dlab">\(\ell=3\)</span>
+            <span class="smp" data-s="abc">\(p_{\{a,b,c\}}(c)\)</span>
+            <span class="smp" data-s="abd">\(p_{\{a,b,d\}}(a)\)</span>
+            <span class="smp" data-s="acd">\(p_{\{a,c,d\}}(c)\)</span>
+            <span class="smp" data-s="bcd">\(p_{\{b,c,d\}}(c)\)</span>
+            <span class="dcnt">4</span>
+          </div>
+          <div class="dgrp">
+            <span class="dlab">\(\ell=4\)</span>
+            <span class="smp" data-s="abcd">\(p_{\{a,b,c,d\}}(c)\)</span>
+            <span class="dcnt">1</span>
+          </div>
+        </div>
+        <div class="kcount"></div>
+      </div>
+    </div>
   </div>
-  <p class="ptrade fragment" data-fragment-index="4">A clear <strong>trade-off</strong>: the chain is light per voter but yields a single sample; the ranking yields \(\binom{k}{\ell}\) samples — at a higher cognitive cost.</p>
-  <aside class="notes">Two primitives, side by side. A k-chain: k−1 sequential comparisons (winner stays), costing k−1 per voter, giving 1 sample at each degree (the nested prefixes). A k-ranking: a full ranking of the k items, costing ~k log k comparisons, but by transitivity it gives C(k,ℓ) independent samples at degree ℓ (the winner of every ℓ-subset). So: chain = cheap but few samples; ranking = many samples but heavy — a trade-off.</aside>
+  <span class="step fragment"></span><span class="step fragment"></span><span class="step fragment"></span><span class="step fragment"></span>
+  <aside class="notes">k-Ranking, animated. 1) sample a subset {a,b,c,d}; 2) the voter ranks it — the letters slide into the order c≻a≻d≻b; 3) by transitivity the winner of EVERY subset is known: each subset lights up in turn and its plurality-matrix sample p_S(winner) is added to the list, all 11 staying on screen; 4) a tally table shows how many samples land at each degree — C(4,2)=6 at degree 2, C(4,3)=4 at degree 3, C(4,4)=1 at degree 4.</aside>
 </section>
 
-<!-- 18. POPULATION vs COGNITIVE LOAD (theorem) -->
+<section class="kchain-slide">
+  <p class="kicker">Elicitation by <span class="kv">k</span>-chains</p>
+  <div class="scene">
+    <div class="ksplit">
+      <ol class="ksteps">
+        <li class="kstep1">Sample a voter and a \(k\)-subset \(S=\{a,b,c,d\}\), \(k=|S|\).</li>
+        <li class="kstep2">Put it in a (random) <b>query order</b>.</li>
+        <li class="kstep3">Ask 1st vs 2nd; the winner faces the next, … — one sample per <b>prefix</b>.</li>
+      </ol>
+      <div class="kanim canim">
+        <div class="kseq">
+          <div class="lt" data-n="a">a</div><div class="lt" data-n="b">b</div><div class="lt" data-n="c">c</div><div class="lt" data-n="d">d</div>
+          <div class="kconn k0">&#8594;</div><div class="kconn k1">&#8594;</div><div class="kconn k2">&#8594;</div>
+        </div>
+        <div class="ksamps">
+          <div class="dgrp"><span class="dlab">\(\ell=2\)</span><span class="smp" data-s="bd">\(p_{\{b,d\}}(d)\)</span><span class="dcnt">1</span></div>
+          <div class="dgrp"><span class="dlab">\(\ell=3\)</span><span class="smp" data-s="abd">\(p_{\{a,b,d\}}(a)\)</span><span class="dcnt">1</span></div>
+          <div class="dgrp"><span class="dlab">\(\ell=4\)</span><span class="smp" data-s="abcd">\(p_{\{a,b,c,d\}}(c)\)</span><span class="dcnt">1</span></div>
+        </div>
+        <div class="kcount"></div>
+      </div>
+    </div>
+  </div>
+  <span class="step fragment"></span><span class="step fragment"></span><span class="step fragment"></span><span class="step fragment"></span>
+  <aside class="notes">k-Chain, animated. 1) sample {a,b,c,d}; 2) a random query order b→d→a→c; 3) a sequential knockout — b vs d (d wins, b greys), d vs a (a wins), a vs c (c wins); each comparison yields the winner of one prefix, so three samples accumulate — one per degree; 4) the tally table shows one sample at each degree (2, 3, 4). Far fewer than the ranking, the trade-off for a lighter per-voter load.</aside>
+</section>
+
+<section class="degree-slide">
+  <p class="kicker">Which probe for a target degree?</p>
+  <div class="dgrid">
+    <p class="dparam fragment"><span class="sterm">\(k=|S|\)</span> — the size of the queried subset (the \(k\) of a \(k\)-ranking / \(k\)-chain).</p>
+    <p class="dparam fragment"><span class="sterm">\(\ell\)</span> — the degree of the plurality matrix we want to elicit.</p>
+    <p class="dcond fragment">A degree-\(\ell\) winner only appears in a subset of size \(\ge\ell\), so we need \(\;k\ge\ell\).</p>
+    <div class="dprop fragment">
+      <p class="dprop-h">Proposition</p>
+      <p class="dprop-b">To elicit degree \(\ell\), the <strong>minimum cognitive load</strong> is achieved by the <span class="dterm">\(\ell\)-chain</span> \((k=\ell)\): \(\;\mathrm{MCL}=\ell-1\).</p>
+    </div>
+  </div>
+  <aside class="notes">Set up the two knobs before the table. k = |S| is the size of the queried subset — the k of a k-ranking or k-chain. ℓ is the target degree of the plurality matrix we want to estimate. A degree-ℓ winner only appears in subsets of size at least ℓ, so we need k ≥ ℓ. Proposition: for a fixed target degree ℓ, the minimum cognitive load is achieved by the ℓ-chain (take k = ℓ and use a chain), giving MCL = ℓ − 1. This is why the chain matters — it is the lightest probe that still reaches degree ℓ.</aside>
+</section>
+
+<section class="prims-slide">
+  <p class="kicker">The two primitives, compared</p>
+  <div class="scene">
+    <table class="ptab">
+      <thead><tr><th></th><th>\(k\)-Ranking</th><th>\(k\)-Chain</th></tr></thead>
+      <tbody>
+        <tr class="trow tcost"><th><span class="rh">Cognitive load</span><span class="rs">per voter</span></th><td>\(\lceil\log_2 k!\rceil \approx k\log k\)</td><td>\(k-1\)</td></tr>
+        <tr class="trow tsamp"><th><span class="rh">Independent samples</span><span class="rs">at degree \(\ell\)</span></th><td>\(\binom{k}{\ell}\)</td><td>\(1\)</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <span class="step fragment"></span><span class="step fragment"></span>
+  <aside class="notes">The trade-off side by side. The ranking costs about k log k comparisons but yields C(k,ℓ) samples at each degree; the chain costs only k−1 comparisons but a single sample per degree. The cognitive-load row grows in first, then the independent-samples row.</aside>
+</section>
+
+<!-- 18. POPULATION vs COGNITIVE LOAD (theorem) + proof-sketch vertical extension -->
+<section>
 <section class="thm-slide">
   <p class="kicker">Population vs cognitive load</p>
   <p class="lead2 fragment">For a fixed degree, the population and the per-voter load are tied by a precise law.</p>
@@ -856,7 +1094,31 @@
     <p class="small muted">where \(T_k = \ln(2Q_k/\delta)/(2\varepsilon^2)\) and \(Q_k = k\binom{m}{k}\) is the number of degree-\(k\) entries.</p>
   </div>
   <p class="thm-take fragment">The ranking cuts the population by a factor \(k\log k\) — at a higher load per voter. <strong>More cognitive load per voter buys fewer voters.</strong></p>
-  <aside class="notes">The formal trade-off. For a fixed degree k, estimating all degree-k plurality entries to ε with confidence 1−δ: a k-chain needs C(m,k)·T_k voters at MCL k−1; a k-ranking needs the same divided by k log k voters, at MCL k log k. T_k is the per-entry sample count from Hoeffding + union bound. So rankings cut the population by k log k at the cost of a heavier query — population and cognitive load trade off, which the next (interactive) figure lets you explore.</aside>
+  <p class="thm-down small muted fragment">↓ &nbsp;proof sketch — a worked case at degree 3</p>
+  <aside class="notes">The formal trade-off. For a fixed degree k, estimating all degree-k plurality entries to ε with confidence 1−δ: a k-chain needs C(m,k)·T_k voters at MCL k−1; a k-ranking needs the same divided by k log k voters, at MCL k log k. T_k is the per-entry sample count from Hoeffding + union bound. So rankings cut the population by k log k at the cost of a heavier query — population and cognitive load trade off, which the next (interactive) figure lets you explore. Press Down for the proof sketch.</aside>
+</section>
+
+<section class="thm-proof">
+  <p class="kicker">Proof sketch — degree \(\ell=3\)</p>
+  <p class="ph-line fragment"><span class="lbl">Hoeffding.</span> a cell \(p\) estimated from \(m\) independent samples obeys
+    \[ \Pr\!\big(|\hat p - p|\ge\varepsilon\big)\,\le\,2e^{-2m\varepsilon^{2}}
+       \;\Longrightarrow\; m \ge \frac{\ln(2/\delta)}{2\varepsilon^{2}} \approx 185
+       \;\;(\varepsilon=0.1,\ \delta=0.05). \]</p>
+  <p class="ph-line fragment">Over all \(\binom{10}{3}=120\) degree-3 cells, \(\,M\approx 22{,}000\) samples. More samples per voter \(\Rightarrow\) fewer voters: \(\;N = M/(\text{samples/voter})\).</p>
+  <table class="vtab fragment">
+    <thead><tr><th>Probe</th><th>MCL</th><th>Samples / voter</th><th>Voters</th></tr></thead>
+    <tbody>
+      <tr class="best"><th>3-chain</th><td>2</td><td>1</td><td>22,000</td></tr>
+      <tr><th>4-chain</th><td>3</td><td>1</td><td>22,000</td></tr>
+      <tr><th>5-chain</th><td>4</td><td>1</td><td>22,000</td></tr>
+      <tr class="rsep"><th>3-ranking</th><td>3</td><td>1</td><td>22,000</td></tr>
+      <tr><th>4-ranking</th><td>5</td><td>4</td><td>5,500</td></tr>
+      <tr><th>5-ranking</th><td>7</td><td>10</td><td>2,200</td></tr>
+    </tbody>
+  </table>
+  <p class="ph-take fragment">A chain yields one degree-3 sample for <em>any</em> \(k\) — the <strong>3-chain</strong> is the cheapest probe (MCL 2); rankings buy fewer voters at a heavier load.</p>
+  <aside class="notes">Proof sketch at degree ℓ=3, n=10 alternatives. Hoeffding: a plurality-matrix cell estimated from m independent samples has error ≥ ε with probability ≤ 2e^(−2mε²); to reach ε=0.1 at δ=0.05 needs m ≈ 185 samples per cell. There are C(10,3)=120 degree-3 cells, so M ≈ 22,000 samples total; voters needed N = M divided by the independent degree-3 samples per voter. Chains yield exactly one degree-3 sample whatever k, so 3/4/5-chains all need ~22,000 voters but the 3-chain has the lowest load (MCL 2) — the cheapest degree-3 probe, matching the proposition. Rankings yield C(k,3) = 1, 4, 10 samples per voter, cutting the population to ~22,000 / 5,500 / 2,200 at MCL 3, 5, 7. This is the population-vs-load trade-off, worked numerically.</aside>
+</section>
 </section>
 
 <!-- 19. INTERACTIVE PARETO FRONTIER -->
@@ -919,6 +1181,107 @@
   Reveal.on('fragmentshown', syncSteps);
   Reveal.on('fragmenthidden', syncSteps);
   Reveal.on('slidechanged', syncSteps);
+
+  // ---- elicitation primitives: hand-built (non-reveal) Manim-style animations ----
+  (function () {
+    var RANK = ['c', 'a', 'd', 'b'];                 // the voter's ranking (ranking slide): c≻a≻d≻b
+    var RSUBS = ['ab','ac','ad','bc','bd','cd','abc','abd','acd','bcd','abcd']; // every subset of {a,b,c,d}
+    var QORD = ['b', 'd', 'a', 'c'];                 // the random query order (chain slide)
+    var PREFC = { c: 0, a: 1, d: 2, b: 3 };          // the chain voter's preference c≻a≻d≻b resolves a knockout
+    var SX = [20, 96, 172, 248], SY = 13;            // the four ordered slot positions inside the centred .kseq
+    var T1 = null, T2 = null;
+    function lt(s) { var m = {}; [].forEach.call(s.querySelectorAll('.lt'), function (l) { m[l.dataset.n] = l; }); return m; }
+    function clr(e) { e.classList.remove('hl', 'hlg', 'dim'); }
+    function put(e, x) { e.style.transform = 'translate(' + x + 'px,' + SY + 'px)'; }
+    function conns(s) { return [].slice.call(s.querySelectorAll('.kconn')); }
+    function cnt(s) { return s.querySelector('.kcount'); }
+    function smps(s) { return [].slice.call(s.querySelectorAll('.smp')); }
+    function smpShow(s, key) { var e = s.querySelector('.smp[data-s="' + key + '"]'); if (e) e.classList.add('show'); }
+    function smpReset(s) { smps(s).forEach(function (e) { e.classList.remove('show'); }); }
+    function stepN(s) { var n = 0; [].forEach.call(s.querySelectorAll('.step'), function (f) { if (f.classList.contains('visible')) n++; }); return n; }
+    function hide(s) { var m = lt(s); ['a','b','c','d'].forEach(function (n) { m[n].classList.remove('on'); clr(m[n]); }); conns(s).forEach(function (c) { c.style.opacity = '0'; }); smpReset(s); cnt(s).innerHTML = ''; }
+    function row(s) { var m = lt(s); ['a','b','c','d'].forEach(function (n, i) { m[n].classList.add('on'); clr(m[n]); put(m[n], SX[i]); }); conns(s).forEach(function (c) { c.style.opacity = '0'; }); smpReset(s); cnt(s).innerHTML = ''; }
+    function order(s, ord) { var m = lt(s); ord.forEach(function (n, i) { m[n].classList.add('on'); clr(m[n]); put(m[n], SX[i]); }); conns(s).forEach(function (c, i) { c.style.left = ((SX[i] + 38 + SX[i + 1]) / 2) + 'px'; c.style.top = SY + 'px'; c.style.opacity = '1'; }); smpReset(s); cnt(s).innerHTML = ''; }
+    function stop(s) { clearTimeout(T1); clearTimeout(T2); s.dataset.play = ''; var m = lt(s); ['a','b','c','d'].forEach(function (n) { clr(m[n]); }); smpReset(s); cnt(s).innerHTML = ''; }
+
+    function playRank(s) {
+      if (s.dataset.play === '1') return; s.dataset.play = '1';
+      var m = lt(s), i = 0, c = 0;
+      (function tick() {
+        if (s.dataset.play !== '1') return;
+        if (i >= RSUBS.length) { ['a','b','c','d'].forEach(function (n) { clr(m[n]); }); cnt(s).innerHTML = '<b>' + c + '</b> independent samples'; return; }
+        var key = RSUBS[i], mem = key.split('');
+        ['a','b','c','d'].forEach(function (n) { clr(m[n]); if (mem.indexOf(n) < 0) m[n].classList.add('dim'); });
+        mem.forEach(function (n) { m[n].classList.add('hl'); });
+        smpShow(s, key);
+        c++; cnt(s).innerHTML = 'sample <b>' + c + '</b> &nbsp;/&nbsp; 11';
+        i++; T1 = setTimeout(tick, 720);
+      })();
+    }
+    function playChain(s) {
+      if (s.dataset.play === '1') return; s.dataset.play = '1';
+      var m = lt(s), i = 1, c = 0, champ = QORD[0], pre = [QORD[0]];
+      m[champ].classList.add('hlg');
+      (function tick() {
+        if (s.dataset.play !== '1') return;
+        if (i >= QORD.length) { cnt(s).innerHTML = '<b>' + c + '</b> independent samples'; return; }
+        var ch = QORD[i], a0 = champ; pre.push(ch);
+        m[ch].classList.remove('dim'); m[ch].classList.add('hl');
+        cnt(s).innerHTML = '<span class="vs">(' + a0 + ' ? ' + ch + ')</span>';
+        T2 = setTimeout(function () {
+          if (s.dataset.play !== '1') return;
+          var w = PREFC[a0] < PREFC[ch] ? a0 : ch, lo = (w === a0) ? ch : a0;
+          m[lo].classList.remove('hl', 'hlg'); m[lo].classList.add('dim');
+          m[w].classList.remove('hl'); m[w].classList.add('hlg');
+          champ = w; c++;
+          smpShow(s, pre.slice().sort().join(''));
+          cnt(s).innerHTML = '<span class="vs">(' + a0 + ' ? ' + ch + ')</span> &rArr; ' + w + ' &#8827; ' + lo;
+          i++; T1 = setTimeout(tick, 1250);
+        }, 850);
+      })();
+    }
+    // final step: the sample cells SHIFT (FLIP) from the wrap into degree columns
+    function classify(s) {
+      if (s.dataset.classified === '1') return; s.dataset.classified = '1';
+      clearTimeout(T1); clearTimeout(T2); s.dataset.play = '';
+      var m = lt(s); ['a','b','c','d'].forEach(function (n) { clr(m[n]); });
+      var ks = s.querySelector('.ksamps'), els = smps(s);
+      els.forEach(function (e) { e.classList.add('show'); e.style.transition = 'none'; e.style.transform = ''; });
+      cnt(s).innerHTML = '<b>' + els.length + '</b> independent samples';
+      var first = els.map(function (e) { return e.getBoundingClientRect(); });
+      ks.classList.add('classified');
+      var last = els.map(function (e) { return e.getBoundingClientRect(); });
+      els.forEach(function (e, i) { e.style.transform = 'translate(' + (first[i].left - last[i].left) + 'px,' + (first[i].top - last[i].top) + 'px)'; });
+      void ks.offsetWidth;
+      els.forEach(function (e) { e.style.transition = 'transform .65s var(--ease), opacity .35s ease'; e.style.transform = 'translate(0,0)'; });
+    }
+    function unclassify(s) {
+      s.dataset.classified = '';
+      var ks = s.querySelector('.ksamps'); if (ks) ks.classList.remove('classified');
+      smps(s).forEach(function (e) { e.style.transition = ''; e.style.transform = ''; });
+    }
+    function drive(s, ord, play) {
+      if (!s.classList.contains('present')) { if (s.dataset.phase) { stop(s); unclassify(s); hide(s); s.dataset.phase = ''; } return; }
+      var n = stepN(s), ph = n >= 4 ? 4 : n >= 3 ? 3 : n >= 2 ? 2 : n >= 1 ? 1 : 0;
+      if (s.dataset.phase === String(ph)) return;
+      var prev = s.dataset.phase || '';
+      s.dataset.phase = String(ph);
+      if (prev === '4' && ph < 4) unclassify(s);
+      if (ph === 0) { stop(s); hide(s); }
+      else if (ph === 1) { stop(s); row(s); }
+      else if (ph === 2) { stop(s); order(s, ord); }
+      else if (ph === 3) { if (prev !== '4') { stop(s); order(s, ord); play(s); } }
+      else if (ph === 4) { if (prev !== '3' && prev !== '4') { order(s, ord); } classify(s); }
+    }
+    function primAnim() {
+      var r = document.querySelector('section.krank-slide'); if (r) drive(r, RANK, playRank);
+      var c = document.querySelector('section.kchain-slide'); if (c) drive(c, QORD, playChain);
+    }
+    Reveal.on('ready', primAnim);
+    Reveal.on('fragmentshown', primAnim);
+    Reveal.on('fragmenthidden', primAnim);
+    Reveal.on('slidechanged', primAnim);
+  })();
 
   // ---- interactive moment-plane: drive the guided stages into the iframe ----
   function mpStage() {
