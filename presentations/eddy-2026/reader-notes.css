@@ -1,0 +1,31 @@
+/* The notes themselves belong in reader-notes.html, not in this file. */
+:root { color-scheme:light; --ink:#202020; --muted:#72706d; --accent:#9a1b1b; }
+* { box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { max-width:860px; margin:0 auto; padding:56px 28px 100px; background:#fff; color:var(--ink); font:19px/1.65 Georgia,"Times New Roman",serif; }
+h1,h2,h3 { font-weight:400; line-height:1.25; }
+h1 { margin:8px 0 22px; font-size:2.45rem; }
+h2 { margin:8px 0 24px; font-size:1.65rem; }
+h3 { margin:0 0 18px; font-size:1.25rem; }
+p { margin:0 0 16px; }
+a { color:inherit; text-decoration-color:#cba8a8; text-underline-offset:4px; }
+a:hover { color:var(--accent); }
+a:focus-visible,summary:focus-visible { outline:2px solid var(--accent); outline-offset:5px; }
+code { font-size:.85em; }
+.eyebrow,.slide-label { color:var(--accent); font-size:.82rem; letter-spacing:.12em; text-transform:uppercase; margin:0; }
+.muted { color:var(--muted); font-size:1rem; }
+.contents { margin:30px 0 46px; }
+summary { cursor:pointer; color:var(--accent); }
+.contents ol { list-style:none; margin:20px 0 0; padding:0; columns:2; column-gap:32px; font-size:1rem; }
+.contents li { break-inside:avoid; margin:0 0 10px; }
+.slide-notes { border-top:1px solid #d8d5d3; margin-top:44px; padding-top:26px; scroll-margin-top:24px; }
+.note-body { min-height:72px; overflow-wrap:anywhere; }
+.note-body:empty::before { content:"No notes yet."; color:var(--muted); font-size:1rem; font-style:italic; }
+.note-body ul,.note-body ol { padding-left:1.4em; }
+.note-body li { margin-bottom:.4em; }
+.detail-notes { margin-top:18px; font-size:1rem; }
+.detail-notes section { border-left:2px solid #e6d5d5; margin:28px 0; padding-left:22px; scroll-margin-top:24px; }
+.detail-notes .note-body { font-size:19px; }
+@media(max-width:600px) { body { padding:28px 20px 64px; } h1 { font-size:2rem; } h2 { font-size:1.4rem; } .contents ol { columns:1; } }
+@media(prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } }
+@media print { body { max-width:none; padding:0; font-size:12pt; } header>p:not(.eyebrow),.contents { display:none; } h2,h3 { break-after:avoid; } a { text-decoration:none; } }

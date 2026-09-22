@@ -5,6 +5,13 @@
 .reveal .conclusion-columns h3 { font-size:.86em; font-style:normal; color:var(--accent); margin:0 0 20px; }
 .reveal .conclusion-strengths > ul { margin:0; padding-left:21px; }
 .conclusion-strengths li { font-size:.68em; line-height:1.36; margin:0 0 17px; }
+.conclusion-gain-with-zoo { display:flex; align-items:center; gap:14px; }
+.conclusion-gain-with-zoo > span { flex:1; min-width:0; }
+.reveal .conclusion-zoo-button { flex:none; display:inline-block; border:1px solid var(--accent); background:var(--accent); color:#fff; padding:.45em .65em; font-size:.72em; line-height:1.15; text-decoration:none; white-space:nowrap; }
+.reveal .fragment.conclusion-zoo-button { transform:translateY(7px); transition:opacity .45s ease, transform .45s var(--ease), visibility .45s; }
+.reveal .fragment.conclusion-zoo-button.visible { transform:none; }
+.reveal .conclusion-zoo-button:hover { background:#761515; color:#fff; }
+.reveal .conclusion-zoo-button:focus-visible { outline:2px solid var(--accent); outline-offset:4px; }
 .conclusion-limit + .conclusion-limit { border-top:1px solid #ddd; margin-top:24px; padding-top:18px; }
 .conclusion-limit p { font-size:.71em; line-height:1.4; margin:0 0 13px; }
 .conclusion-limit .limit-detail { font-size:.63em; color:var(--muted); }
@@ -27,8 +34,10 @@
 @media(max-width:760px) {
   .conclusion-columns { grid-template-columns:1fr; gap:25px; }
   .conclusion-columns > div + div { border-left:0; border-top:1px solid #bbb; padding:20px 0 0; }
+  .conclusion-gain-with-zoo { flex-wrap:wrap; }
+  .conclusion-gain-with-zoo > span { flex-basis:100%; }
   .thank-you-layout { grid-template-columns:1fr; gap:35px; text-align:center; }
   .reveal .thank-you-card h1 { font-size:2.1em; }
 }
-@media(prefers-reduced-motion:reduce) { .conclusion-emphasis, .conclusion-emphasis::after { transition:none !important; } }
+@media(prefers-reduced-motion:reduce) { .conclusion-emphasis, .conclusion-emphasis::after, .reveal .fragment.conclusion-zoo-button { transition:none !important; transform:none; } }
 @media print { .conclusion-emphasis { color:var(--accent) !important; } .conclusion-emphasis::after { transform:scaleX(1); } }

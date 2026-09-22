@@ -15,10 +15,10 @@
   <link rel="stylesheet" href="continuation.css?v=20260922-2">
   <link rel="stylesheet" href="framework.css?v=20260922-3">
   <link rel="stylesheet" href="elicitation.css?v=20260922-2">
-  <link rel="stylesheet" href="sampling-overview.css?v=20260922-2">
+  <link rel="stylesheet" href="sampling-overview.css?v=20260922-6">
   <link rel="stylesheet" href="protocols.css?v=20260922-2">
   <link rel="stylesheet" href="literature.css?v=20260922-3">
-  <link rel="stylesheet" href="closing.css?v=20260922">
+  <link rel="stylesheet" href="closing.css?v=20260922-2">
 </head>
 <body>
 <div class="reveal">
@@ -507,8 +507,8 @@
 </section>
 
 <section>
-  <section id="borda-elicitation" class="main-slide elicitation-slide sampling-overview" data-build="0">
-    <button class="branch-entry" type="button" data-branch="down">Hoeffding development ↓</button>
+  <section id="borda-elicitation" class="main-slide elicitation-slide sampling-overview" data-build="0" data-direct-details="true">
+    <button class="branch-entry" type="button" data-detail-target="borda-hoeffding-development">Hoeffding development ↓</button>
     <div class="sampling-overview-canvas">
       <h2 class="sampling-overview-title">Computing Borda score through elicitation</h2>
       <div class="sampling-flow">
@@ -538,14 +538,14 @@
       </div>
       <div class="tradeoff-columns" data-from="5">
         <div class="tradeoff-protocol tradeoff-full">
-          <h3 data-from="5">Full ranking</h3>
+          <h3 class="tradeoff-heading-morph" data-from="5"><span class="protocol-heading-label" data-until="21">Full ranking</span><span class="protocol-heading-label protocol-heading-new" data-from="21">An $m$-ranking</span></h3>
           <ol class="tradeoff-steps">
             <li data-from="5"><span class="tradeoff-number">1</span><span>Sample a voter.</span></li>
             <li data-from="6"><span class="tradeoff-number">2</span><span>Ask them to rank all $m$ alternatives.</span></li>
           </ol>
           <div class="tradeoff-yield" data-from="7"><p><span data-until="22">$Q(m)$ observations</span><span data-from="22">$Q(10)=45$ observations</span><br><span class="tradeoff-detail">one per pair</span></p></div>
-          <div class="tradeoff-population" data-from="8"><p class="tradeoff-label">Population</p><p><span data-until="22">$N=n(m)$</span><span data-from="22">$N=1\,500$</span></p></div>
-          <div class="tradeoff-cost" data-from="14"><p class="tradeoff-label">Comparisons per voter</p><p><span data-until="22">$C(m)=\Theta(m\log m)$</span><span data-from="22">$C(10)\le25$</span></p></div>
+          <div class="tradeoff-population" data-from="8" data-until="23"><p class="tradeoff-label">Population</p><p><span data-until="22">$N=n(m)$</span><span data-from="22">$N=$ <span data-sampling-source="population-full">1 500</span></span></p></div>
+          <div class="tradeoff-cost" data-from="14" data-until="23"><p class="tradeoff-label">Comparisons per voter</p><p><span data-until="22">$C(m)=\Theta(m\log m)$</span><span data-from="22">$C(10)\le$ <span data-sampling-source="cost-full">25</span></span></p></div>
         </div>
         <div class="tradeoff-protocol tradeoff-subset" data-from="15">
           <h3>A $k$-ranking</h3>
@@ -554,24 +554,27 @@
             <li data-from="16"><span class="tradeoff-number">2</span><span>Draw a random $k$-subset.</span></li>
             <li data-from="17"><span class="tradeoff-number">3</span><span>Ask them to rank it.</span></li>
           </ol>
-          <div class="tradeoff-yield" data-from="18"><p><span data-until="22">$\binom k2$ observations</span><span data-from="22">$\binom52=10$ observations</span><br><span class="tradeoff-detail">one per included pair</span></p></div>
-          <div class="tradeoff-population" data-from="19"><p class="tradeoff-label">Population · mean coverage</p><p><span data-until="22">$N_{\rm cov}=\dfrac{Q(m)n(m)}{\binom k2}$</span><span data-from="22">$N_{\rm cov}=\dfrac{45\times1\,500}{10}=6\,750$</span></p></div>
-          <div class="tradeoff-cost" data-from="20"><p class="tradeoff-label">Comparisons per voter</p><p><span data-until="22">$C(k)=\Theta(k\log k)$</span><span data-from="22">$C(5)\le8$</span></p></div>
+          <div class="tradeoff-yield" data-from="18"><p>$\binom k2$ observations<br><span class="tradeoff-detail">one per included pair</span></p></div>
+          <div class="tradeoff-population" data-from="19" data-until="23"><p class="tradeoff-label">Population · mean coverage</p><p><span data-until="22">$N_{\rm cov}=\dfrac{Q(m)n(m)}{\binom k2}$</span><span data-from="22">$N_{\rm cov}=\dfrac{67\,500}{\binom k2}$</span></p></div>
+          <div class="tradeoff-cost" data-from="20" data-until="23"><p class="tradeoff-label">Comparisons per voter</p><p>$C(k)=\Theta(k\log k)$</p></div>
         </div>
         <div class="tradeoff-protocol tradeoff-pair" data-from="9">
-          <h3>One pairwise comparison</h3>
+          <h3 class="tradeoff-heading-morph"><span class="protocol-heading-label" data-until="21">One pairwise comparison</span><span class="protocol-heading-label protocol-heading-new" data-from="21">A $2$-ranking</span></h3>
           <ol class="tradeoff-steps">
             <li data-from="9"><span class="tradeoff-number">1</span><span>Sample a voter.</span></li>
             <li data-from="10"><span class="tradeoff-number">2</span><span>Draw a pair, balancing allocations.</span></li>
             <li data-from="11"><span class="tradeoff-number">3</span><span>Ask them to compare it.</span></li>
           </ol>
           <div class="tradeoff-yield" data-from="12"><p>1 observation<br><span class="tradeoff-detail">per sampled voter</span></p></div>
-          <div class="tradeoff-population" data-from="13"><p class="tradeoff-label">Population</p><p><span data-until="22">$N=Q(m)n(m)$</span><span data-from="22">$N=45\times1\,500$<br>$=67\,500$</span></p></div>
-          <div class="tradeoff-cost" data-from="14"><p class="tradeoff-label">Comparisons per voter</p><p>$1$</p></div>
+          <div class="tradeoff-population" data-from="13" data-until="23"><p class="tradeoff-label">Population</p><p><span data-until="22">$N=Q(m)n(m)$</span><span data-from="22">$N=$ <span data-sampling-source="population-pair">67 500</span></span></p></div>
+          <div class="tradeoff-cost" data-from="14" data-until="23"><p class="tradeoff-label">Comparisons per voter</p><p><span data-sampling-source="cost-pair">1</span></p></div>
         </div>
       </div>
-      <p class="tradeoff-example-settings" data-from="21">$m=10$, with $k=5$ in the middle · $\varepsilon=\delta=0.05$<span data-from="22"><br>Ranking costs: merge-sort worst-case bounds.</span></p>
-      <div class="sampling-steps" aria-hidden="true"><span class="fragment" data-fragment-index="0"></span><span class="fragment" data-fragment-index="1"></span><span class="fragment" data-fragment-index="2"></span><span class="fragment" data-fragment-index="3"></span><span class="fragment" data-fragment-index="4"></span><span class="fragment" data-fragment-index="5"></span><span class="fragment" data-fragment-index="6"></span><span class="fragment" data-fragment-index="7"></span><span class="fragment" data-fragment-index="8"></span><span class="fragment" data-fragment-index="9"></span><span class="fragment" data-fragment-index="10"></span><span class="fragment" data-fragment-index="11"></span><span class="fragment" data-fragment-index="12"></span><span class="fragment" data-fragment-index="13"></span><span class="fragment" data-fragment-index="14"></span><span class="fragment" data-fragment-index="15"></span><span class="fragment" data-fragment-index="16"></span><span class="fragment" data-fragment-index="17"></span><span class="fragment" data-fragment-index="18"></span><span class="fragment" data-fragment-index="19"></span><span class="fragment" data-fragment-index="20"></span><span class="fragment" data-fragment-index="21"></span></div>
+      <div class="sampling-numerical-table" data-from="23">
+        <table aria-label="Population and comparison bounds for every ranking size from 2 to 10"></table>
+      </div>
+      <p class="tradeoff-example-settings" data-from="22">$m=10$ · $\varepsilon=\delta=0.05$</p>
+      <div class="sampling-steps" aria-hidden="true"><span class="fragment" data-fragment-index="0"></span><span class="fragment" data-fragment-index="1"></span><span class="fragment" data-fragment-index="2"></span><span class="fragment" data-fragment-index="3"></span><span class="fragment" data-fragment-index="4"></span><span class="fragment" data-fragment-index="5"></span><span class="fragment" data-fragment-index="6"></span><span class="fragment" data-fragment-index="7"></span><span class="fragment" data-fragment-index="8"></span><span class="fragment" data-fragment-index="9"></span><span class="fragment" data-fragment-index="10"></span><span class="fragment" data-fragment-index="11"></span><span class="fragment" data-fragment-index="12"></span><span class="fragment" data-fragment-index="13"></span><span class="fragment" data-fragment-index="14"></span><span class="fragment" data-fragment-index="15"></span><span class="fragment" data-fragment-index="16"></span><span class="fragment" data-fragment-index="17"></span><span class="fragment" data-fragment-index="18"></span><span class="fragment" data-fragment-index="19"></span><span class="fragment" data-fragment-index="20"></span><span class="fragment" data-fragment-index="21"></span><span class="fragment" data-fragment-index="22"></span></div>
     </div>
   </section>
   <section id="borda-hoeffding-development" class="technical elicitation-slide elicitation-lab" data-step-through-branch="true" data-build="0">
@@ -828,7 +831,12 @@
       <div class="conclusion-strengths">
         <h3>What we gain</h3>
         <ul>
-          <li class="fragment" data-fragment-index="0">Levels quantify a measure’s<br><strong>information requirements</strong>.</li>
+          <li class="fragment" data-fragment-index="0">
+            <div class="conclusion-gain-with-zoo">
+              <span>Levels quantify a measure’s<br><strong>information requirements</strong>.</span>
+              <a class="fragment conclusion-zoo-button" data-fragment-index="7" href="#/literature-measures" data-detail-target="literature-measures">Divisiveness Zoo</a>
+            </div>
+          </li>
           <li class="fragment" data-fragment-index="1">They reveal what a measure can see —<br>and what it may miss.</li>
           <li class="fragment" data-fragment-index="3">Levels guide the<br><strong>people–questions trade-off</strong>.</li>
           <li class="fragment" data-fragment-index="4">Minimal cognitive-load options;<br>generally <span class="fragment custom conclusion-emphasis" data-fragment-index="5">efficient</span> protocols<br>with sampling guarantees.</li>
@@ -1010,11 +1018,12 @@
 <script src="tournament.js?v=20260922"></script>
 <script src="continuation.js?v=20260922"></script>
 <script src="framework.js?v=20260922-3"></script>
-<script src="elicitation.js?v=20260922-3"></script>
+<script src="sampling-model.js?v=20260922"></script>
+<script src="elicitation.js?v=20260922-7"></script>
 <script src="protocols.js?v=20260922"></script>
 <script src="closing.js?v=20260922"></script>
 <script src="literature-data.js?v=20260922-2"></script>
 <script src="literature.js?v=20260922-2"></script>
-<script src="deck.js?v=20260922-14"></script>
+<script src="deck.js?v=20260922-15"></script>
 </body>
 </html>

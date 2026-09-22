@@ -113,7 +113,7 @@ for (let m = 2; m <= 8; m += 1) {
 }
 console.log("Elicitation validation passed: simultaneous Hoeffding threshold, both endpoints, and random-subset coverage identities.");
 
-// Main sampling overview: fixed m=10 and illustrative k=5, with merge-sort cost bounds.
+// Main sampling overview: fixed m=10, every k=2,...,m, and merge-sort cost bounds.
 const overviewN = Math.ceil(200 * Math.log(40 * 45));
 assert.equal(overviewN, 1500);
 assert.equal(45 * overviewN, 67500);
@@ -127,7 +127,26 @@ for (let t = 2; t <= 30; t++) {
 }
 assert.equal(mergeSortWorstCase(10), 25);
 assert.equal(mergeSortWorstCase(5), 8);
-console.log("Sampling overview validation passed: 1500 / 67500 / 6750 people and merge-sort caps 25 / 1 / 8.");
+const sampling = require("./sampling-model.js");
+const numericalOverview = sampling.makeExample();
+assert.equal(numericalOverview.m, 10);
+assert.equal(numericalOverview.pairs, 45);
+assert.equal(numericalOverview.samplesPerPair, overviewN);
+assert.deepEqual(numericalOverview.rows.map(row => row.k), [2, 3, 4, 5, 6, 7, 8, 9, 10]);
+assert.deepEqual(numericalOverview.rows.map(row => row.population), [67500, 22500, 11250, 6750, 4500, 3215, 2411, 1875, 1500]);
+assert.deepEqual(numericalOverview.rows.map(row => row.comparisons), [1, 3, 5, 8, 11, 14, 17, 21, 25]);
+for (let m = 2; m <= 30; m++) {
+  const model = sampling.makeExample(m);
+  model.rows.forEach(row => {
+    const inclusion = row.pairsPerVoter / model.pairs;
+    assert.ok(row.population * inclusion >= model.samplesPerPair - 1e-10);
+    assert.ok((row.population - 1) * inclusion < model.samplesPerPair, "Population is the rounded-up mean-coverage benchmark");
+    assert.equal(row.comparisons, mergeSortWorstCase(row.k));
+  });
+  assert.equal(model.rows[0].population, model.pairs * model.samplesPerPair);
+  assert.equal(model.rows.at(-1).population, model.samplesPerPair);
+}
+console.log("Sampling overview validation passed: all k=2,...,10 table entries, rounded mean coverage, and merge-sort bounds through m=30.");
 
 // Higher-degree sampling and the source-backed protocol selector.
 for (let m = 3; m <= 12; m += 1) for (let ell = 2; ell <= m; ell += 1) {

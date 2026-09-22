@@ -257,6 +257,15 @@
       target.classList.contains("main-slide") ? detailReturnState.get(indices.h) ?? savedFragmentState.get(indices.h) ?? -1 : -1);
   }
 
+  function setLiteratureHome(slide) {
+    if (!["using-results", "conclusion"].includes(slide?.id)) return;
+    const table = document.getElementById("literature-measures");
+    const back = table.querySelector("[data-detail-home-link]");
+    table.dataset.detailHome = slide.id;
+    back.href = "#/" + slide.id;
+    back.textContent = slide.id === "conclusion" ? "↑ Back to the conclusion" : "↑ Back to the interactive figure";
+  }
+
   function storyNext() {
     const indices = currentIndices();
     const branch = Reveal.getCurrentSlide();
@@ -308,7 +317,7 @@
       if (detail || home) {
         event.preventDefault();
         event.stopPropagation();
-        openDetail(detail ? detail.dataset.detailTarget : "using-results");
+        openDetail(detail ? detail.dataset.detailTarget : home.closest("[data-detail-home]")?.dataset.detailHome || "using-results");
       }
     }, true);
     document.addEventListener("click", (event) => {
@@ -400,6 +409,7 @@
   Reveal.on("fragmenthidden", syncOriginalFigure);
   Reveal.on("slidechanged", syncOriginalFigure);
   Reveal.on("slidechanged", (event) => {
+    if (event.currentSlide?.id === "literature-measures") setLiteratureHome(event.previousSlide);
     // The sampling overview saves its fragment index before entering its branch.
     // Reveal marks the departed parent slide's fragments visible, so counting
     // them here would overwrite that saved position with the final build.
