@@ -363,6 +363,7 @@ body {                      /* a comfortable single reading column */
 /* ---- talks page ---- */
 .talk.featured { display: grid; grid-template-columns: 1fr 320px; gap: 2.2rem; align-items: start;
     margin: 1.2rem 0 1.6rem; padding-bottom: 1.8rem; border-bottom: 1px solid #eee; }
+.talk.featured.talk-text { grid-template-columns: 1fr; }
 .talk-title { font-style: normal; font-weight: 400; font-size: 1.5rem; line-height: 1.28; margin: 0 0 .35rem; }
 .talk-title a { text-decoration: none; border-bottom: 2px solid #ccc; }
 .talk-title a:hover { border-bottom-color: #111; }
