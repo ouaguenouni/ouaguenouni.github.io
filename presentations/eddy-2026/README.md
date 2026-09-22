@@ -16,18 +16,24 @@ Open <http://localhost:8000/presentations/eddy-2026/>.
 - Left: step backward through the horizontal story.
 - Down: enter an optional technical branch when one exists.
 - `O`: overview.
+- `S`: open the speaker view (allow pop-ups if prompted).
 
 ## Write your reader’s notes
 
 Edit [`reader-notes.html`](reader-notes.html) only. Each slide has a blank `note-body` block marked `<!-- Write your notes here. -->`; replace the comment with paragraphs, lists, or any HTML you need. All 22 main slides and their 43 optional detail slides are included, with the latter grouped in expandable sections. Headings link to the corresponding slides.
 
-Save the file, then refresh <http://localhost:8000/presentations/eddy-2026/reader-notes.html> to preview it. The page is a viewer, not a browser editor: your saved HTML file is the source of truth. Styling is kept separately in `reader-notes.css`. Nothing imports these notes into the projected deck or restores the speaker-notes plugin.
+Save the file, then refresh <http://localhost:8000/presentations/eddy-2026/reader-notes.html> to preview it. The page is a viewer, not a browser editor: your saved HTML file is the source of truth. Styling is kept separately in `reader-notes.css`.
+
+For speaker notes, open the presentation through the local server (or the hosted website), then press **S**. The Reveal.js speaker view displays the current slide's `note-body`, matched by `data-slide`, including optional detail slides. Only that body is imported—not the page headings, navigation, or nested detail notes. Blank bodies remain blank. Notes stay hidden in the projected deck and its default print output.
+
+After saving notes, **refresh the presentation** to load the latest file, then press S if the speaker window is closed. Notes are fetched without caching; there is no need to copy text into `index.html`. The deck still opens if loading the notes fails; check the browser console and the notes-file URL if the speaker view is unexpectedly blank. Use a web server, not a `file://` URL. See the [Reveal.js speaker-view documentation](https://revealjs.com/speaker-view/).
 
 This is a public website repository: notes will also be public if you commit and push this file. The `noindex` tag is not access control.
 
 ## Editable project
 
-- `index.html` — narrative, technical branches, and visible bibliographic pointers. Speaker notes and the notes plugin are omitted.
+- `index.html` — narrative, technical branches, visible bibliographic pointers, and the Reveal.js speaker-notes plugin.
+- `speaker-notes.js` — loads the sole notes source, `reader-notes.html`, into hidden per-slide notes before Reveal initializes.
 - `deck.css` — the visual system and responsive layout.
 - `opening.css` — isolated layouts and reversible animations for the five opening cards.
 - `example.css` and `example.js` — the 14-build illustrative example, including grouping, normalization, rank-specific highlights, growing histograms, and probability flights into Borda computations.
@@ -43,6 +49,7 @@ This is a public website repository: notes will also be public if you commit and
 - `sampling-model.js` — the numerical k-ranking table's rounded mean-coverage populations and merge-sort comparison bounds, shared with the validation script.
 - `deck.js` — computed teaching examples, original-figure stage control, navigation, and browser-side validation.
 - `validate.cjs` — checks Borda scores, all 11 rows of the four-alternative matrix, the moment formula, original witnesses, and the exact equality of all 147 degree-2 and degree-3 witness entries.
+- `validate-speaker-notes.cjs` — checks note mapping, HTML preservation, blank sections, reloads, and non-blocking request failures; also runs with `validate.cjs`.
 
 Run the exact witness check with:
 

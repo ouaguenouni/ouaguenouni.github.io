@@ -300,3 +300,4 @@ for (let p = 1; p < matrices.length; p += 1) {
 
 console.log("EDDY witness validation passed: all 147 degree-2/3 entries are exactly equal across profiles.");
 require("./validate-literature.cjs");
+require("./validate-speaker-notes.cjs");

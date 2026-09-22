@@ -347,6 +347,9 @@
   document.querySelector("#moment-compass iframe").addEventListener("load", syncOriginalFigure);
 
   Reveal.initialize({
+    // Load the separate notes file before initializing the speaker window.
+    plugins: [RevealReaderNotes, RevealNotes],
+    showNotes: false,
     width: window.innerWidth <= 760 ? window.innerWidth : 960,
     height: window.innerWidth <= 760 ? window.innerHeight : 700,
     margin: window.innerWidth <= 760 ? 0.025 : 0.04,
