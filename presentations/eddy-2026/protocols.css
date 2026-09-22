@@ -1,0 +1,96 @@
+  /* two elicitation primitives — a slide each (ranking / chain): steps on the left,
+     a hand-built JS animation on the right (letters reorder, highlight, grey out),
+     the extracted samples listed (KaTeX) as they accumulate; then a comparison table. */
+  /* balanced two columns — a wider steps column, the pair centred on the slide */
+  .reveal #protocol-examples .ksplit { display:flex; align-items:center; justify-content:center; gap:2.4em; max-width:900px; margin:.4em auto 0; }
+  .reveal #protocol-examples .ksteps { flex:0 0 348px; margin:0; padding-left:1.2em; font-size:.8em; line-height:1.5; }
+  .reveal #protocol-examples .ksteps li { opacity:0; transition:opacity .5s ease; margin:.7em 0; }
+  .reveal #protocol-examples .scene.s1 .kstep1 { opacity:1; }
+  .reveal #protocol-examples .scene.s2 .kstep2 { opacity:1; }
+  .reveal #protocol-examples .scene.s3 .kstep3 { opacity:1; }
+  .reveal #protocol-examples .ksteps b { color:var(--accent); }
+  .reveal #protocol-examples .kanim { flex:0 0 404px; }
+  .reveal #protocol-examples .kseq { position:relative; width:320px; height:64px; margin:0 auto; }
+  .reveal #protocol-examples .lt { position:absolute; left:0; top:0; width:38px; height:38px; line-height:35px; text-align:center;
+    font-style:italic; font-size:1.05em; border:1.5px solid var(--ink); border-radius:50%; background:#fff; color:var(--ink);
+    opacity:0; box-sizing:border-box;
+    transition:transform .55s var(--ease), color .3s ease, background .3s ease, border-color .3s ease, opacity .35s ease; }
+  .reveal #protocol-examples .lt.on { opacity:1; }
+  .reveal #protocol-examples .lt.dim { color:#d0d0d0; border-color:#e6e6e6; }
+  .reveal #protocol-examples .lt.hl { color:#fff; background:var(--accent); border-color:var(--accent); }
+  .reveal #protocol-examples .lt.hlg { color:#fff; background:var(--green); border-color:var(--green); }
+  .reveal #protocol-examples .kconn { position:absolute; height:38px; line-height:38px; text-align:center; color:#bbb; font-size:1.05em; opacity:0; transform:translateX(-50%); transition:opacity .4s ease; }
+  /* sample cells: a flat wrap while the cycle runs, then they SHIFT (FLIP) into
+     three degree columns that read as a classification table */
+  .reveal #protocol-examples .ksamps { display:flex; flex-wrap:wrap; justify-content:center; align-items:flex-start; align-content:flex-start;
+    gap:.25em .7em; min-height:96px; max-width:404px; margin:.3em auto 0; }
+  .reveal #protocol-examples .dgrp { display:contents; }
+  .reveal #protocol-examples .smp { opacity:0; transition:opacity .35s ease; font-size:.6em; color:var(--accent); }
+  .reveal #protocol-examples .kchain-slide .smp { color:var(--green); }
+  .reveal #protocol-examples .smp.show { opacity:1; }
+  .reveal #protocol-examples .dlab, .reveal #protocol-examples .dcnt { display:none; }
+  .reveal #protocol-examples .ksamps.classified { flex-wrap:nowrap; align-items:stretch; gap:1.5em; max-width:none; }
+  .reveal #protocol-examples .ksamps.classified .dgrp { display:flex; flex-direction:column; align-items:center; gap:.3em; }
+  .reveal #protocol-examples .ksamps.classified .dlab { display:block; font-size:.66em; font-style:italic; color:var(--muted); margin-bottom:.1em; }
+  .reveal #protocol-examples .ksamps.classified .dcnt { display:block; margin-top:auto; padding-top:.3em; min-width:1.7em; text-align:center;
+    font-size:.72em; font-weight:700; color:var(--accent); border-top:1.5px solid var(--ink); }
+  .reveal #protocol-examples .kchain-slide .ksamps.classified .dcnt { color:var(--green); }
+  .reveal #protocol-examples .kcount { text-align:center; font-size:.86em; color:var(--muted); margin:.15em auto 0; max-width:430px; min-height:1.3em; }
+  .reveal #protocol-examples .kcount b { color:var(--ink); font-size:1.1em; }
+  .reveal #protocol-examples .kcount .vs { color:var(--green); }
+  /* a lowercase italic k kept inside the otherwise-uppercase slide titles */
+  .reveal #protocol-examples .kicker .kv { text-transform:none; font-style:italic; }
+
+.reveal .protocol-slide h2 { font-size:1.19em; }
+.protocol-scenes { position:relative; height:455px; margin-top:27px; }
+.protocol-panel { position:absolute; inset:0; opacity:0; visibility:hidden; transition:opacity .45s ease, visibility .45s ease; }
+.protocol-panel.protocol-active { opacity:1; visibility:visible; }
+.reveal #protocol-examples .protocol-panel > .kicker { font-size:.70em; color:var(--accent); text-transform:none; letter-spacing:0; }
+.reveal #protocol-examples .ksplit { align-items:center; gap:28px; margin:28px 0 0; }
+.reveal #protocol-examples .ksteps { flex-basis:340px; font-size:.70em; }
+.reveal #protocol-examples .kanim { flex-basis:420px; }
+.reveal #protocol-examples .kcount { font-size:.62em; margin-top:15px; }
+.reveal #protocol-examples .ksamps.classified { gap:27px; }
+.protocol-independence { color:var(--muted); font-size:.52em; text-align:center; margin:22px 0 0; }
+.protocol-step { position:absolute; width:0; height:0; overflow:hidden; pointer-events:none; }
+.protocol-parameters { font-size:.72em; margin:25px 0 30px; }
+.reveal table.protocol-table { width:100%; border-collapse:collapse; border-top:2px solid var(--ink); border-bottom:2px solid var(--ink); }
+.reveal .protocol-table th, .reveal .protocol-table td { padding:20px 18px; border:0; text-align:center; font-size:.78em; }
+.reveal .protocol-table thead th { font-style:italic; color:var(--accent); border-bottom:1px solid #ccc; font-weight:400; }
+.reveal .protocol-table tbody th { text-align:right; border-right:1px solid #ccc; font-weight:400; }
+.protocol-table tbody th > span { display:block; font-size:.61em; color:var(--muted); margin-top:6px; }
+.protocol-comparison-proposition { margin:32px 0 0; border-color:var(--accent); }
+.reveal .protocol-comparison-proposition .formal-label { color:var(--accent); }
+.sample-proposition { margin:15px 0 10px; border-color:var(--accent); }
+.sample-bound { font-size:.85em; }
+.sample-bound .katex-display { margin:10px 0; }
+.sample-allocation { display:grid; grid-template-columns:1fr 1fr; gap:30px; text-align:center; }
+.sample-allocation > div + div { border-left:1px solid #ccc; padding-left:20px; }
+.reveal .sample-allocation h3 { font-size:.74em; color:var(--accent); }
+.sample-allocation p { font-size:.58em; color:var(--muted); margin:7px 0; }
+.sample-allocation > div > div { font-size:.66em; }
+.sample-allocation .katex-display { margin:9px 0; }
+.sample-qualification { font-size:.57em; color:var(--muted); text-align:center; margin:20px 0 0; }
+.sample-level-link { font-size:.65em; text-align:center; margin:16px 0 0; }
+.results-layout { display:grid; grid-template-columns:30% 70%; margin-top:25px; height:530px; }
+.reveal .results-steps { list-style:none; margin:0; padding:23px 23px 0 0; }
+.results-steps > li { display:flex; align-items:flex-start; gap:12px; font-size:.69em; margin:0 0 29px; line-height:1.4; }
+.step-number { display:inline-flex; align-items:center; justify-content:center; flex:0 0 24px; height:26px; background:var(--accent); color:white; font-size:.77em; }
+.reveal .results-steps ol { list-style:lower-alpha; font-size:.85em; margin:9px 0 0 20px; padding:0; }
+.results-steps ol li { margin:7px 0; }
+.results-figure { min-width:0; border-left:1px solid #ddd; padding-left:12px; }
+.results-figure iframe { width:100%; height:100%; border:0; max-width:none; max-height:none; margin:0; }
+@media (max-width:760px) {
+  .protocol-scenes { height:680px; }
+  .reveal #protocol-examples .ksplit { flex-direction:column; align-items:stretch; }
+  .reveal #protocol-examples .ksteps, .reveal #protocol-examples .kanim { flex-basis:auto; }
+  .reveal #protocol-examples .ksamps.classified { gap:15px; }
+  .sample-allocation { grid-template-columns:1fr; }
+  .sample-allocation > div + div { border-left:0; padding-left:0; }
+  .reveal .protocol-table th, .reveal .protocol-table td { padding:14px 5px; font-size:.63em; }
+  .results-layout { grid-template-columns:1fr; height:auto; }
+  .results-figure { height:600px; border-left:0; padding-left:0; }
+  .results-steps > li { margin-bottom:15px; }
+}
+@media (prefers-reduced-motion:reduce) { #protocol-examples * { transition:none !important; } }
+@media print { .protocol-scenes { height:auto; } .protocol-panel { position:relative; opacity:1; visibility:visible; margin:25px 0; } }

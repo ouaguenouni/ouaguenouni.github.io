@@ -1,0 +1,59 @@
+/* Main-route abstraction. The earlier detailed development remains a down branch. */
+.sampling-overview-canvas { height:680px; position:relative; }
+.reveal .sampling-overview-title { margin:0; }
+.sampling-overview > .branch-entry { top:48px; font-size:.4em; padding:.3em .6em; }
+.sampling-flow { position:absolute; top:90px; left:0; right:0; display:grid; grid-template-columns:1fr 35px 1fr 35px 1fr; align-items:center; text-align:center; }
+.reveal .sampling-flow-node p { font-size:.64em; margin:0 0 10px; }
+.reveal .sampling-flow-node p + p { font-size:.55em; margin:0; }
+.sampling-flow-arrow { font-size:.9em; }
+.sampling-overview [data-from], .sampling-overview [data-until] { transition:opacity .4s ease, visibility .4s ease; }
+.sampling-overview .build-hidden { opacity:0; visibility:hidden; pointer-events:none; }
+.sampling-overview span.build-hidden { display:none; }
+.sampling-overview-hoeffding { position:absolute; top:245px; left:0; right:0; text-align:center; }
+.reveal .sampling-sample-question { font-size:.82em; margin:0 0 40px; }
+.sampling-overview-hoeffding .katex .accent { color:inherit; }
+.sampling-overview-hoeffding > div { font-size:.94em; margin-top:35px; }
+.sampling-abstract { position:absolute; top:290px; left:0; right:0; text-align:center; transition:top .65s var(--ease); }
+.reveal .sampling-abstract-label { position:relative; font-size:1.18em; margin:0; }
+.reveal .sampling-per-pair { font-size:.65em; color:var(--muted); margin:8px 0 0; }
+.sampling-compact .sampling-abstract { top:170px; }
+.sampling-compact .sampling-abstract-label { font-size:.79em; }
+.sampling-compact .sampling-per-pair { display:inline; font-size:.59em; margin:0; }
+.tradeoff-columns { position:absolute; top:248px; left:0; right:0; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); }
+.tradeoff-protocol { padding:0 15px; min-width:0; }
+.tradeoff-subset { border-left:1px solid transparent; border-right:1px solid transparent; transition:border-color .5s, opacity .4s; }
+.sampling-three-protocols .tradeoff-subset { border-color:#bbb; }
+.reveal .tradeoff-protocol h3 { color:var(--accent); font-style:normal; font-size:.77em; margin:0; height:35px; white-space:nowrap; }
+.reveal .tradeoff-steps { list-style:none; margin:0; padding:0; height:139px; }
+.reveal .tradeoff-steps li { display:grid; grid-template-columns:23px 1fr; align-items:start; gap:10px; font-size:.60em; line-height:1.35; margin:0 0 14px; }
+.tradeoff-number { display:grid; place-items:center; width:23px; height:23px; background:var(--accent); color:white; font-size:.83em; line-height:1; }
+.tradeoff-yield { height:64px; }
+.tradeoff-population { height:84px; }
+.tradeoff-cost { height:56px; }
+.reveal .tradeoff-protocol p { font-size:.67em; line-height:1.4; margin:0; }
+.tradeoff-detail { font-size:.86em; color:var(--muted); }
+.reveal .tradeoff-protocol .tradeoff-label { font-size:.49em; color:var(--muted); margin:0 0 9px; }
+.reveal .tradeoff-subset .tradeoff-population > p:last-child { font-size:.57em; }
+.reveal .tradeoff-cost > p:last-child { font-size:.58em; }
+.reveal .tradeoff-example-settings { position:absolute; top:625px; left:0; right:0; text-align:center; font-size:.56em; line-height:1.5; margin:0; }
+.tradeoff-example-settings > span:not(.katex) { color:var(--muted); }
+@media(max-width:760px) {
+  .sampling-overview-canvas { height:1500px; }
+  .sampling-overview-hoeffding > div { font-size:.55em; overflow-x:auto; }
+  .sampling-abstract-label { font-size:.85em !important; }
+  .tradeoff-columns { grid-template-columns:1fr; gap:25px; }
+  .tradeoff-protocol { padding:0 5px; }
+  .tradeoff-subset { border-left:0; border-right:0; }
+  .sampling-three-protocols .tradeoff-subset { border-top:1px solid #bbb; border-bottom:1px solid #bbb; padding:18px 5px; }
+  .tradeoff-example-settings { top:1490px !important; }
+  .sampling-overview.sampling-compact .sampling-overview-canvas { height:1570px; }
+}
+@media(prefers-reduced-motion:reduce) { .sampling-overview * { transition:none !important; } }
+@media print {
+  .sampling-overview-hoeffding { display:none; }
+  .sampling-overview [data-from] { opacity:1 !important; visibility:visible !important; }
+  .sampling-overview [data-until="22"] { display:none !important; }
+  .sampling-overview span[data-from="22"] { display:inline !important; }
+  .sampling-overview .sampling-abstract { top:170px; }
+  .sampling-overview .tradeoff-subset { border-color:#bbb; }
+}

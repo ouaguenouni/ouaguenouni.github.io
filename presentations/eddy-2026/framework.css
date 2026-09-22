@@ -1,0 +1,84 @@
+/* Cards 9–11. Keep the original deck's serif, rule, and colored-layer vocabulary. */
+.reveal .framework-slide h2 { font-size:1.25em; }
+.formal-block { border-left:2px solid #aaa; padding:4px 0 5px 19px; margin:20px 0; }
+.reveal .formal-block p { font-size:.7em; margin:6px 0; }
+.reveal .formal-block .formal-label { font-size:.72em; font-style:italic; margin:0 0 10px; }
+.formal-equation { font-size:.61em; }
+.formal-equation .katex-display { margin:12px 0; }
+.framework-step { position:absolute; width:0; height:0; overflow:hidden; pointer-events:none; }
+.plurality-example { display:grid; grid-template-columns:1fr 1.2fr; gap:38px; margin-top:25px; min-height:375px; }
+.reveal .four-profile h3 { font-size:.77em; margin:0 0 22px; }
+#framework-profile p { font-size:.72em; margin:17px 0; }
+.framework-profile-letter { display:inline-block; padding:1px 2px; font-style:italic; transition:color .3s, background-color .3s; }
+.framework-profile-relation { margin:0 3px; }
+.framework-profile-weight { display:inline-block; padding:1px 4px; transition:color .3s, background-color .3s; }
+.framework-profile-member { background:#9a1b1b12; }
+.framework-profile-favorite, .framework-profile-contributor { color:var(--accent); background:#9a1b1b20; }
+.framework-profile-favorite { box-shadow:inset 0 -2px var(--accent); }
+.reveal .four-profile .profile-zero { font-size:.51em; color:var(--muted); margin-top:24px; }
+.growing-matrix { border-left:1px solid #ccc; padding-left:28px; }
+.matrix-degree-key { display:flex; gap:16px; font-size:.43em; margin:0 0 13px; white-space:nowrap; }
+.degree-three-label { color:var(--accent); }
+.degree-four-label { color:var(--teal); }
+.degree-three-label, .degree-four-label { opacity:0; transition:opacity .5s ease; }
+.plurality-card.has-degree-three .degree-three-label,
+.plurality-card.has-degree-four .degree-four-label { opacity:1; }
+.reveal table.framework-matrix { width:100%; margin:0; font-size:.60em; border-collapse:collapse; border-top:1.5px solid var(--ink); border-bottom:1.5px solid var(--ink); }
+.reveal table.framework-matrix th, .reveal table.framework-matrix td { border:0; font-weight:400; text-align:center; padding:3px 9px; line-height:1.15; }
+.reveal table.framework-matrix th:first-child { text-align:left; }
+.reveal table.framework-matrix thead th { border-bottom:1px solid #aaa; font-style:italic; padding-top:5px; padding-bottom:5px; }
+.framework-matrix .matrix-degree-3 { color:var(--accent); }
+.framework-matrix .matrix-degree-4 { color:var(--teal); }
+.reveal .framework-matrix [data-degree="3"] > *,
+.reveal .framework-matrix [data-degree="4"] > * { padding-top:0; padding-bottom:0; transition:padding .5s var(--ease); }
+.framework-matrix [data-degree="3"] > * > div,
+.framework-matrix [data-degree="4"] > * > div { max-height:0; overflow:hidden; opacity:0; transition:max-height .5s var(--ease), opacity .5s ease; }
+.reveal .plurality-card .matrix-layer-visible > * { padding-top:3px; padding-bottom:3px; }
+.plurality-card .matrix-layer-visible > * > div { max-height:24px; opacity:1; }
+.framework-matrix .matrix-value { display:inline-block; opacity:0; visibility:hidden; transition:opacity .4s; }
+.framework-matrix .matrix-value.is-filled { opacity:1; visibility:visible; }
+.framework-matrix .matrix-cell-active { background:#9a1b1b12; outline:1px solid #9a1b1b55; outline-offset:-1px; }
+.matrix-flight { position:fixed; z-index:100; pointer-events:none; font-family:"ETBembo", Georgia, serif; color:var(--accent); white-space:nowrap; }
+.matrix-footnote { color:var(--muted); font-size:.46em; margin:10px 0 0; }
+.level-definition { margin-bottom:30px; }
+.reveal .level-definition .level-in-language { font-size:.93em; line-height:1.55; max-width:810px; margin:18px 0 12px; }
+.level-minimal { color:var(--accent); text-decoration:underline; text-decoration-thickness:2px; text-underline-offset:5px; }
+.level-propositions { display:grid; grid-template-columns:1fr 1fr; gap:35px; }
+.level-propositions .formal-block { margin:5px 0 18px; }
+.reveal .level-propositions .formal-label { font-size:.86em; }
+.reveal .level-propositions .proposition-explanation { color:var(--muted); font-size:.64em; margin-top:19px; }
+.degree-three-proposition { border-color:var(--accent); }
+.degree-three-proposition .formal-label { color:var(--accent); }
+.framework-caveat { color:var(--muted); font-size:.5em; margin:14px 0 0; }
+.moment-general { font-size:.78em; margin:12px 0; }
+.moment-general .katex-display { margin:12px 0; }
+.moment-familiar { display:grid; grid-template-columns:1fr 1.2fr; gap:25px; margin-bottom:12px; }
+.moment-familiar p { font-size:.60em; line-height:1.7; margin:0; }
+.moment-familiar em { color:var(--muted); }
+.moment-proposition { border-color:var(--accent); margin:12px 0; }
+.reveal .moment-proposition p { line-height:1.2; }
+.moment-proposition .formal-label { color:var(--accent); }
+.moment-formula-lead { font-size:.63em; margin:5px 0; }
+.moment-main-formula { font-size:.72em; }
+.moment-main-formula .katex-display { margin:9px 0; }
+.moment-coefficients { font-size:.62em; }
+.moment-coefficients .katex-display { margin:10px 0; }
+.moment-computation .framework-caveat { text-align:center; margin-top:8px; }
+@media (max-width:760px) {
+  .plurality-example, .level-propositions, .moment-familiar { grid-template-columns:1fr; gap:22px; }
+  .plurality-example { min-height:0; }
+  .growing-matrix { border-left:0; padding-left:0; min-height:355px; }
+  .formal-equation, .moment-general, .moment-main-formula, .moment-coefficients { overflow-x:auto; }
+  .reveal .formal-block { padding-left:12px; }
+  .matrix-degree-key { font-size:.48em; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .framework-slide * { transition:none !important; }
+}
+@media print {
+  .framework-slide .fragment { opacity:1 !important; visibility:visible !important; }
+  .plurality-card .degree-three-label, .plurality-card .degree-four-label { opacity:1; }
+  .reveal .framework-matrix [data-degree] > * { padding-top:3px; padding-bottom:3px; }
+  .framework-matrix [data-degree] > * > div { max-height:24px; opacity:1; }
+  .framework-matrix .matrix-value { opacity:1 !important; visibility:visible !important; }
+}

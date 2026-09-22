@@ -1,0 +1,46 @@
+/* Optional, explorable derivations below the protocol-selection slide. */
+.using-results-card > .branch-entry { top:0; font-size:.44em; padding:.35em .65em; }
+.reveal .literature-index h2, .reveal .literature-derivation h2, .reveal .literature-references h2 { font-size:1.14em; }
+.reveal .literature-intro { font-size:.67em; margin:18px 0; }
+.reveal .literature-table { width:100%; border-collapse:collapse; font-size:.60em; }
+.reveal .literature-table th, .reveal .literature-table td { padding:11px 12px; border-bottom:1px solid #ddd; vertical-align:middle; font-weight:400; }
+.reveal .literature-table thead th { border-top:2px solid var(--ink); border-bottom:1px solid var(--ink); color:var(--muted); }
+.reveal .literature-table th:first-child { padding-left:0; }
+.literature-table td:last-child { font-size:.82em; line-height:1.4; }
+.literature-table tbody tr { cursor:pointer; }
+.literature-table tbody tr:hover, .literature-table tbody tr:focus-within { background:#faf1f1; }
+.reveal .literature-table a { color:var(--ink); text-decoration:none; }
+.reveal .literature-table a:focus-visible { outline:2px solid var(--accent); outline-offset:4px; }
+.literature-row-arrow, .literature-level { color:var(--accent); }
+.reveal .literature-provenance { font-size:.49em; line-height:1.4; color:var(--muted); margin:17px 0 0; }
+.literature-nav { display:flex; align-items:center; justify-content:space-between; gap:18px; margin-top:20px; }
+.reveal .literature-nav a { font-size:.52em; color:var(--accent); text-decoration:none; border-bottom:1px solid #d9bcbc; padding:5px 0; }
+.reveal .literature-nav a:focus-visible { outline:2px solid var(--accent); outline-offset:5px; }
+.derivation-content { margin-top:18px; }
+.reveal .derivation-content p { font-size:.68em; margin:10px 0; }
+.derivation-content > div:not(.derivation-step):not(.formal-block), .derivation-step > div, .derivation-result > div { font-size:.65em; }
+.derivation-step { margin:16px 0; }
+.reveal .derivation-step h3 { font-size:.66em; color:var(--muted); font-style:normal; margin:0 0 8px; }
+.derivation-content .katex-display { margin:9px 0; }
+.derivation-content .derivation-result { border-color:var(--accent); padding-left:18px; margin:16px 0; }
+.reveal .derivation-content .derivation-convention { font-size:.53em; color:var(--muted); line-height:1.4; margin:15px 0 0; }
+.reveal .derivation-source { font-size:.44em; color:var(--muted); margin:15px 0 0; line-height:1.45; }
+.literature-derivation .literature-nav { margin-top:14px; }
+.derivation-source > span { display:block; }
+.reveal .derivation-source a { color:var(--accent); text-decoration:underline; text-decoration-thickness:1px; text-underline-offset:2px; }
+.reveal .literature-reference-list { margin:25px 0 0 1em; padding:0; font-size:.66em; }
+.literature-reference-list li { margin:0 0 23px; padding-left:10px; }
+.literature-reference-list p { margin:0; }
+.reveal .literature-reference-list li, .reveal .literature-reference-list li > p { font-size:1em; }
+.reveal .literature-reference-list a { color:var(--ink); text-decoration:underline; text-decoration-thickness:1px; text-decoration-color:#c9a8a8; text-underline-offset:3px; }
+.reveal .literature-reference-list .reference-note { font-size:.78em; color:var(--muted); margin:7px 0 0; }
+.reveal .measure-definitions .measure-bib-label { width:145px; min-width:145px; vertical-align:middle; }
+.reveal .measure-definitions .measure-bib-pointer { display:block; font-weight:400; font-size:.67em; line-height:1.25; color:var(--muted); margin-top:4px; }
+@media(max-width:760px) {
+  .reveal .literature-table { font-size:.53em; }
+  .reveal .literature-table th, .reveal .literature-table td { padding:10px 4px; }
+  .literature-nav { flex-wrap:wrap; }
+  .derivation-content .katex-display { overflow-x:auto; overflow-y:hidden; padding:4px 0; }
+  .derivation-content > div:not(.derivation-step):not(.formal-block), .derivation-step > div, .derivation-result > div { font-size:.60em; }
+}
+@media print { .literature-nav { display:none; } }

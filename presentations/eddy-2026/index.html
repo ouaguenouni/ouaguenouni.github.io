@@ -1,0 +1,1020 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="EDDY 2026 presentation on efficient elicitation of collective disagreements.">
+  <title>EDDY 2026 — Efficient Elicitation of Collective Disagreements</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.24/dist/katex.min.css">
+  <link rel="stylesheet" href="deck.css?v=20260922">
+  <link rel="stylesheet" href="opening.css?v=20260922-6">
+  <link rel="stylesheet" href="example.css?v=20260922">
+  <link rel="stylesheet" href="tournament.css?v=20260922">
+  <link rel="stylesheet" href="continuation.css?v=20260922-2">
+  <link rel="stylesheet" href="framework.css?v=20260922-3">
+  <link rel="stylesheet" href="elicitation.css?v=20260922-2">
+  <link rel="stylesheet" href="sampling-overview.css?v=20260922-2">
+  <link rel="stylesheet" href="protocols.css?v=20260922-2">
+  <link rel="stylesheet" href="literature.css?v=20260922-3">
+  <link rel="stylesheet" href="closing.css?v=20260922">
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+<section class="titleslide" id="title">
+  <div class="logos">
+    <img class="erc" src="../elicitation-collective-disagreement/figs/LOGO_ERC-FLAG_FP.png" alt="Funded by the European Union and the European Research Council">
+    <img class="addi" src="../elicitation-collective-disagreement/figs/Logo-ADDI-RVB.png" alt="ADDI — Advancing Digital Democratic Innovation">
+  </div>
+  <p class="kicker deck-title">EDDY 2026</p>
+  <h1>Efficient Elicitation of<br>Collective Disagreements</h1>
+  <p class="authors">Mohamed Ouaguenouni<sup>1</sup>, Felipe Garrido-Lucero<sup>1</sup>, Umberto Grandi<sup>1</sup>, César Hidalgo<sup>2,3,4</sup>, Magdalena Tydrichova<sup>5</sup></p>
+  <p class="title-affil">
+    1. IRIT, Université Toulouse Capitole, Toulouse, France<br>
+    2. Center for Collective Learning, IAST, Toulouse School of Economics, France<br>
+    3. Center for Collective Learning, CIAS, Corvinus University of Budapest, Hungary<br>
+    4. AMBS, University of Manchester, UK &nbsp; 5. Centrale Supélec, Paris Saclay, France
+  </p>
+</section>
+
+<section id="setting" class="opening-slide">
+  <p class="kicker">The setting</p>
+  <h2>Alternatives, people, and preferences</h2>
+  <p>We have \(m\) alternatives: \(\mathcal A=\{a_1,\ldots,a_m\}\).</p>
+  <div class="opening-alternatives" aria-label="A set of m alternatives"><span>a₁</span><span>a₂</span><span>a₃</span><span class="ellipsis">⋯</span><span>aₘ</span></div>
+  <p class="fragment" data-fragment-index="0">People can compare them using a binary relation \(\succ\).</p>
+  <div class="preference-reading fragment" data-fragment-index="1">
+    <span class="preference-symbol">\(A\succ B\)</span>
+    <span>means <strong>A is better than B</strong><br><span class="muted">for that person.</span></span>
+  </div>
+  <p class="support fragment" data-fragment-index="2">We model each person’s preferences as a strict, complete, transitive ranking.</p>
+</section>
+
+<section>
+<section id="choosing-a-winner" class="main-slide opening-slide borda-introduction" data-direct-details="true">
+  <button class="branch-entry" type="button" data-branch="down">Formal definitions ↓</button>
+  <p class="kicker">Choosing a winner</p>
+  <h2>Gentle Warmup</h2>
+  <p class="support">Computational social choice often asks: which alternative should win?</p>
+  <p class="support borda-method"><span class="fragment" data-fragment-index="0">One way is to give points according to rank.</span> <span class="fragment borda-method-name" data-fragment-index="1"><span aria-hidden="true">→</span> Borda score</span></p>
+  <div class="borda-horizontal">
+    <div class="borda-ranking-panel fragment" data-fragment-index="2" aria-live="polite">
+      <div class="borda-panel-heading">
+        <h3 class="borda-person-only">People’s rankings</h3>
+        <h3 class="borda-profile-only" aria-hidden="true">A distribution: the profile \(\pi\)</h3>
+      </div>
+      <div class="borda-list">
+        <div class="borda-list-head borda-profile-only" aria-hidden="true"><span>Ranking \(\sigma\)</span><span>\(\pi(\sigma)\)</span></div>
+        <div class="borda-ranking-row"><span class="borda-person-only person-index">1</span><span class="borda-ranking-order">\(a_1\succ a_2\succ\cdots\succ a_m\)</span><span class="borda-profile-only ranking-mass" aria-hidden="true">\(w_1\)</span></div>
+        <div class="borda-ranking-row"><span class="borda-person-only person-index">2</span><span class="borda-ranking-order">\(a_3\succ a_2\succ\cdots\succ a_m\)</span><span class="borda-profile-only ranking-mass" aria-hidden="true">\(w_2\)</span></div>
+        <div class="borda-ranking-ellipsis">\(\vdots\)</div>
+        <div class="borda-ranking-row"><span class="borda-person-only person-index">\(n\)</span><span class="borda-ranking-order">\(a_2\succ a_1\succ\cdots\succ a_m\)</span><span class="borda-profile-only ranking-mass" aria-hidden="true">\(w_s\)</span></div>
+      </div>
+      <p class="warmup-definition borda-profile-only" aria-hidden="true">The <strong>profile $\pi$</strong> tells us how likely each complete ranking is when we sample a person.</p>
+    </div>
+    <div class="borda-score-panel fragment" data-fragment-index="3">
+      <h3>The Borda score</h3>
+      <div class="borda-points" aria-label="Borda points by rank">
+        <div><span>rank 1</span><strong>\(m\)</strong></div>
+        <div><span>rank 2</span><strong>\(m-1\)</strong></div>
+        <div class="points-ellipsis">⋯</div>
+        <div><span>rank \(m\)</span><strong>\(1\)</strong></div>
+      </div>
+      <p class="warmup-definition fragment" data-fragment-index="5">An alternative’s <strong>rank distribution</strong> tells us how likely it is to be placed first, second, and so on.</p>
+      <div class="borda-formula" aria-live="polite">
+        <div class="formula-sample">$$B_n(a)=\frac1n\sum_{i=1}^{n}\bigl(m+1-r_i(a)\bigr).$$</div>
+        <div class="formula-profile" aria-hidden="true">$$B_\pi(a)=\sum_{\sigma}\pi(\sigma)\bigl(m+1-r_\sigma(a)\bigr)$$<div class="expectation-line">$$=m+1-\mathbb E_{\sigma\sim\pi}[r_\sigma(a)].$$</div></div>
+      </div>
+    </div>
+  </div>
+  <span class="opening-step fragment" data-fragment-index="4"></span>
+  <span class="opening-step fragment" data-fragment-index="6"></span>
+</section>
+
+<section id="warmup-definitions" class="technical warmup-definitions" data-step-through-branch="true">
+  <p class="kicker">Gentle Warmup · formal definitions</p>
+  <h2>Profiles and rank distributions</h2>
+  <p class="warmup-formal-setting">Let $\mathcal A$ contain $m$ alternatives and $\mathcal L(\mathcal A)$ be their complete, strict rankings.</p>
+  <div class="formal-block">
+    <p class="formal-label">Definition · profile</p>
+    <p>A profile is a probability distribution over rankings:</p>
+    <div>$$\pi:\mathcal L(\mathcal A)\to[0,1],\qquad \sum_{\sigma\in\mathcal L(\mathcal A)}\pi(\sigma)=1.$$</div>
+    <p>$\pi(\sigma)$ is the probability that a randomly sampled person has ranking $\sigma$.</p>
+  </div>
+  <div class="formal-block">
+    <p class="formal-label">Definition · rank distribution</p>
+    <p>Let $r_\sigma(a)$ be the position of $a$ in ranking $\sigma$, with rank 1 best. Its rank distribution under $\pi$ is</p>
+    <div>$$q_a^\pi(j):=\Pr_{\sigma\sim\pi}[r_\sigma(a)=j]=\sum_{\sigma:\,r_\sigma(a)=j}\pi(\sigma),\qquad j=1,\ldots,m.$$</div>
+    <p>Thus $q_a^\pi(j)\ge0$ and $\sum_{j=1}^{m}q_a^\pi(j)=1$.</p>
+  </div>
+  <div class="branch-nav"><button type="button" data-branch="up">↑ Back to warmup</button></div>
+</section>
+</section>
+
+<section id="borda-example" class="opening-slide illustrative-example">
+  <p class="kicker">Three alternatives</p>
+  <h2>Illustrative Exemple</h2>
+  <div id="illustrative-example" class="example-workspace" aria-live="polite"></div>
+  <div id="example-builds" aria-hidden="true"></div>
+</section>
+
+<section id="weighted-tournament" class="opening-slide">
+  <p class="kicker">To compute the Borda score</p>
+  <h2>We don’t need the full profile</h2>
+  <p class="support fragment" data-fragment-index="0">Pairwise proportions: \(p_{ab}=\Pr_{\sigma\sim\pi}[a\succ b]\).</p>
+  <div class="tournament-formula fragment" data-fragment-index="1" aria-live="polite">
+    <div class="rank-formula">$$B_\pi(a)=m+1-\mathbb E_{\sigma\sim\pi}[r_\sigma(a)]$$</div>
+    <div class="pairwise-formula" aria-hidden="true">$$B_\pi(a)=1+\sum_{b\ne a}p_{ab}.$$</div>
+  </div>
+  <div class="opening-tournament-row">
+    <div class="tournament-graph-panel fragment" data-fragment-index="0">
+    <svg class="opening-tournament" viewBox="0 0 440 275" role="img" aria-label="Weighted tournament for the example: A beats B with probability 0.65, A beats C with probability 0.70, B beats C with probability 0.65">
+      <defs><marker id="opening-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10" fill="none" stroke="currentColor" stroke-width="1.5"/></marker></defs>
+      <g class="tournament-edges" marker-end="url(#opening-arrow)"><line id="tournament-line-ab" x1="207" y1="54" x2="123" y2="205"/><line id="tournament-line-ac" x1="233" y1="54" x2="317" y2="205"/><line id="tournament-line-bc" x1="140" y1="230" x2="299" y2="230"/></g>
+      <g class="tournament-nodes"><circle cx="220" cy="32" r="23"/><circle cx="110" cy="230" r="23"/><circle cx="330" cy="230" r="23"/></g>
+      <g class="tournament-letters"><text x="220" y="40">A</text><text x="110" y="238">B</text><text x="330" y="238">C</text></g>
+      <g class="tournament-weights"><text x="120" y="117" id="opening-edge-ab"></text><text x="320" y="117" id="opening-edge-ac"></text><text x="220" y="215" id="opening-edge-bc"></text></g>
+    </svg>
+      <p class="tournament-caption">Each arrow gives the probability that its source<br>is preferred to its target.</p>
+      <p class="tournament-reverse">In the reverse direction: \(p_{ba}=1-p_{ab}\).</p>
+    </div>
+    <div id="opening-tournament-scores" aria-live="polite"></div>
+  </div>
+  <span class="opening-step fragment" data-fragment-index="2"></span>
+  <span class="opening-step fragment" data-fragment-index="3"></span>
+  <span class="opening-step fragment" data-fragment-index="4"></span>
+  <span class="opening-step fragment" data-fragment-index="5"></span>
+  <span class="opening-step fragment" data-fragment-index="6"></span>
+</section>
+
+<section>
+  <section id="same-margins" class="main-slide opening-slide">
+    <button class="branch-entry" type="button" data-branch="down">Why they are indistinguishable ↓</button>
+    <p class="kicker">Understanding disagreement</p>
+    <h2>Deliberation needs to know what is divisive</h2>
+    <p class="support">In digital democracy, we also want to structure deliberation around disagreements.</p>
+    <div class="opening-populations">
+      <div class="opening-population uniform-population">
+        <h3>Uniform profile</h3>
+        <div class="population-definition">
+          <p>\(\pi_U(\sigma)=\tfrac16\) for each of the six rankings.</p>
+          <div class="opening-ranking-list" id="uniform-rankings"></div>
+        </div>
+        <div class="original-rank-hist" id="uniform-a-hist" aria-label="Rank distribution of A: one third at each rank"></div>
+        <p class="hist-caption">Rank distribution of A</p>
+        <div class="population-margins fragment" data-fragment-index="2" id="uniform-proportions"></div>
+      </div>
+      <div class="opening-population polarized-population" aria-hidden="true">
+        <h3><span class="before-polarization">The same starting distribution</span><span class="after-polarization">Two opposed camps</span></h3>
+        <div class="population-definition">
+          <p class="before-polarization">\(\pi_U(\sigma)=\tfrac16\) for each ranking.</p>
+          <div class="after-polarization" id="polarized-rankings"></div>
+        </div>
+        <div class="original-rank-hist" id="polarized-a-hist" aria-label="Rank distribution of A"></div>
+        <p class="hist-caption">Rank distribution of A</p>
+        <div class="population-margins fragment" data-fragment-index="2" id="polarized-proportions"></div>
+      </div>
+    </div>
+    <span class="opening-step fragment" data-fragment-index="0"></span>
+    <span class="opening-step fragment" data-fragment-index="1"></span>
+    <p class="opening-conclusion fragment" data-fragment-index="3">Different profiles. <strong>The same weighted tournament.</strong><br>They are indistinguishable from pairwise proportions alone.</p>
+  </section>
+  <section id="same-margins-proof" class="technical">
+    <p class="depth">Technical branch · same margins</p>
+    <h2>Why can no pairwise rule distinguish them?</h2>
+    <table>
+      <thead><tr><th>Pair</th><th>Population U</th><th>Population P</th></tr></thead>
+      <tbody id="pairwise-proof-table"></tbody>
+    </table>
+    <div class="proof-step">
+      <p>Every function whose input is only these three aggregate proportions receives the same input on U and P, so it must return the same output.</p>
+    </div>
+    <p class="small muted">This does not say linked answers from the same voter are useless. Their joint pattern is precisely the information the separate margins discard.</p>
+    <div class="branch-nav"><button type="button" data-branch="up">↑ Back to story</button><button type="button" data-branch="next">Continue story →</button></div>
+  </section>
+</section>
+
+<section id="complete-rankings" class="continuation-slide information-choice">
+  <p class="kicker">What should we look at?</p>
+  <h2>Pairwise proportions miss disagreement structure</h2>
+  <div class="information-choice-lines">
+    <p class="pairwise-label">Pairwise tournaments</p>
+    <p class="full-profile-question fragment" data-fragment-index="1">Full profile?</p>
+  </div>
+  <span class="continuation-step fragment" data-fragment-index="0"></span>
+</section>
+
+<section id="comparing-measures" class="continuation-slide measure-comparison">
+  <p class="kicker">Three measures from the literature</p>
+  <h2>Some measures distinguish the two profiles</h2>
+  <p class="measure-introduction">Several measures of divisiveness have been proposed in the literature.</p>
+  <div class="measure-definitions">
+    <p class="fragment" data-fragment-index="0"><strong class="measure-bib-label">Agreement index.<a class="measure-bib-pointer" href="https://doi.org/10.1007/s00355-012-0716-9" target="_blank" rel="noopener noreferrer">Alcalde-Unzu &amp; Vorsatz (2013)</a></strong> \(\displaystyle A(\pi)=\frac1{\binom m2}\sum_{\{x,y\}}\left|2p_{xy}-1\right|\)</p>
+    <p class="fragment" data-fragment-index="1"><strong class="measure-bib-label">Rank variance.<a class="measure-bib-pointer" href="https://www.ijcai.org/proceedings/2023/291" target="_blank" rel="noopener noreferrer">Colley et al. (2023), §2.3</a></strong> \(\displaystyle \operatorname{Var}_\pi(a)=\mathbb E_\pi[(r_a-\mathbb E_\pi[r_a])^2]\)</p>
+    <p class="fragment" data-fragment-index="2"><strong class="measure-bib-label">Divisiveness.<a class="measure-bib-pointer" href="https://www.nature.com/articles/s41562-023-01755-x" target="_blank" rel="noopener noreferrer">Navarrete et al. (2024)</a></strong> \(\displaystyle \operatorname{Div}_\pi(a)=\frac1{m-1}\sum_{b\ne a}\left|B_\pi(a\mid a\succ b)-B_\pi(a\mid b\succ a)\right|\)</p>
+  </div>
+  <table class="original-measure-table">
+    <caption>\(m=15\) alternatives · the focal alternative \(a\) is at an extreme in both opposed rankings.</caption>
+    <thead><tr><th>Measure</th><th><div class="measure-table-hist" id="measure-uniform-hist" aria-label="Uniform rank distribution over 15 ranks"></div><span>\(\pi_{\rm IC}\) · uniform</span></th><th><div class="measure-table-hist" id="measure-antagonistic-hist" aria-label="Half at rank 1, half at rank 15"></div><span>\(\pi_{\rm AN}\) · antagonism</span></th></tr></thead>
+    <tbody>
+      <tr class="agreement-row fragment" data-fragment-index="0"><th>Agreement index</th><td>\(0\)</td><td>\(0\)</td></tr>
+      <tr class="fragment" data-fragment-index="1"><th>Rank variance</th><td>\(\frac{56}{3}\)</td><td>\(49\)</td></tr>
+      <tr class="fragment" data-fragment-index="2"><th>Divisiveness</th><td>\(\frac{16}{3}\)</td><td>\(14\)</td></tr>
+    </tbody>
+  </table>
+  <div class="full-profile-hypothesis fragment" data-fragment-index="3">
+    <p>“Rank variance and divisiveness see every disagreement structure<br>because they use the full profile.”</p>
+    <p class="hypothesis-question fragment" data-fragment-index="4">Are we sure?</p>
+  </div>
+</section>
+
+<section>
+  <section id="same-scores" class="main-slide continuation-slide original-witness-card">
+    <button class="branch-entry" type="button" data-branch="down">Feasible construction and scores ↓</button>
+    <p class="kicker">A counterexample</p>
+    <h2>Let’s suppose…</h2>
+    <ul class="witness-recipe">
+      <li>We have \(m\) alternatives, with one distinguished alternative \(a\).</li>
+      <li>We choose \(a\)’s rank using one of the distributions below.</li>
+      <li>We uniformly shuffle the other \(m-1\) alternatives into the remaining positions.</li>
+    </ul>
+    <p class="witness-question fragment" data-fragment-index="0">What do these profiles—with only \(a\)’s rank distribution changed—have in common?</p>
+    <div class="five-witnesses fragment" data-fragment-index="0" id="original-five-witnesses"></div>
+    <div class="profile-use-correction fragment" data-fragment-index="2">
+      <p>Rank variance and divisiveness <span class="profile-use-word">use</span><span class="profile-defined-words" aria-hidden="true">are defined on</span> the full profile.</p>
+    </div>
+    <p class="information-next-question fragment" data-fragment-index="4">What information are they using?</p>
+    <span class="continuation-step fragment" data-fragment-index="1"></span>
+    <span class="continuation-step fragment" data-fragment-index="3"></span>
+  </section>
+  <section id="original-witness-construction" class="technical">
+    <p class="depth">Technical branch · original five-profile construction</p>
+    <h2>A changed focal histogram still defines a feasible profile</h2>
+    <p>Draw rank \(R\sim w\) for \(a\), then uniformly permute the remaining labels over the vacant positions.</p>
+    <div class="equation">$$\pi_w(\sigma)=\frac{w_{r_\sigma(a)}}{(m-1)!}.$$</div>
+    <p>For these witnesses, \(\mu=(m+1)/2\) and \(v=(m^2-1)/12\).</p>
+    <div class="equation">$$\operatorname{Var}_\pi(a)=v,\qquad \operatorname{Div}_\pi(a)=\frac{4v}{m-1}=\frac{m+1}{3}.$$</div>
+    <p class="small muted">“Uniform except for \(a\)” means a uniform shuffle conditional on \(a\)’s rank. Each other alternative’s marginal at rank \(j\) is \((1-w_j)/(m-1)\).</p>
+    <div class="branch-nav"><button type="button" data-branch="up">↑ Back to story</button><button type="button" data-branch="next">Continue story →</button></div>
+  </section>
+  <section id="seven-alternative-witness" class="technical">
+    <p class="depth">Technical branch · a separate exact seven-alternative witness</p>
+    <h2>Another construction matches every entry through degree 3</h2>
+    <div class="hist-grid" id="witness-histograms"></div>
+    <p class="support" style="text-align:center;margin:1.8em auto 0;">Mean rank 4, variance 1.5, divisiveness 1 — and identical plurality data through degree 3.</p>
+    <div class="branch-nav"><button type="button" data-branch="up">↑ Back to story</button><button type="button" data-branch="next">Continue story →</button></div>
+  </section>
+  <section id="witness-construction" class="technical">
+    <p class="depth">Technical branch · seven-alternative witness · 1/2</p>
+    <h2>The equality is stronger than matching mean and variance</h2>
+    <p>Sample A’s rank from one of the displayed distributions. Conditional on that rank, place the other six alternatives uniformly in the remaining positions.</p>
+    <div class="equation">$$p_S(a)=\sum_{j=1}^{7}w_j\frac{\binom{7-j}{|S|-1}}{\binom{6}{|S|-1}}.$$</div>
+    <p>For pairs and triples this expression depends only on the first two rank moments. Symmetry fixes every other winner entry.</p>
+    <div class="proof-step"><p>Therefore all degree-2 and degree-3 plurality entries agree exactly — not merely A’s histogram summaries.</p></div>
+    <div class="branch-nav"><button type="button" data-branch="up">↑ Back to story</button><button type="button" data-branch="next">Continue story →</button></div>
+  </section>
+  <section id="witness-values" class="technical">
+    <p class="depth">Technical branch · seven-alternative witness · 2/2</p>
+    <h2>The higher moments separate the three profiles</h2>
+    <table>
+      <thead><tr><th>Profile</th><th>Mean</th><th>Variance</th><th>Skewness</th><th>Excess kurtosis</th></tr></thead>
+      <tbody id="witness-values-table"></tbody>
+    </table>
+    <p class="proof-step">The profiles remain indistinguishable through degree 3, then skewness and kurtosis reveal distinctions at higher resolution.</p>
+    <p class="small muted">Higher moments add summaries; they do not reconstruct an arbitrary ranking distribution.</p>
+    <div class="branch-nav"><button type="button" data-branch="up">↑ Back to story</button><button type="button" data-branch="next">Continue story →</button></div>
+  </section>
+</section>
+
+<section>
+  <section id="small-group-favorites" class="main-slide framework-slide plurality-card" data-build="0">
+    <button class="branch-entry" type="button" data-branch="down">Precise definition ↓</button>
+    <p class="kicker">A framework for information</p>
+    <h2>The plurality matrix records favorites in subsets</h2>
+    <div class="formal-block">
+      <p class="formal-label">Definition · plurality cell</p>
+      <div class="formal-equation">$$p_S^\pi(a):=\Pr_{\succ\sim\pi}\!\left[a\succ b\ \text{for every }b\in S\setminus\{a\}\right],\qquad a\in S\subseteq\mathcal A.$$</div>
+      <p>The probability that $a$ is favorite in $S$. The cell’s <em>degree</em> is $|S|$.</p>
+    </div>
+    <div class="plurality-example fragment" data-fragment-index="0">
+      <div class="four-profile">
+        <h3>A profile on four alternatives</h3>
+        <div id="framework-profile"></div>
+        <p class="profile-zero">All other rankings have probability 0.</p>
+      </div>
+      <div class="growing-matrix">
+        <div class="matrix-content fragment" data-fragment-index="1">
+        <div class="matrix-degree-key"><span>Degree 2 · pairs</span><span class="degree-three-label">Degree 3 · triples</span><span class="degree-four-label">Degree 4 · all four</span></div>
+        <table class="framework-matrix" aria-label="Plurality matrix of the four-alternative example">
+          <thead><tr><th>$S$</th><th>A</th><th>B</th><th>C</th><th>D</th></tr></thead>
+          <tbody id="framework-matrix-body"></tbody>
+        </table>
+        <p class="matrix-footnote">Each row sums to 1; — means $a\notin S$.</p>
+        </div>
+      </div>
+    </div>
+    <span class="framework-step fragment" data-fragment-index="2"></span>
+    <span class="framework-step fragment" data-fragment-index="3"></span>
+    <span class="framework-step fragment" data-fragment-index="4"></span>
+    <span class="framework-step fragment" data-fragment-index="5"></span>
+    <span class="framework-step fragment" data-fragment-index="6"></span>
+    <span class="framework-step fragment" data-fragment-index="7"></span>
+  </section>
+  <section id="plurality-definition" class="technical">
+    <p class="depth">Technical branch · plurality matrix</p>
+    <h2>One entry answers one subset question</h2>
+    <div class="equation">$$p_S^{\pi}(a)=\Pr_{\succ\sim\pi}\!\left(a\text{ is ranked first within }S\right),\qquad a\in S.$$</div>
+    <ul>
+      <li>Each row is indexed by a nonempty subset S.</li>
+      <li>Its entries sum to one: $\sum_{a\in S}p_S^{\pi}(a)=1$.</li>
+      <li>The row’s degree is $|S|$; degree 2 is pairwise information.</li>
+      <li>A measure’s level is the smallest cutoff that suffices in general.</li>
+    </ul>
+    <p class="small muted">A degree-k cutoff retains every row of degree 2 through k; it is not only the degree-k row.</p>
+    <div class="branch-nav"><button type="button" data-branch="up">↑ Back to story</button><button type="button" data-branch="next">Continue story →</button></div>
+  </section>
+</section>
+
+<section>
+  <section id="measure-levels" class="main-slide framework-slide" data-direct-details="true">
+    <button class="branch-entry" type="button" data-branch="down">Formal definition and details ↓</button>
+    <p class="kicker">How much information is enough?</p>
+    <h2>The level is the smallest sufficient degree</h2>
+    <div class="formal-block level-definition">
+      <p class="formal-label">Definition · level of a measure</p>
+      <p class="level-in-language">A measure’s level is the <strong class="level-minimal">minimal</strong> degree up to which we need the plurality matrix to express that measure.</p>
+    </div>
+    <div class="level-propositions">
+      <div class="formal-block fragment" data-fragment-index="0">
+        <p><strong>Borda score</strong> and <strong>agreement index</strong> are level 2.</p>
+      </div>
+      <div class="formal-block degree-three-proposition fragment" data-fragment-index="1">
+        <p><strong>Rank variance</strong> and <strong>divisiveness</strong> are level 3.</p>
+      </div>
+    </div>
+  </section>
+  <section id="level-formal-definition" class="technical framework-slide">
+    <p class="depth">Technical branch · formal definition of level</p>
+    <h2>The level is a minimal sufficient cutoff</h2>
+    <div class="formal-block level-definition">
+      <p class="formal-label">Definition · level of a measure</p>
+      <p>Write $P_{\le\ell}(\pi)=\bigl(p_S^\pi(a)\bigr)_{2\le |S|\le\ell,\ a\in S}$.</p>
+      <div class="formal-equation">$$\operatorname{level}(D):=\min\!\left\{\ell:\ \exists f,\ \forall\pi,\quad D(\pi)=f\!\left(P_{\le\ell}(\pi)\right)\right\}.$$</div>
+      <p>Keep <em>every</em> degree up to $\ell$, not just degree $\ell$.</p>
+    </div>
+    <div class="branch-nav"><button type="button" data-branch="up">↑ Back to story</button><button type="button" data-branch="next">Continue story →</button></div>
+  </section>
+  <section id="variance-degree-three" class="technical">
+    <p class="depth">Technical branch · why triples appear · 1/2</p>
+    <h2>Variance creates products of two pairwise indicators</h2>
+    <div class="equation">$$X_b=\mathbf{1}\{a\succ b\},\qquad r_a=m-\sum_{b\ne a}X_b.$$</div>
+    <div class="equation">$$\mathbb{E}[X_b]=p_{\{a,b\}}(a),\qquad \mathbb{E}[X_bX_c]=p_{\{a,b,c\}}(a).$$</div>
+    <div class="proof-step"><p>Expanding $\mathrm{Var}(r_a)$ introduces $X_bX_c$: the event that A beats both opponents in their triple.</p></div>
+    <p class="small muted">The earlier U/P pair has identical pairwise data but different variance, proving pairwise insufficiency in general.</p>
+    <div class="branch-nav"><button type="button" data-branch="up">↑ Back to story</button><button type="button" data-branch="next">Continue story →</button></div>
+  </section>
+  <section id="sufficiency-necessity" class="technical">
+    <p class="depth">Technical branch · why triples appear · 2/2</p>
+    <h2>Sufficiency and necessity answer different questions</h2>
+    <div class="conversation">
+      <div class="side"><p><strong>Sufficiency</strong></p><p class="small">An explicit formula writes the measure using entries through degree 3.</p></div>
+      <div class="rule"></div>
+      <div class="side"><p><strong>Necessity in general</strong></p><p class="small">Two profiles agree through degree 2 but the measure changes.</p></div>
+    </div>
+    <p class="proof-step">Under additional structure, the hierarchy can collapse: for example, Plackett–Luce profiles or single-peaked preferences on a known common axis.</p>
+    <p class="small muted">This does not say every real dataset needs degree 3, only that no degree-2 formula works for all unrestricted profiles.</p>
+    <div class="branch-nav"><button type="button" data-branch="up">↑ Back to story</button><button type="button" data-branch="next">Continue story →</button></div>
+  </section>
+</section>
+
+<section>
+<section id="beyond-spread" class="main-slide framework-slide moment-card">
+  <button class="branch-entry" type="button" data-branch="down">Compare moment shapes ↓</button>
+  <p class="kicker">The moment hierarchy</p>
+  <h2>Can we go beyond level 3?</h2>
+  <div class="moment-introduction">
+    <div class="moment-general">$$M_k^\pi(a)=\mathbb E_{\pi}\!\left[(r_a-\mu_a)^k\right],\qquad \mu_a=\mathbb E_{\pi}[r_a].$$</div>
+    <div class="moment-familiar">
+      <p><em>First moment → Borda</em><br>$B_\pi(a)=m+1-\mu_a$</p>
+      <p><em>Second central moment → rank variance</em><br>$M_2^\pi(a)=\operatorname{Var}_{\pi}(r_a)$</p>
+    </div>
+  </div>
+  <div class="formal-block moment-proposition fragment" data-fragment-index="0">
+    <p class="formal-label">Proposition · moment–level correspondence</p>
+    <p>The $k$-th central moment has <strong>level $k+1$</strong><br>for $k\ge2$ and $m\ge k+2$.</p>
+  </div>
+  <div class="moment-computation fragment" data-fragment-index="1">
+    <p class="moment-formula-lead">Compute it directly from the plurality matrix:</p>
+    <div class="moment-main-formula">$$M_k^\pi(a)=(-1)^k\sum_{s=0}^{k}c_s(a)\underbrace{\sum_{\substack{S\subseteq\mathcal A\setminus\{a\}\\|S|=s}}p_{S\cup\{a\}}^\pi(a)}_{\text{degree }s+1\ \le\ k+1}.$$</div>
+    <div class="moment-coefficients">$$c_s(a)=\sum_{j=0}^{s}(-1)^{s-j}\binom{s}{j}(j-q_a)^k,\qquad q_a=B_\pi(a)-1.$$</div>
+    <p class="framework-caveat">Convention: $p_{\{a\}}^\pi(a)=1$. Only degrees 2 through $k+1$ are needed.</p>
+  </div>
+</section>
+<section id="moment-shapes" class="technical">
+  <p class="kicker">Beyond spread</p>
+  <h2>The same spread can hide different shapes</h2>
+  <div class="hist-grid" id="moment-histograms"></div>
+  <p class="support fragment" data-fragment-index="1" style="text-align:center;margin:1.7em auto 0;">Asymmetry appears in the third central moment; sensitivity to extreme deviations appears in the fourth.</p>
+  <p class="support fragment" data-fragment-index="2" style="text-align:center;margin:.45em auto 0;"><strong>Skewness is level 4.</strong> &nbsp; <strong>Excess kurtosis is level 5.</strong></p>
+  <div class="branch-nav"><button type="button" data-branch="up">↑ Back to story</button><button type="button" data-branch="next">Continue story →</button></div>
+</section>
+</section>
+
+<section>
+  <section id="moment-compass" class="main-slide original-asset mp-explain">
+    <button class="branch-entry" type="button" data-branch="down">Explore the figure ↓</button>
+    <p class="kicker">Skewness × kurtosis — the level-4 / level-5 plane</p>
+    <div class="asset-viewport" tabindex="0" role="region" aria-label="Synthetic-data moment plane; scroll horizontally on small screens">
+      <iframe class="mpframe" data-src="../elicitation-collective-disagreement/moment_plane.html?mode=explain" loading="lazy" title="Synthetic-data moment plane — original guided figure"></iframe>
+    </div>
+    <span class="mpstep fragment"></span><span class="mpstep fragment"></span><span class="mpstep fragment"></span><span class="mpstep fragment"></span><span class="mpstep fragment"></span>
+    <img class="print-figure" src="../elicitation-collective-disagreement/figs/fig_synth_bis.png" alt="Original synthetic-data skewness–kurtosis figure">
+    <p class="mphint small muted"><a href="#/moment-explorer">Open the interactive version ↓</a> &nbsp;·&nbsp; <a href="#/synthetic-figure">Full synthetic-data figure</a></p>
+  </section>
+  <section id="moment-explorer" class="technical original-asset">
+    <p class="kicker">Interactive · the moment plane</p>
+    <div class="asset-viewport" tabindex="0" role="region" aria-label="Interactive moment plane; scroll horizontally on small screens">
+      <iframe class="mpframe" data-src="../elicitation-collective-disagreement/moment_plane.html?mode=play" loading="lazy" title="Original interactive moment plane"></iframe>
+    </div>
+    <p class="mphint small muted">Synthetic models and real elections. Select an alternative to inspect its rank distribution.</p>
+    <div class="branch-nav"><button type="button" data-branch="up">↑ Back to story</button><button type="button" data-branch="next">Continue story →</button></div>
+  </section>
+  <section id="synthetic-figure" class="technical original-asset">
+    <p class="kicker">Synthetic data · the complete figure</p>
+    <img class="source-figure" src="../elicitation-collective-disagreement/figs/fig_synth_bis.png" alt="Original synthetic-data figure, with model clouds and reference rank distributions">
+    <div class="branch-nav"><button type="button" data-branch="up">↑ Back to story</button><button type="button" data-branch="next">Continue story →</button></div>
+  </section>
+  <section id="moment-details" class="technical">
+    <p class="depth">Technical branch · moment plane · 1/2</p>
+    <h2>Standardized moments require nonzero variance</h2>
+    <div class="equation">$$\gamma_1=\frac{\mathbb{E}[(r-\mu)^3]}{\sigma^3},\qquad \gamma_2=\frac{\mathbb{E}[(r-\mu)^4]}{\sigma^4}-3,\qquad \sigma^2>0.$$</div>
+    <p>Orders 3 and 4 require plurality information through degrees 4 and 5 in the unrestricted setting.</p>
+    <div class="equation">$$\sum_{\substack{T\subseteq\mathcal A\setminus\{a\}\\|T|=s}}p_{T\cup\{a\}}(a)=\mathbb{E}\!\left[\binom{m-r_a}{s}\right].$$</div>
+    <div class="branch-nav"><button type="button" data-branch="up">↑ Back to story</button><button type="button" data-branch="next">Continue story →</button></div>
+  </section>
+  <section id="moment-limits" class="technical">
+    <p class="depth">Technical branch · moment plane · 2/2</p>
+    <h2>A point is a summary, not an identity card</h2>
+    <ul>
+      <li>Pearson’s inequality constrains feasible skewness–kurtosis pairs.</li>
+      <li>Equality describes a two-point distribution.</li>
+      <li>Many distinct distributions can still share one moment pair.</li>
+      <li>No continuous-unimodality curve is used here as a universal classifier for discrete ranks.</li>
+    </ul>
+    <div class="proof-step"><p>The plane is useful because it separates aspects of shape — not because it uniquely identifies a distribution or its causes.</p></div>
+    <div class="branch-nav"><button type="button" data-branch="up">↑ Back to story</button><button type="button" data-branch="next">Continue story →</button></div>
+  </section>
+</section>
+
+<section id="a-little-break" class="elicitation-slide recap-card">
+  <p class="kicker">What do we know so far?</p>
+  <h2>A little break</h2>
+  <ul class="recap-points">
+    <li class="fragment" data-fragment-index="0">Understanding the structure of disagreement is difficult: different profiles can look identical to a measure.</li>
+    <li class="fragment" data-fragment-index="1">The measures we saw are defined on full profiles, but we don’t <strong>need</strong> full profiles to compute them.</li>
+    <li class="fragment" data-fragment-index="2">With limited attention, we don’t <strong>want</strong> to ask people for full rankings.</li>
+    <li class="fragment recap-implication" data-fragment-index="3">With enough people and suitable questions, we can estimate the plurality information our measures require.</li>
+  </ul>
+  <div class="recap-questions fragment" data-fragment-index="4">
+    <p>How many people?</p><p>How many comparisons per person?</p>
+  </div>
+</section>
+
+<section id="elicitation-principles" class="elicitation-slide principles-card">
+  <p class="kicker">The elicitation trade-off</p>
+  <h2>Cognitive load and the number of sampled people</h2>
+  <p class="elicitation-lead">We query sampled people under two principles.</p>
+  <div class="elicitation-principle fragment" data-fragment-index="0">
+    <p class="principle-eyebrow">First principle</p>
+    <p><em>Anonymity.</em> Sample a preference order from $\pi$, independently for each new respondent. We use preferences, not identities.</p>
+  </div>
+  <div class="elicitation-principle fragment" data-fragment-index="1">
+    <p class="principle-eyebrow">Second principle</p>
+    <p><em>Minimal cost.</em> Keep both the burden on each person and the number of people small.</p>
+    <div class="cognitive-cost-definition fragment" data-fragment-index="2">
+      <p>The cost $c_j$ of a query is the number of <strong>pairwise comparisons</strong> someone needs to make to answer it.</p>
+      <p class="cost-example">One pairwise question costs 1; ranking $k$ alternatives costs $\Theta(k\log k)$ comparisons.</p>
+    </div>
+    <div class="elicitation-costs fragment" data-fragment-index="3">
+      <p>$\lambda=\max_j c_j$<br><span>Maximum cognitive load</span></p>
+      <p>$N$<br><span>Number of sampled people</span></p>
+      <p>$B_{\mathrm{tot}}=\sum_j c_j\le N\lambda$<br><span>Total comparison budget</span></p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <section id="borda-elicitation" class="main-slide elicitation-slide sampling-overview" data-build="0">
+    <button class="branch-entry" type="button" data-branch="down">Hoeffding development ↓</button>
+    <div class="sampling-overview-canvas">
+      <h2 class="sampling-overview-title">Computing Borda score through elicitation</h2>
+      <div class="sampling-flow">
+        <div class="sampling-flow-node">
+          <p>Borda score</p>
+          <p>$B_\pi(a)=1+\sum_{b\ne a}p_{ab}$</p>
+        </div>
+        <span class="sampling-flow-arrow" data-from="1" aria-hidden="true">→</span>
+        <div class="sampling-flow-node" data-from="1">
+          <p>Pairwise proportions</p>
+          <p>$p_{ab}=\Pr_\pi[a\succ b]$</p>
+        </div>
+        <span class="sampling-flow-arrow" data-from="2" aria-hidden="true">→</span>
+        <div class="sampling-flow-node" data-from="2">
+          <p>How many pairs?</p>
+          <p><span data-until="22">$Q(m)=\binom m2$</span><span data-from="22">$Q(10)=45$</span></p>
+        </div>
+      </div>
+      <div class="sampling-overview-hoeffding" data-from="3" data-until="4">
+        <p class="sampling-sample-question">How many independent samples per pair?</p>
+        <p class="kicker">Hoeffding’s inequality</p>
+        <div>$$\Pr\!\left(|\widehat p_{ab}-p_{ab}|\ge\varepsilon\right)\le 2e^{-2\textcolor{#9a1b1b}{n}\varepsilon^2}.$$</div>
+      </div>
+      <div class="sampling-abstract" data-from="4">
+        <p class="sampling-abstract-label"><span data-until="22">$n(m)$ independent samples</span><span class="sampling-numeric-label" data-from="22">$n(10)=1\,500$ independent samples</span></p>
+        <p class="sampling-per-pair">per pair</p>
+      </div>
+      <div class="tradeoff-columns" data-from="5">
+        <div class="tradeoff-protocol tradeoff-full">
+          <h3 data-from="5">Full ranking</h3>
+          <ol class="tradeoff-steps">
+            <li data-from="5"><span class="tradeoff-number">1</span><span>Sample a voter.</span></li>
+            <li data-from="6"><span class="tradeoff-number">2</span><span>Ask them to rank all $m$ alternatives.</span></li>
+          </ol>
+          <div class="tradeoff-yield" data-from="7"><p><span data-until="22">$Q(m)$ observations</span><span data-from="22">$Q(10)=45$ observations</span><br><span class="tradeoff-detail">one per pair</span></p></div>
+          <div class="tradeoff-population" data-from="8"><p class="tradeoff-label">Population</p><p><span data-until="22">$N=n(m)$</span><span data-from="22">$N=1\,500$</span></p></div>
+          <div class="tradeoff-cost" data-from="14"><p class="tradeoff-label">Comparisons per voter</p><p><span data-until="22">$C(m)=\Theta(m\log m)$</span><span data-from="22">$C(10)\le25$</span></p></div>
+        </div>
+        <div class="tradeoff-protocol tradeoff-subset" data-from="15">
+          <h3>A $k$-ranking</h3>
+          <ol class="tradeoff-steps">
+            <li data-from="15"><span class="tradeoff-number">1</span><span>Sample a voter.</span></li>
+            <li data-from="16"><span class="tradeoff-number">2</span><span>Draw a random $k$-subset.</span></li>
+            <li data-from="17"><span class="tradeoff-number">3</span><span>Ask them to rank it.</span></li>
+          </ol>
+          <div class="tradeoff-yield" data-from="18"><p><span data-until="22">$\binom k2$ observations</span><span data-from="22">$\binom52=10$ observations</span><br><span class="tradeoff-detail">one per included pair</span></p></div>
+          <div class="tradeoff-population" data-from="19"><p class="tradeoff-label">Population · mean coverage</p><p><span data-until="22">$N_{\rm cov}=\dfrac{Q(m)n(m)}{\binom k2}$</span><span data-from="22">$N_{\rm cov}=\dfrac{45\times1\,500}{10}=6\,750$</span></p></div>
+          <div class="tradeoff-cost" data-from="20"><p class="tradeoff-label">Comparisons per voter</p><p><span data-until="22">$C(k)=\Theta(k\log k)$</span><span data-from="22">$C(5)\le8$</span></p></div>
+        </div>
+        <div class="tradeoff-protocol tradeoff-pair" data-from="9">
+          <h3>One pairwise comparison</h3>
+          <ol class="tradeoff-steps">
+            <li data-from="9"><span class="tradeoff-number">1</span><span>Sample a voter.</span></li>
+            <li data-from="10"><span class="tradeoff-number">2</span><span>Draw a pair, balancing allocations.</span></li>
+            <li data-from="11"><span class="tradeoff-number">3</span><span>Ask them to compare it.</span></li>
+          </ol>
+          <div class="tradeoff-yield" data-from="12"><p>1 observation<br><span class="tradeoff-detail">per sampled voter</span></p></div>
+          <div class="tradeoff-population" data-from="13"><p class="tradeoff-label">Population</p><p><span data-until="22">$N=Q(m)n(m)$</span><span data-from="22">$N=45\times1\,500$<br>$=67\,500$</span></p></div>
+          <div class="tradeoff-cost" data-from="14"><p class="tradeoff-label">Comparisons per voter</p><p>$1$</p></div>
+        </div>
+      </div>
+      <p class="tradeoff-example-settings" data-from="21">$m=10$, with $k=5$ in the middle · $\varepsilon=\delta=0.05$<span data-from="22"><br>Ranking costs: merge-sort worst-case bounds.</span></p>
+      <div class="sampling-steps" aria-hidden="true"><span class="fragment" data-fragment-index="0"></span><span class="fragment" data-fragment-index="1"></span><span class="fragment" data-fragment-index="2"></span><span class="fragment" data-fragment-index="3"></span><span class="fragment" data-fragment-index="4"></span><span class="fragment" data-fragment-index="5"></span><span class="fragment" data-fragment-index="6"></span><span class="fragment" data-fragment-index="7"></span><span class="fragment" data-fragment-index="8"></span><span class="fragment" data-fragment-index="9"></span><span class="fragment" data-fragment-index="10"></span><span class="fragment" data-fragment-index="11"></span><span class="fragment" data-fragment-index="12"></span><span class="fragment" data-fragment-index="13"></span><span class="fragment" data-fragment-index="14"></span><span class="fragment" data-fragment-index="15"></span><span class="fragment" data-fragment-index="16"></span><span class="fragment" data-fragment-index="17"></span><span class="fragment" data-fragment-index="18"></span><span class="fragment" data-fragment-index="19"></span><span class="fragment" data-fragment-index="20"></span><span class="fragment" data-fragment-index="21"></span></div>
+    </div>
+  </section>
+  <section id="borda-hoeffding-development" class="technical elicitation-slide elicitation-lab" data-step-through-branch="true" data-build="0">
+    <button class="branch-entry" type="button" data-branch="up">↑ Back to overview</button>
+    <div class="sampling-canvas">
+      <div class="sampling-intro" data-until="7">
+        <p class="kicker">An illustration with the Borda score</p>
+        <h2>How many independent samples do we need?</h2>
+        <p class="borda-sampling-identity">$B_\pi(a)=1+\sum_{b\ne a}p_{ab}$ <span>— estimate the pairwise proportions.</span></p>
+      </div>
+      <div class="hoeffding-original" data-until="6">
+        <p class="sampling-formula-label">Hoeffding’s inequality · one fixed pair</p>
+        <div class="hoeffding-formula" aria-label="Probability of pairwise estimation error at least epsilon is at most two exp minus two n epsilon squared">
+          <span>$\Pr\bigl(|\widehat p_{ab}-p_{ab}|\ge$</span><span class="hoeffding-epsilon">$\varepsilon$</span><span>$\bigr)\le 2\exp\bigl(-2$</span><span class="hoeffding-n">$n$</span><span class="hoeffding-epsilon">$\varepsilon^2$</span><span>$\bigr)$</span><span class="hoeffding-target" data-from="3">$\le$ <span class="hoeffding-delta">$\delta$</span>$\,/Q$</span>
+        </div>
+        <p class="sampling-union" data-from="3">Protect all $Q=\binom m2$ pairs at once: allow failure probability $\delta/Q$ per pair.</p>
+      </div>
+      <div class="sampling-explanations" data-until="6">
+        <div class="sampling-explanation" data-from="1" data-until="3">
+          <p><em>$\varepsilon$ · accuracy</em></p>
+          <p>How close should each estimated pairwise proportion be?</p>
+          <p class="sampling-fixed" data-from="2">Let’s fix it: <strong>$\varepsilon=0.05$</strong> — five percentage points.</p>
+        </div>
+        <div class="sampling-explanation" data-from="3" data-until="5">
+          <p><em>$\delta$ · failure probability</em></p>
+          <p>How often may <em>any</em> pair’s estimate miss that accuracy?</p>
+          <p class="sampling-fixed" data-from="4">Let’s fix it: <strong>$\delta=0.05$</strong> — 95% confidence for all pairs.</p>
+        </div>
+        <div class="sampling-explanation" data-from="5">
+          <p><em>$n$ · independent respondents per pair</em></p>
+          <p>This is the quantity we want to determine.</p>
+          <p class="sampling-fixed">Fix $\varepsilon=0.05$ and $\delta=0.05$; let $m$ vary.</p>
+        </div>
+      </div>
+      <div class="sampling-final" data-from="6">
+        <div class="sampling-final-equation">$$n(m)=\left\lceil\frac{\ln(2Q/\delta)}{2\varepsilon^2}\right\rceil=\left\lceil200\ln\!\left(40\binom m2\right)\right\rceil.$$</div>
+        <p>$\varepsilon=\delta=0.05,\quad Q=\binom m2$; $n(m)$ independent samples <em>per pair</em>.</p>
+      </div>
+      <div class="sampling-bound-explanation" data-from="6" data-until="7">
+        <p>With probability at least 95%, every pairwise error is at most 0.05.</p>
+        <p>Hence every Borda-score error is at most $0.05(m-1)$.</p>
+        <p class="sampling-independence">For a fixed pair, samples come from different people.<br>Comparisons inferred from one person need not be independent.</p>
+      </div>
+      <p class="sampling-question" data-from="7">How can we obtain $n(m)$ independent samples<br>for <em>each</em> pairwise proportion?</p>
+      <div class="sampling-strategies" data-from="8">
+        <div class="sampling-strategy full-ranking-strategy" data-from="8">
+          <h3>Full ranking</h3>
+          <p>Ask each sampled person<br>to rank all $m$ alternatives.</p>
+          <div data-from="9">
+            <p class="query-yield">One observation for every pair:<br>$\binom m2=Q$ pairs per person.</p>
+            <p class="query-population">$N_{\mathrm{full}}=n(m)$</p>
+            <p class="query-load">Load: $\Theta(m\log m)$ comparisons.</p>
+          </div>
+        </div>
+        <div class="sampling-strategy subset-ranking-strategy" data-from="12">
+          <h3>A random $k$-ranking</h3>
+          <p>Sample a person and a uniform<br>$k$-subset; ask them to rank it.</p>
+          <div data-from="13">
+            <p class="query-yield">$\binom k2$ pairs per person.<br>Inclusion probability: $\rho=\binom k2/Q$.</p>
+            <p class="query-population">$N_{\mathrm{coverage}}=n(m)/\rho$</p>
+            <p class="query-load">Load: $\Theta(k\log k)$ comparisons.</p>
+            <p class="coverage-warning">Mean-coverage benchmark,<br>not a guaranteed stopping count.</p>
+          </div>
+        </div>
+        <div class="sampling-strategy single-pair-strategy" data-from="10">
+          <h3>One pairwise comparison</h3>
+          <p>Ask each sampled person<br>to compare one assigned pair.</p>
+          <div data-from="11">
+            <p class="query-yield">One observation for one pair.<br>Assign $n(m)$ people to each pair.</p>
+            <p class="query-population">$N_{\mathrm{pair}}=Q\,n(m)$</p>
+            <p class="query-load">Load: 1 comparison.</p>
+          </div>
+        </div>
+      </div>
+      <p class="sampling-stop-rule" data-from="14">For random subsets, keep sampling until <strong>every pair</strong> has $n(m)$ respondents.<br>Use the first $n(m)$ observations of each pair.</p>
+      <div class="sampling-steps" aria-hidden="true"><span class="fragment" data-fragment-index="0"></span><span class="fragment" data-fragment-index="1"></span><span class="fragment" data-fragment-index="2"></span><span class="fragment" data-fragment-index="3"></span><span class="fragment" data-fragment-index="4"></span><span class="fragment" data-fragment-index="5"></span><span class="fragment" data-fragment-index="6"></span><span class="fragment" data-fragment-index="7"></span><span class="fragment" data-fragment-index="8"></span><span class="fragment" data-fragment-index="9"></span><span class="fragment" data-fragment-index="10"></span><span class="fragment" data-fragment-index="11"></span><span class="fragment" data-fragment-index="12"></span><span class="fragment" data-fragment-index="13"></span></div>
+    </div>
+  </section>
+  <section id="borda-sampling-details" class="technical">
+    <p class="depth">Technical branch · pairwise sampling</p>
+    <h2>Accuracy, independence, and random coverage</h2>
+    <div class="equation">$$\Pr\!\left(\max_{a&lt;b}|\widehat p_{ab}-p_{ab}|\ge\varepsilon\right)\le 2Qe^{-2n\varepsilon^2}\le\delta.$$</div>
+    <ul>
+      <li>$Q=\binom m2$ distinct pairs; reverse proportions carry the same information.</li>
+      <li>For each pair, use $n$ different, independently sampled respondents.</li>
+      <li>Uniform $k$-subsets include any fixed pair with probability $\rho=\binom k2/Q$; its expected count after $N$ people is $N\rho$.</li>
+      <li>$N=n/\rho$ only gives the mean count. Random coverage is uneven; stop when the minimum pair count reaches $n$.</li>
+    </ul>
+    <p class="small muted">Pairwise error $\varepsilon$ implies raw Borda error at most $(m-1)\varepsilon$. A fixed raw-score target would require adjusting the pairwise tolerance as $m$ grows.</p>
+    <div class="branch-nav"><button type="button" data-branch="up">↑ Back to story</button><button type="button" data-branch="next">Continue story →</button></div>
+  </section>
+</section>
+
+<section id="protocol-examples" class="protocol-slide">
+  <p class="kicker">Two elicitation protocols</p>
+  <h2>Extending the trade-off to the plurality matrix</h2>
+  <div class="protocol-scenes">
+<div class="protocol-panel krank-slide" data-protocol="ranking">
+  <p class="kicker">Elicitation by <span class="kv">k</span>-rankings</p>
+  <div class="scene">
+    <div class="ksplit">
+      <ol class="ksteps">
+        <li class="kstep1">Sample a voter and a \(k\)-subset \(S=\{a,b,c,d\}\), \(k=|S|\).</li>
+        <li class="kstep2">Ask them to <b>rank</b> it.</li>
+        <li class="kstep3">By transitivity, read the winner of <b>every</b> subset — one observation for each, \(\binom{k}{\ell}\) at degree \(\ell\).</li>
+      </ol>
+      <div class="kanim ranim">
+        <div class="kseq">
+          <div class="lt" data-n="a">a</div><div class="lt" data-n="b">b</div><div class="lt" data-n="c">c</div><div class="lt" data-n="d">d</div>
+          <div class="kconn k0">&#8827;</div><div class="kconn k1">&#8827;</div><div class="kconn k2">&#8827;</div>
+        </div>
+        <div class="ksamps">
+          <div class="dgrp">
+            <span class="dlab">\(\ell=2\)</span>
+            <span class="smp" data-s="ab">\(p_{\{a,b\}}(a)\)</span>
+            <span class="smp" data-s="ac">\(p_{\{a,c\}}(c)\)</span>
+            <span class="smp" data-s="ad">\(p_{\{a,d\}}(a)\)</span>
+            <span class="smp" data-s="bc">\(p_{\{b,c\}}(c)\)</span>
+            <span class="smp" data-s="bd">\(p_{\{b,d\}}(d)\)</span>
+            <span class="smp" data-s="cd">\(p_{\{c,d\}}(c)\)</span>
+            <span class="dcnt">6</span>
+          </div>
+          <div class="dgrp">
+            <span class="dlab">\(\ell=3\)</span>
+            <span class="smp" data-s="abc">\(p_{\{a,b,c\}}(c)\)</span>
+            <span class="smp" data-s="abd">\(p_{\{a,b,d\}}(a)\)</span>
+            <span class="smp" data-s="acd">\(p_{\{a,c,d\}}(c)\)</span>
+            <span class="smp" data-s="bcd">\(p_{\{b,c,d\}}(c)\)</span>
+            <span class="dcnt">4</span>
+          </div>
+          <div class="dgrp">
+            <span class="dlab">\(\ell=4\)</span>
+            <span class="smp" data-s="abcd">\(p_{\{a,b,c,d\}}(c)\)</span>
+            <span class="dcnt">1</span>
+          </div>
+        </div>
+        <div class="kcount"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+<div class="protocol-panel kchain-slide" data-protocol="chain">
+  <p class="kicker">Elicitation by <span class="kv">k</span>-chains</p>
+  <div class="scene">
+    <div class="ksplit">
+      <ol class="ksteps">
+        <li class="kstep1">Sample a voter and a \(k\)-subset \(S=\{a,b,c,d\}\), \(k=|S|\).</li>
+        <li class="kstep2">Put it in a (random) <b>query order</b>.</li>
+        <li class="kstep3">Ask 1st vs 2nd; the winner faces the next, … — one observation per <b>prefix</b>.</li>
+      </ol>
+      <div class="kanim canim">
+        <div class="kseq">
+          <div class="lt" data-n="a">a</div><div class="lt" data-n="b">b</div><div class="lt" data-n="c">c</div><div class="lt" data-n="d">d</div>
+          <div class="kconn k0">&#8594;</div><div class="kconn k1">&#8594;</div><div class="kconn k2">&#8594;</div>
+        </div>
+        <div class="ksamps">
+          <div class="dgrp"><span class="dlab">\(\ell=2\)</span><span class="smp" data-s="bd">\(p_{\{b,d\}}(d)\)</span><span class="dcnt">1</span></div>
+          <div class="dgrp"><span class="dlab">\(\ell=3\)</span><span class="smp" data-s="abd">\(p_{\{a,b,d\}}(a)\)</span><span class="dcnt">1</span></div>
+          <div class="dgrp"><span class="dlab">\(\ell=4\)</span><span class="smp" data-s="abcd">\(p_{\{a,b,c,d\}}(c)\)</span><span class="dcnt">1</span></div>
+        </div>
+        <div class="kcount"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+  </div>
+  <p class="protocol-independence">One person, several subset observations. Independence is across people for a fixed subset.</p>
+  <span class="protocol-step fragment" data-fragment-index="0"></span><span class="protocol-step fragment" data-fragment-index="1"></span><span class="protocol-step fragment" data-fragment-index="2"></span><span class="protocol-step fragment" data-fragment-index="3"></span><span class="protocol-step fragment" data-fragment-index="4"></span><span class="protocol-step fragment" data-fragment-index="5"></span><span class="protocol-step fragment" data-fragment-index="6"></span>
+</section>
+
+<section id="protocol-comparison" class="protocol-slide">
+  <p class="kicker">The two protocols, compared</p>
+  <h2>More information per person, at a higher cost</h2>
+  <p class="protocol-parameters">$k$: queried subset size. &nbsp; $\ell$: target degree. &nbsp; $2\le\ell\le k\le m$.</p>
+  <table class="protocol-table">
+    <thead><tr><th></th><th>$k$-ranking</th><th>$k$-chain</th></tr></thead>
+    <tbody>
+      <tr class="fragment" data-fragment-index="0"><th>Cognitive load<span>comparisons per person</span></th><td>$\Theta(k\log k)$</td><td>$k-1$</td></tr>
+      <tr class="fragment" data-fragment-index="1"><th>Subset observations<span>at degree $\ell$, per person</span></th><td>$\binom{k}{\ell}$</td><td>$1$</td></tr>
+    </tbody>
+  </table>
+  <div class="formal-block protocol-comparison-proposition fragment" data-fragment-index="2">
+    <p class="formal-label">Proposition</p>
+    <p>To observe a degree-$\ell$ favorite at the lightest load,<br>use an <strong>$\ell$-chain</strong>: $\lambda=\ell-1$ comparisons.</p>
+  </div>
+</section>
+
+<section>
+  <section id="samples-per-level" class="main-slide protocol-slide">
+    <button class="branch-entry" type="button" data-branch="down">Degree versus level ↓</button>
+    <p class="kicker">From pairs to higher degrees</p>
+    <h2>How many samples do we need at each degree?</h2>
+    <div class="formal-block sample-proposition">
+      <p class="formal-label">Proposition · simultaneous estimation at degree $\ell$</p>
+      <p>There are $Q_\ell=\ell\binom m\ell$ plurality cells. It suffices to collect</p>
+      <div class="sample-bound">$$T_\ell=\left\lceil\frac{\ln(2Q_\ell/\delta)}{2\varepsilon^2}\right\rceil$$</div>
+      <p>independent favorite observations <em>per subset</em> to estimate every cell<br>within $\varepsilon$, with probability at least $1-\delta$.</p>
+    </div>
+    <div class="sample-allocation fragment" data-fragment-index="0">
+      <div><h3>Balanced $\ell$-chains</h3><p>One subset per person</p><div>$$N=\binom m\ell\,T_\ell$$</div></div>
+      <div><h3>Uniform random $k$-rankings</h3><p>$\binom k\ell$ subsets per person</p><div>$$N_{\mathrm{coverage}}=\frac{\binom m\ell}{\binom k\ell}\,T_\ell$$</div></div>
+    </div>
+  </section>
+  <section id="cumulative-sampling" class="technical">
+    <p class="depth">Technical branch · degrees and a measure’s level</p>
+    <h2>Protect every cell through the required level</h2>
+    <div class="equation">$$Q_{\le L}=\sum_{\ell=2}^{L}\ell\binom m\ell,\qquad T_{\le L}=\left\lceil\frac{\ln(2Q_{\le L}/\delta)}{2\varepsilon^2}\right\rceil.$$</div>
+    <p>Collect $T_{\le L}$ independent favorite observations for each subset of every degree $2,\ldots,L$.</p>
+    <ul><li>Use the first $T_{\le L}$ observations per subset.</li><li>A union bound controls all retained plurality cells at once.</li><li>Convert entrywise accuracy into measure accuracy separately.</li></ul>
+    <p class="small muted">For random queries, coverage counts fluctuate. A mean-coverage calculation is not a fixed-population guarantee.</p>
+    <div class="branch-nav"><button type="button" data-branch="up">↑ Back to story</button><button type="button" data-branch="next">Continue story →</button></div>
+  </section>
+</section>
+
+<section id="results-stack">
+<section id="using-results" class="main-slide protocol-slide using-results-card" data-direct-details="true">
+  <button class="branch-entry" type="button" data-branch="down">Measures from the literature ↓</button>
+  <p class="kicker">From a measure to an elicitation protocol</p>
+  <h2>How to use our results?</h2>
+  <div class="results-layout">
+    <ol class="results-steps">
+      <li class="fragment" data-fragment-index="0"><span class="step-number">1</span><div>Select a measure<br>from the literature.</div></li>
+      <li class="fragment" data-fragment-index="1"><span class="step-number">2</span><div>Find its level.</div></li>
+      <li class="fragment" data-fragment-index="2"><span class="step-number">3</span><div>Navigate the trade-off:<ol><li>people we can sample;</li><li>comparisons we can ask of each.</li></ol></div></li>
+      <li class="fragment" data-fragment-index="3"><span class="step-number">4</span><div>Deduce which<br>protocol to use.</div></li>
+    </ol>
+    <div class="results-figure fragment" data-fragment-index="4">
+      <iframe data-src="tradeoff-explorer.html" title="Linked population and cognitive-load explorer"></iframe>
+    </div>
+  </div>
+</section>
+
+<section id="literature-measures" class="technical literature-index" data-detail-home="using-results">
+  <p class="kicker">How to use our results · measures from the literature</p>
+  <h2>Choose a measure, explore its information</h2>
+  <p class="literature-intro">Select a row to open the full plurality-matrix derivation.</p>
+  <table class="literature-table">
+    <thead><tr><th>Measure</th><th>Scope</th><th>Level</th><th>Reference</th></tr></thead>
+    <tbody id="literature-measure-rows"></tbody>
+  </table>
+  <p class="literature-provenance">Levels and plurality reformulations: this work.<br>Original measures: the references linked below.</p>
+  <div class="literature-nav"><a href="#/using-results" data-detail-home-link>↑ Back to the interactive figure</a><a href="#/literature-references" data-detail-target="literature-references">Bibliographic references →</a></div>
+</section>
+</section>
+
+<section>
+  <section id="conclusion" class="main-slide conclusion-card">
+    <button class="branch-entry" type="button" data-branch="down">Backup slides ↓</button>
+    <p class="kicker">What the hierarchy gives us — and what it leaves open</p>
+    <h2>Conclusion</h2>
+    <div class="conclusion-columns">
+      <div class="conclusion-strengths">
+        <h3>What we gain</h3>
+        <ul>
+          <li class="fragment" data-fragment-index="0">Levels quantify a measure’s<br><strong>information requirements</strong>.</li>
+          <li class="fragment" data-fragment-index="1">They reveal what a measure can see —<br>and what it may miss.</li>
+          <li class="fragment" data-fragment-index="3">Levels guide the<br><strong>people–questions trade-off</strong>.</li>
+          <li class="fragment" data-fragment-index="4">Minimal cognitive-load options;<br>generally <span class="fragment custom conclusion-emphasis" data-fragment-index="5">efficient</span> protocols<br>with sampling guarantees.</li>
+        </ul>
+      </div>
+      <div class="conclusion-limits">
+        <h3>What remains limited</h3>
+        <div class="conclusion-limit fragment" data-fragment-index="2">
+          <p><strong>Not the full profile</strong> —<br>even at degree $m$, in general.</p>
+          <p class="limit-detail">Cross-set dependencies can stay hidden:</p>
+          <p class="cross-set-event">$\Pr(a\succ b\ \text{and}\ c\succ d)$.</p>
+        </div>
+        <div class="conclusion-limit fragment" data-fragment-index="6">
+          <p><strong>Whole-matrix bounds can be conservative.</strong></p>
+          <p class="limit-detail">For a fixed measure, fewer people may suffice to:</p>
+          <ul>
+            <li>find the most divisive alternative;</li>
+            <li>rank alternatives by divisiveness.</li>
+          </ul>
+          <p class="limit-outlook">A similar trade-off,<br>potentially at a lower sample cost.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+<section id="real-elections" class="technical backup-slide original-asset">
+    <button class="branch-entry" type="button" data-branch="down">Data provenance and caveats ↓</button>
+    <p class="kicker">The same plane — real elections</p>
+    <div class="asset-viewport" tabindex="0" role="region" aria-label="Real-election moment plane; scroll horizontally on small screens">
+      <iframe class="mpframe" data-src="../elicitation-collective-disagreement/moment_plane.html?mode=realguided" loading="lazy" title="Original real-election moment plane"></iframe>
+    </div>
+    <img class="print-figure" src="../elicitation-collective-disagreement/figs/fig_real.png" alt="Original real-election moment-plane figure">
+    <p class="mphint small muted">Complete-ranking ballots · Glasgow STV · NSW LA · French presidential</p>
+  </section>
+
+<section id="real-data-caveats" class="technical">
+    <p class="depth">Technical branch · real elections</p>
+    <h2>The empirical figure illustrates diversity, not an impossibility result</h2>
+    <ul>
+      <li>Observation unit: one candidate in one complete-ranking election.</li>
+      <li>Rank scales are normalized before comparing datasets with different numbers of alternatives.</li>
+      <li>Only complete-ranking ballots are retained.</li>
+      <li>This filter can over-represent more engaged voters.</li>
+    </ul>
+    <p class="proof-step">The figure supports the claim that varied rank-distribution shapes occur in real data. Exact lower-degree indistinguishability is established by the synthetic witness, not by this plot.</p>
+    <div class="branch-nav"><button type="button" data-branch="up">↑ Back to story</button><button type="button" data-branch="next">Continue story →</button></div>
+  </section>
+
+<section id="practical-question">
+  <p class="kicker">The practical question</p>
+  <h2>How much should we ask each person?</h2>
+  <p class="claim">The target measure determines a required degree. The interface still has a choice about how to collect it.</p>
+  <div class="cost-pair">
+    <div class="cost fragment" data-fragment-index="1"><div class="number">λ</div><div class="label">Maximum pairwise comparisons asked of one participant</div></div>
+    <div class="cost fragment" data-fragment-index="2"><div class="number">N</div><div class="label">Total participants required</div></div>
+  </div>
+  <p class="support fragment" data-fragment-index="3" style="text-align:center;margin:0 auto;">Several comparisons with the same participant can reveal higher-degree information.</p>
+</section>
+
+<section id="chain">
+  <p class="kicker">A chain of simple choices</p>
+  <h2>A chain finds a favorite through simple choices</h2>
+  <div class="sequence" aria-label="Fixed query order B, D, A, C"><span class="candidate">B</span><span class="connector">→</span><span class="candidate">D</span><span class="connector">→</span><span class="candidate">A</span><span class="connector">→</span><span class="candidate">C</span></div>
+  <div class="rounds" id="chain-rounds"></div>
+  <p class="support fragment" data-fragment-index="4" style="text-align:center;margin:.7em auto;">Three comparisons yield one favorite observation for each nested prefix — not a complete ranking.</p>
+</section>
+
+<section id="ranking-reuse" class="main-slide">
+    <button class="branch-entry" type="button" data-branch="down">What reuse does — and does not — mean ↓</button>
+    <p class="kicker">Reusing a ranking</p>
+    <h2>A ranking answers many subset questions at once</h2>
+    <div class="sequence" aria-label="One participant ranks C above A above D above B"><span class="candidate">C</span><span class="connector">≻</span><span class="candidate">A</span><span class="connector">≻</span><span class="candidate">D</span><span class="connector">≻</span><span class="candidate">B</span></div>
+    <div class="triples" id="ranking-triples"></div>
+    <p class="support fragment" data-fragment-index="5" style="text-align:center;margin:.6em auto;"><strong>4 triple observations from 1 participant</strong> — useful reuse, but not four independent voters.</p>
+  </section>
+
+<section id="reuse-details" class="technical">
+    <p class="depth">Technical branch · elicitation primitives · 1/2</p>
+    <h2>Query size, target degree, and dependence are different notions</h2>
+    <ul>
+      <li>A chain on k alternatives yields the favorite of each nested prefix.</li>
+      <li>A complete ranking on k alternatives implies the favorite of every subset.</li>
+      <li>At target degree 3, a ranking of exactly three alternatives and a 3-chain each yield one triple winner.</li>
+      <li>Reuse appears when a larger ranking covers several triples or several degrees.</li>
+    </ul>
+    <div class="proof-step"><p>Observations derived from one voter are dependent. Sampling guarantees concern repeated observations across appropriately sampled respondents.</p></div>
+    <div class="branch-nav"><button type="button" data-branch="up">↑ Back to story</button><button type="button" data-branch="next">Continue story →</button></div>
+  </section>
+
+<section id="selection-bias" class="technical">
+    <p class="depth">Technical branch · elicitation primitives · 2/2</p>
+    <h2>Naive pooling can change what is being estimated</h2>
+    <p>If longer chains are shown only to unusually engaged participants, inferred comparisons from those chains need not represent the same population as short-query answers.</p>
+    <div class="conversation">
+      <div class="side"><p><strong>Within voter</strong></p><p class="small">Transitivity permits logical reuse.</p></div>
+      <div class="rule"></div>
+      <div class="side"><p><strong>Across voters</strong></p><p class="small">The sampling design must preserve the target population.</p></div>
+    </div>
+    <p class="small muted">The lower-bound scope must match the query model; finding one person’s favorite does not automatically lower-bound every population estimator.</p>
+    <div class="branch-nav"><button type="button" data-branch="up">↑ Back to story</button><button type="button" data-branch="next">Continue story →</button></div>
+  </section>
+
+<section id="effort-population" class="technical backup-slide original-asset">
+    <button class="branch-entry" type="button" data-branch="down">Guarantee and assumptions ↓</button>
+    <p class="kicker">The elicitation frontier — effort and population</p>
+    <div class="asset-viewport" tabindex="0" role="region" aria-label="Elicitation frontier; scroll horizontally on small screens">
+      <iframe class="mpframe pareto-frame" data-src="../elicitation-collective-disagreement/pareto_widget.html" loading="lazy" title="Original population versus cognitive-load frontier"></iframe>
+    </div>
+    <img class="print-figure" src="../elicitation-collective-disagreement/figs/fig_pareto_front_final.png" alt="Original elicitation frontier figure">
+    <p class="mphint small muted">Richer answers can reduce the number of participants. Chain ● · ranking ▢</p>
+  </section>
+
+<section id="tradeoff-guarantee" class="technical">
+    <p class="depth">Technical branch · effort and population · 1/2</p>
+    <h2>A fixed entry gets a finite-sample guarantee first</h2>
+    <div class="equation">$$\Pr\!\left(|\widehat p-p|\ge\varepsilon\right)\le 2e^{-2n\varepsilon^2}.$$</div>
+    <p>Then a union bound covers all requested entries, provided each receives enough appropriately sampled observations.</p>
+    <ul>
+      <li>Within-voter correlations do not invalidate the union bound.</li>
+      <li>Repeated observations of one entry need the stated sampling guarantee across respondents.</li>
+      <li>Entrywise error is not automatically the same error for a nonlinear disagreement score.</li>
+    </ul>
+    <div class="branch-nav"><button type="button" data-branch="up">↑ Back to story</button><button type="button" data-branch="next">Continue story →</button></div>
+  </section>
+
+<section id="validated-frontier" class="technical">
+    <p class="depth">Technical branch · effort and population · 2/2</p>
+    <h2>Read the experimental frontier within its scope</h2>
+    <ul>
+      <li>Ten alternatives and entrywise accuracy target \(\varepsilon=0.05\).</li>
+      <li>Filled circles: chains. Open squares: rankings.</li>
+      <li>Population is total comparison budget divided by per-voter load for each homogeneous protocol.</li>
+      <li>The source experiments report 5–95% quantiles across experimental seeds.</li>
+    </ul>
+    <p class="support">The plotted frontier compares the evaluated protocols; it does not prove global optimality over all elicitation strategies.</p>
+    <div class="branch-nav"><button type="button" data-branch="up">↑ Back to story</button><button type="button" data-branch="next">Continue story →</button></div>
+  </section>
+
+<section id="design-principle">
+  <p class="kicker">The design principle</p>
+  <h2>The question determines the information to collect</h2>
+  <div class="design-principle">
+    <div class="step-box"><div class="num">1 · Question</div><div class="body">Understand variation in candidates’ ranks</div></div>
+    <div class="arrow">→</div>
+    <div class="step-box fragment" data-fragment-index="1"><div class="num">2 · Information</div><div class="body">Pairs and triples are sufficient for rank variance</div></div>
+    <div class="arrow fragment" data-fragment-index="2">→</div>
+    <div class="step-box fragment" data-fragment-index="2"><div class="num">3 · Protocol</div><div class="body">Choose chains or rankings to fit participants’ available effort</div></div>
+  </div>
+  <p class="closing-line fragment" data-fragment-index="3">Understanding disagreement starts with knowing which information to ask for.</p>
+</section>
+</section>
+
+<section id="thank-you" class="thank-you-card">
+  <div class="thank-you-layout">
+    <div>
+      <p class="kicker">EDDY 2026</p>
+      <h1>Thank you</h1>
+      <p class="thank-you-invite">Questions welcome.</p>
+      <a class="thank-you-site" href="https://ouaguenouni.com/">ouaguenouni.com</a>
+    </div>
+    <div class="presentation-qr">
+      <a href="https://ouaguenouni.com/presentations/eddy-2026/" aria-label="Open the EDDY 2026 presentation">
+        <img src="qr-presentation.svg" width="260" height="260" alt="QR code linking to https://ouaguenouni.com/presentations/eddy-2026/">
+      </a>
+      <p>Explore the presentation</p>
+      <a class="qr-url" href="https://ouaguenouni.com/presentations/eddy-2026/">ouaguenouni.com/<br>presentations/eddy-2026/</a>
+    </div>
+  </div>
+</section>
+
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.24/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.24/dist/contrib/auto-render.min.js"></script>
+<script src="data.js?v=20260922-6"></script>
+<script src="example.js?v=20260922"></script>
+<script src="tournament.js?v=20260922"></script>
+<script src="continuation.js?v=20260922"></script>
+<script src="framework.js?v=20260922-3"></script>
+<script src="elicitation.js?v=20260922-3"></script>
+<script src="protocols.js?v=20260922"></script>
+<script src="closing.js?v=20260922"></script>
+<script src="literature-data.js?v=20260922-2"></script>
+<script src="literature.js?v=20260922-2"></script>
+<script src="deck.js?v=20260922-14"></script>
+</body>
+</html>

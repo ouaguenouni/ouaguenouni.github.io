@@ -1,0 +1,93 @@
+/* Cards 13–15: recap, elicitation principles, and the staged Borda example. */
+.reveal .elicitation-slide h2 { font-size:1.22em; }
+.reveal .recap-card h2 { font-size:1.8em; }
+.reveal .recap-points { margin:30px 0 15px 27px; font-size:.9em; }
+.recap-points li { margin:18px 0; line-height:1.4; }
+.recap-points .recap-implication { list-style:none; position:relative; }
+.recap-implication::before { content:"→"; position:absolute; left:-31px; color:var(--accent); }
+.recap-questions { display:flex; justify-content:space-between; gap:25px; border-top:1px solid #ccc; margin-top:24px; padding-top:19px; }
+.recap-questions p { font-size:.94em; font-style:italic; color:var(--accent); }
+.elicitation-lead { font-size:.74em; margin:23px 0; color:var(--muted); }
+.elicitation-principle { border-top:1px solid #ccc; padding-top:12px; margin-top:20px; }
+.reveal .elicitation-principle .principle-eyebrow { font-size:.49em; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin:0 0 7px; }
+.elicitation-principle > p { font-size:.77em; margin:8px 0; }
+.elicitation-principle em { color:var(--accent); }
+.cognitive-cost-definition { margin:18px 0 20px; padding-left:22px; border-left:2px solid var(--accent); }
+.cognitive-cost-definition p { font-size:.70em; margin:7px 0; }
+.cognitive-cost-definition .cost-example { font-size:.57em; color:var(--muted); }
+.elicitation-costs { display:grid; grid-template-columns:1fr 1fr 1.3fr; gap:20px; text-align:center; margin-top:27px; }
+.elicitation-costs p { font-size:.78em; line-height:1.7; margin:0; }
+.elicitation-costs p > span:not(.katex) { font-size:.72em; color:var(--muted); }
+.sampling-canvas { position:relative; height:620px; }
+.sampling-canvas [data-from], .sampling-canvas [data-until] { transition:opacity .45s ease, visibility .45s ease, transform .6s var(--ease); }
+.sampling-canvas .build-hidden { opacity:0; visibility:hidden; pointer-events:none; }
+.sampling-intro { position:absolute; top:0; left:0; right:0; }
+.reveal .sampling-intro h2 { font-size:1.19em; }
+.borda-sampling-identity { font-size:.66em; margin-top:19px; }
+.borda-sampling-identity > span:not(.katex) { color:var(--muted); font-size:.92em; }
+.hoeffding-original { position:absolute; top:168px; left:0; right:0; }
+.sampling-formula-label { text-align:center; font-size:.61em; color:var(--muted); margin:0 0 23px; }
+.hoeffding-formula { display:flex; justify-content:center; align-items:baseline; gap:2px; font-size:.83em; white-space:nowrap; }
+.hoeffding-epsilon, .hoeffding-n, .hoeffding-delta { transition:color .4s ease; }
+.elicitation-lab[data-build="1"] .hoeffding-epsilon,
+.elicitation-lab[data-build="2"] .hoeffding-epsilon,
+.elicitation-lab[data-build="3"] .hoeffding-delta,
+.elicitation-lab[data-build="4"] .hoeffding-delta,
+.elicitation-lab[data-build="5"] .hoeffding-n { color:var(--accent); }
+.hoeffding-target { margin-left:8px; }
+.sampling-union { font-size:.58em; color:var(--muted); text-align:center; margin:20px 0; }
+.sampling-explanations { position:absolute; top:335px; left:0; right:0; text-align:center; }
+.sampling-explanation { position:absolute; inset:0; }
+.sampling-explanation p { font-size:.78em; margin:15px 0; }
+.sampling-explanation p:first-child { font-size:.95em; color:var(--accent); }
+.sampling-explanation .sampling-fixed { font-size:.72em; margin-top:28px; }
+.sampling-fixed strong { color:var(--accent); }
+.sampling-final { position:absolute; top:176px; left:0; right:0; transform:translateY(0); }
+.sampling-final-equation { font-size:.80em; }
+.sampling-final-equation .katex-display { margin:0; }
+.sampling-final p { font-size:.49em; text-align:center; color:var(--muted); margin:15px 0 0; }
+.sampling-bound-explanation { position:absolute; top:337px; left:0; right:0; text-align:center; }
+.sampling-bound-explanation p { font-size:.77em; margin:18px 0; }
+.sampling-bound-explanation .sampling-independence { font-size:.60em; color:var(--muted); margin-top:32px; }
+.elicitation-lab[data-comparison="true"] .sampling-final { transform:translateY(-155px); }
+.sampling-question { position:absolute; top:123px; left:0; right:0; margin:0; font-size:.87em; text-align:center; line-height:1.35; }
+.sampling-question em { color:var(--accent); }
+.sampling-strategies { position:absolute; top:233px; left:0; right:0; display:grid; grid-template-columns:1fr 1fr 1fr; gap:0; min-height:265px; }
+.sampling-strategy { padding:0 17px; text-align:center; }
+.sampling-strategy + .sampling-strategy { border-left:1px solid #ccc; }
+.reveal .sampling-strategy h3 { font-size:.80em; font-style:normal; color:var(--accent); margin:0 0 14px; }
+.sampling-strategy p { font-size:.57em; line-height:1.5; margin:10px 0; }
+.sampling-strategy .query-yield { margin-top:22px; min-height:68px; }
+.subset-ranking-strategy .query-yield { font-size:.53em; }
+.subset-ranking-strategy .query-population { font-size:.70em; }
+.sampling-strategy .query-population { font-size:.78em; margin:15px 0 18px; }
+.sampling-strategy .query-load { font-size:.48em; color:var(--muted); }
+.sampling-strategy .coverage-warning { font-size:.44em; color:var(--accent); margin-top:11px; }
+.sampling-stop-rule { position:absolute; top:580px; left:0; right:0; font-size:.57em; text-align:center; line-height:1.5; margin:0; }
+.sampling-steps { position:absolute; width:0; height:0; overflow:hidden; pointer-events:none; }
+@media (max-width:760px) {
+  .recap-questions { display:block; }
+  .elicitation-costs { grid-template-columns:1fr; gap:17px; }
+  .sampling-canvas { height:850px; }
+  .hoeffding-formula { font-size:.53em; gap:0; }
+  .sampling-final-equation { font-size:.52em; overflow-x:auto; }
+  .sampling-intro h2 { font-size:1em; }
+  .borda-sampling-identity > span:not(.katex) { display:block; margin-top:10px; }
+  .sampling-question { font-size:.70em; }
+  .sampling-strategies { grid-template-columns:1fr; top:235px; gap:16px; }
+  .sampling-strategy { border-left:0 !important; padding:0; }
+  .sampling-strategy h3 { margin:0 0 5px !important; }
+  .sampling-strategy p { margin:4px 0; }
+  .sampling-strategy .query-yield { margin-top:5px; min-height:0; }
+  .sampling-strategy .query-population { margin:5px 0; }
+  .sampling-stop-rule { top:1110px; }
+  .elicitation-lab[data-comparison="true"] .sampling-canvas { height:1220px; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .sampling-canvas * { transition:none !important; }
+}
+@media print {
+  .sampling-intro, .hoeffding-original, .sampling-explanations, .sampling-bound-explanation { display:none !important; }
+  .sampling-final, .sampling-question, .sampling-strategies, .sampling-strategies [data-from], .sampling-stop-rule { opacity:1 !important; visibility:visible !important; }
+  .sampling-final { transform:translateY(-155px); }
+}

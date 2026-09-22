@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Linked elicitation frontier</title><link rel="icon" href="data:,">
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <style>
+    *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;background:white;color:#161616;font-family:"Palatino Linotype",Palatino,Georgia,serif}
+    body{display:flex;flex-direction:column;padding:0 5px;overflow:hidden}
+    #plot{width:100%;flex:1;min-height:240px}
+    #controls{flex:none;padding:7px 12px 0;border-top:1px solid #ddd}
+    .level-controls{display:flex;align-items:center;justify-content:center;gap:8px;font-size:15px;margin-bottom:10px}
+    button{font:inherit;cursor:pointer;border:1px solid #aaa;background:white;color:#222;min-width:31px;padding:4px 8px;border-radius:0}
+    button[aria-pressed="true"]{background:#9a1b1b;color:white;border-color:#9a1b1b}
+    .slider-row{display:grid;grid-template-columns:190px 1fr;align-items:center;gap:12px;margin:6px 0;font-size:14px}
+    input{width:100%;accent-color:#9a1b1b;cursor:pointer;margin:0}
+    input:focus-visible,button:focus-visible{outline:2px solid #9a1b1b;outline-offset:3px}
+    output{font-weight:bold;color:#9a1b1b}
+    #protocol{margin:9px 0 6px;font-size:17px;text-align:center;min-height:25px}
+    #protocol strong{color:#9a1b1b}
+    .hint{font-size:11px;line-height:1.35;color:#666;text-align:center;margin:3px 0}
+    #status{font-size:13px;color:#9a1b1b;text-align:center}
+    @media(max-width:440px){.slider-row{grid-template-columns:145px 1fr;font-size:12px}#controls{padding:7px 2px 0}.level-controls{font-size:13px}}
+  </style>
+</head>
+<body>
+  <div id="plot" role="img" aria-label="Original empirical population versus cognitive-load frontier, with selected protocol highlighted"></div>
+  <div id="controls" hidden>
+    <div class="level-controls" role="group" aria-label="Fixed level"><span>Fixed level ℓ</span><button data-level="2" aria-pressed="false">2</button><button data-level="3" aria-pressed="true">3</button><button data-level="4" aria-pressed="false">4</button><button data-level="5" aria-pressed="false">5</button></div>
+    <label class="slider-row" for="people-slider"><span>People: <output id="people-value"></output></span><input id="people-slider" type="range" aria-label="Number of sampled people" min="0" step="any"></label>
+    <label class="slider-row" for="load-slider"><span>Comparisons/person: <output id="load-value"></output></span><input id="load-slider" type="range" aria-label="Comparisons per person" min="0" step="any"></label>
+    <p id="protocol" aria-live="polite"></p>
+    <p class="hint">● Chain · □ Ranking. Sliders move continuously; the protocol changes at thresholds.</p>
+    <p class="hint">Original experiments · m = 10 · ε = 0.05 · degree-wise estimates, not a new sample guarantee.</p>
+  </div>
+  <p id="status" role="status">Loading the original frontier…</p>
+  <script src="tradeoff-model.js"></script>
+  <script src="tradeoff-explorer.js"></script>
+</body>
+</html>

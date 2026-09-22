@@ -1,0 +1,34 @@
+/* Final story cards: compact conclusions and a scan-ready presentation link. */
+.reveal .conclusion-card h2 { font-size:1.55em; margin-bottom:24px; }
+.conclusion-columns { display:grid; grid-template-columns:1fr 1fr; gap:40px; }
+.conclusion-columns > div + div { border-left:1px solid #bbb; padding-left:35px; }
+.reveal .conclusion-columns h3 { font-size:.86em; font-style:normal; color:var(--accent); margin:0 0 20px; }
+.reveal .conclusion-strengths > ul { margin:0; padding-left:21px; }
+.conclusion-strengths li { font-size:.68em; line-height:1.36; margin:0 0 17px; }
+.conclusion-limit + .conclusion-limit { border-top:1px solid #ddd; margin-top:24px; padding-top:18px; }
+.conclusion-limit p { font-size:.71em; line-height:1.4; margin:0 0 13px; }
+.conclusion-limit .limit-detail { font-size:.63em; color:var(--muted); }
+.conclusion-limit .cross-set-event { font-size:.69em; margin:14px 0 0; }
+.reveal .conclusion-limit ul { margin:0 0 17px; padding-left:20px; }
+.conclusion-limit li { font-size:.62em; margin:7px 0; line-height:1.35; }
+.conclusion-limit .limit-outlook { color:var(--muted); font-size:.64em; font-style:italic; margin:15px 0 0; }
+.reveal .fragment.conclusion-emphasis { display:inline-block; position:relative; vertical-align:baseline; opacity:1; visibility:inherit; transform:none; transition:color .5s ease, background-color .5s ease; }
+.conclusion-emphasis::after { content:""; position:absolute; left:0; right:0; bottom:0; height:2px; background:var(--accent); transform:scaleX(0); transform-origin:left; transition:transform .5s var(--ease); }
+.reveal .fragment.conclusion-emphasis.visible { color:var(--accent); background:#9a1b1b0c; }
+.conclusion-emphasis.visible::after { transform:scaleX(1); }
+.thank-you-layout { display:grid; grid-template-columns:1fr 340px; align-items:center; gap:80px; min-height:460px; }
+.reveal .thank-you-card h1 { font-size:2.6em; margin:20px 0 18px; }
+.thank-you-invite { color:var(--muted); font-size:.92em; margin:0 0 35px; }
+.thank-you-site { font-size:.78em; }
+.presentation-qr { text-align:center; }
+.reveal .presentation-qr img { display:block; width:260px; height:260px; max-width:100%; max-height:none; margin:0 auto 22px; }
+.presentation-qr p { font-size:.75em; margin:0 0 12px; }
+.qr-url { font-size:.58em; line-height:1.45; }
+@media(max-width:760px) {
+  .conclusion-columns { grid-template-columns:1fr; gap:25px; }
+  .conclusion-columns > div + div { border-left:0; border-top:1px solid #bbb; padding:20px 0 0; }
+  .thank-you-layout { grid-template-columns:1fr; gap:35px; text-align:center; }
+  .reveal .thank-you-card h1 { font-size:2.1em; }
+}
+@media(prefers-reduced-motion:reduce) { .conclusion-emphasis, .conclusion-emphasis::after { transition:none !important; } }
+@media print { .conclusion-emphasis { color:var(--accent) !important; } .conclusion-emphasis::after { transform:scaleX(1); } }

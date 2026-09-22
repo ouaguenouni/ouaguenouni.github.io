@@ -1,0 +1,33 @@
+/* Keep the graph intact while revealing its scoring interpretation. */
+#weighted-tournament h2 { font-size:1.65em; }
+#weighted-tournament .tournament-formula { height:112px; margin-bottom:18px; }
+#weighted-tournament .opening-tournament-row { grid-template-columns:420px 1fr; gap:35px; align-items:start; }
+.tournament-graph-panel { min-width:0; }
+.reveal .tournament-caption { font-size:.62em; line-height:1.4; text-align:center; margin:15px 0 0; }
+.reveal .tournament-reverse { font-size:.59em; color:var(--muted); text-align:center; margin:10px 0 0; }
+#opening-tournament-scores { padding-top:18px; }
+.tournament-score { min-height:102px; opacity:0; visibility:hidden; transition:opacity .4s; }
+.tournament-score.is-shown { opacity:1; visibility:visible; }
+.tournament-score-heading { font-size:.89em; font-style:italic; margin-bottom:14px; }
+.tournament-score-heading sub { font-size:.65em; }
+.tournament-calculation { display:flex; gap:8px; align-items:baseline; font-size:.76em; white-space:nowrap; }
+.tournament-term, .tournament-result { opacity:0; visibility:hidden; transition:opacity .4s; }
+.tournament-term.is-shown, .tournament-result.is-shown { opacity:1; visibility:visible; }
+.tournament-result { color:var(--accent); font-weight:700; }
+.tournament-weights text { transition:fill .3s; }
+.tournament-edges line { transition:stroke .3s, stroke-width .3s; }
+.tournament-edges .tournament-edge-active { stroke:var(--accent); stroke-width:2.8; }
+.tournament-weights .tournament-edge-active { font-weight:700; }
+.tournament-flight { position:fixed; pointer-events:none; z-index:100; white-space:nowrap; font-family:"ETBembo", Georgia, serif; color:var(--accent); }
+@media(max-width:760px) {
+  #weighted-tournament .opening-tournament-row { grid-template-columns:1fr; gap:25px; }
+  #weighted-tournament .tournament-formula { font-size:.66em; }
+  #opening-tournament-scores { padding-top:0; }
+}
+@media(prefers-reduced-motion:reduce) {
+  #weighted-tournament * { transition:none !important; }
+}
+@media print {
+  .tournament-score, .tournament-term, .tournament-result { opacity:1 !important; visibility:visible !important; }
+  #weighted-tournament .rank-formula { display:none; }
+}
